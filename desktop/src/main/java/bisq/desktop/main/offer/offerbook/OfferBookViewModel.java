@@ -657,6 +657,10 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
     abstract Predicate<OfferBookListItem> getCurrencyAndMethodPredicate(OfferDirection direction,
                                                                         TradeCurrency selectedTradeCurrency);
 
+    boolean isMatchingSelectedPaymentMethod(Offer offer) {
+        return showAllPaymentMethods || offer.getPaymentMethod().equals(selectedPaymentMethod);
+    }
+
     // The offers within the price range of the market. Null if the market has no price range.
     @Nullable
     Predicate<OfferBookListItem> getPriceRangePredicate() {
