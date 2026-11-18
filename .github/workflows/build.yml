@@ -34,7 +34,7 @@ jobs:
       uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
       with:
         java-version: ${{ matrix.java }}
-        distribution: 'zulu'
+        distribution: 'corretto'
         check-latest: true
 
     - name: Set up Gradle
