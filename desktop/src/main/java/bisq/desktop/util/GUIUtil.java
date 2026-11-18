@@ -176,6 +176,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class GUIUtil {
     public final static String SHOW_ALL_FLAG = "list.currency.showAll"; // Used for accessing the i18n resource
     public final static String EDIT_FLAG = "list.currency.editList"; // Used for accessing the i18n resource
+    // Used for accessing the i18n resource
+    public final static String STABLECOINS_ONLY_FLAG = "list.paymentMethod.stableCoinsOnly";
 
     public final static String OPEN_WEB_PAGE_KEY = "warnOpenURLWhenTorEnabled";
 
@@ -703,6 +705,8 @@ public class GUIUtil {
                     if (id.equals(GUIUtil.SHOW_ALL_FLAG)) {
                         paymentType.setText(Res.get("shared.all"));
                         paymentMethod.setText(Res.get("list.currency.showAll"));
+                    } else if (id.equals(GUIUtil.STABLECOINS_ONLY_FLAG)) {
+                        paymentType.setText(Res.get("payment.stablecoin.coin"));
                     }
 
                     setGraphic(box);

@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.offer.offerbook;
 
+import bisq.desktop.util.GUIUtil;
+
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CryptoCurrency;
@@ -63,6 +65,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.natpryce.makeiteasy.Maker;
 
@@ -580,6 +584,45 @@ public class OfferBookViewModelTest {
 
         assertTrue(toolTip.contains("Name of the payment method (text of the maker): " + Res.get("shared.na")), toolTip);
         assertFalse(toolTip.contains("SEPA"), toolTip);
+    }
+
+    // The entry for stablecoins is offered only if the list has a stablecoin, which are all pegged to USD so far
+    @Test
+    public void testFilterEntriesOfPaymentMethods() {
+        List<PaymentMethod> withStableCoin = new ArrayList<>(List.of(
+                PaymentMethod.getPaymentMethod(PaymentMethod.SEPA_ID),
+                PaymentMethod.getPaymentMethod("USDT_TRC20")));
+        OfferBookViewModel.addFilterEntries(withStableCoin);
+        assertEquals(List.of(GUIUtil.SHOW_ALL_FLAG, GUIUtil.STABLECOINS_ONLY_FLAG, PaymentMethod.SEPA_ID, "USDT_TRC20"),
+                withStableCoin.stream().map(PaymentMethod::getId).collect(Collectors.toList()));
+
+        List<PaymentMethod> withoutStableCoin = new ArrayList<>(List.of(
+                PaymentMethod.getPaymentMethod(PaymentMethod.SEPA_ID)));
+        OfferBookViewModel.addFilterEntries(withoutStableCoin);
+        assertEquals(List.of(GUIUtil.SHOW_ALL_FLAG, PaymentMethod.SEPA_ID),
+                withoutStableCoin.stream().map(PaymentMethod::getId).collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testStableCoinsOnlyEntryMatchesOffersOfAllStableCoins() {
+        OfferBookViewModel model = getOfferBookViewModel();
+        model.showAllPaymentMethods = false;
+        model.selectedPaymentMethod = PaymentMethod.getDummyPaymentMethod(GUIUtil.STABLECOINS_ONLY_FLAG);
+
+        assertTrue(model.isMatchingSelectedPaymentMethod(getOffer("USD", "USDT_TRC20", null, null, null, null)));
+        assertTrue(model.isMatchingSelectedPaymentMethod(getOffer("USD", "USDC_ERC20", null, null, null, null)));
+        assertFalse(model.isMatchingSelectedPaymentMethod(getOffer("USD", PaymentMethod.CLEAR_X_CHANGE_ID, null, null, null, null)));
+        assertFalse(model.isMatchingSelectedPaymentMethod(getCustomPaymentMethodOffer("USD", "M-Pesa")));
+    }
+
+    @Test
+    public void testPaymentMethodEntryMatchesOffersOfThatPaymentMethod() {
+        OfferBookViewModel model = getOfferBookViewModel();
+        model.showAllPaymentMethods = false;
+        model.selectedPaymentMethod = PaymentMethod.getPaymentMethod("USDT_TRC20");
+
+        assertTrue(model.isMatchingSelectedPaymentMethod(getOffer("USD", "USDT_TRC20", null, null, null, null)));
+        assertFalse(model.isMatchingSelectedPaymentMethod(getOffer("USD", "USDC_ERC20", null, null, null, null)));
     }
 
     private static OfferBookListItem item(Offer offer) {

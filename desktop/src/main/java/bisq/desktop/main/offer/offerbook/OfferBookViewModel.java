@@ -410,8 +410,17 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
         list = filterPaymentMethods(list, selectedTradeCurrency);
 
         list.sort(Comparator.naturalOrder());
-        list.add(0, getShowAllEntryForPaymentMethod());
+        addFilterEntries(list);
         return list;
+    }
+
+    // Adds the entries which select a group of payment methods at the top. The entry for the stablecoins is only
+    // added if there are stablecoins (only for USD so far).
+    static void addFilterEntries(List<PaymentMethod> paymentMethods) {
+        if (paymentMethods.stream().anyMatch(PaymentMethod::isStableCoin)) {
+            paymentMethods.add(0, PaymentMethod.getDummyPaymentMethod(GUIUtil.STABLECOINS_ONLY_FLAG));
+        }
+        paymentMethods.add(0, PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG));
     }
 
     protected abstract ObservableList<PaymentMethod> filterPaymentMethods(ObservableList<PaymentMethod> list,
@@ -658,7 +667,13 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
                                                                         TradeCurrency selectedTradeCurrency);
 
     boolean isMatchingSelectedPaymentMethod(Offer offer) {
-        return showAllPaymentMethods || offer.getPaymentMethod().equals(selectedPaymentMethod);
+        if (showAllPaymentMethods) {
+            return true;
+        }
+        if (selectedPaymentMethod.getId().equals(GUIUtil.STABLECOINS_ONLY_FLAG)) {
+            return offer.getPaymentMethod().isStableCoin();
+        }
+        return offer.getPaymentMethod().equals(selectedPaymentMethod);
     }
 
     // The offers within the price range of the market. Null if the market has no price range.
