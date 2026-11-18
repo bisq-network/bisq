@@ -150,11 +150,14 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Separator;
 import javafx.scene.input.Clipboard;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+
+import javafx.geometry.Insets;
 
 import javafx.collections.ObservableList;
 
@@ -197,10 +200,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private AutocompleteComboBox<PaymentMethod> paymentMethodComboBox;
     private AutocompleteComboBox<PaymentMethod> stableCoinComboBox;
     private CheckBox customPaymentMethodCheckBox;
-    // The group of a new account spans its three selectors of the payment method and one row more, as before
-    // with one selector.
-    private static final int SELECTORS_ROW_SPAN = 4;
-    // The last row of the selectors of the payment method of a new account
+    // The rows of the group of a new account and of its last selector of the payment method
+    private int accountGroupGridRow;
     private int selectorsLastGridRow;
     private PaymentMethodForm paymentMethodForm;
     private TitledGroupBg accountTitledGroupBg;
@@ -480,7 +481,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         paymentAccountsListView.getSelectionModel().clearSelection();
         removeAccountRows();
         addAccountButton.setDisable(true);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, SELECTORS_ROW_SPAN, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
+        accountGroupGridRow = ++gridRow;
+        accountTitledGroupBg = addTitledGroupBg(root, accountGroupGridRow, 2, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
 
         // Stablecoins and the custom payment method have their own selectors, so the list of the other payment
         // methods stays short enough to scan. Selecting in one selector clears the others.
@@ -521,7 +523,15 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         resetPaymentMethodSelector(stableCoinComboBox, stableCoinPaymentMethods, Res.get("payment.select.stablecoin"));
 
         customPaymentMethodCheckBox = addCheckBox(root, ++gridRow, Res.get("payment.custom.select"), 10);
+
+        // Separates the selectors from the form of the selected payment method
+        Separator separator = new Separator();
+        GridPane.setRowIndex(separator, ++gridRow);
+        GridPane.setMargin(separator, new Insets(10, 0, 0, 0));
+        root.getChildren().add(separator);
+
         selectorsLastGridRow = gridRow;
+        GridPane.setRowSpan(accountTitledGroupBg, getSelectorsRowSpan());
 
         // Not onAction, which fires on every change of the search text
         paymentMethodComboBox.setOnChangeConfirmed(e -> {
@@ -578,6 +588,11 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         comboBox.setPromptText(prompt);
     }
 
+    // As before with one selector, the group spans one row more than its selectors.
+    private int getSelectorsRowSpan() {
+        return selectorsLastGridRow - accountGroupGridRow + 2;
+    }
+
     private void onPaymentMethodSelected(PaymentMethod selectedPaymentMethod) {
         // Reselecting the current method must keep the entered account data.
         if (paymentMethodForm != null &&
@@ -603,8 +618,9 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             saveNewAccountButton.disableProperty().bind(paymentMethodForm.allInputsValidProperty().not());
             Button cancelButton = tuple2.second;
             cancelButton.setOnAction(event -> onCancelNewAccount());
-            // The form counts its rows from the last selector, the group starts two rows above it.
-            GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 3);
+            // The form counts its rows from the last selector, the group starts above the selectors.
+            GridPane.setRowSpan(accountTitledGroupBg,
+                    paymentMethodForm.getRowSpan() + 1 + selectorsLastGridRow - accountGroupGridRow);
         }
     }
 
@@ -615,7 +631,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             paymentMethodForm = null;
         }
         gridRow = selectorsLastGridRow;
-        GridPane.setRowSpan(accountTitledGroupBg, SELECTORS_ROW_SPAN);
+        GridPane.setRowSpan(accountTitledGroupBg, getSelectorsRowSpan());
     }
 
     // Select account form
