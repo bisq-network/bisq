@@ -12,16 +12,18 @@ verification.
 | `verification-keyring.keys` | the public keys used to verify dependency signatures |
 | `dependency-checksum-fallback-allowlist.tsv` | dependency artifacts accepted with a checksum only |
 
-Currently pinned: **Gradle 9.0.0**, Azul Zulu Java **21**, at least **21.0.13.0.3**.
+Currently pinned: **Gradle 9.0.0**, Amazon Corretto Java **21**, at least **21.0.13.1** (Corretto **21.0.13.1.2**).
 `gradle.properties` pins the vendor (`releaseBuild.javaVendor`) and the minimum Java version
-(`releaseBuild.javaVersion`). `verifyReleaseEnvironment` accepts every Azul build of the same feature version at or
-above the minimum. It compares the version numbers only, so `21.0.13.0.3+1` and `21.0.14+7` pass for `21.0.13.0.3`,
-and `21.0.13+9` and `25.0.1` fail. Azul builds an update several times and not on every platform at once, so no exact
-build is pinned. The build info of a release records the exact runtime and Zulu build.
+(`releaseBuild.javaVersion`). `verifyReleaseEnvironment` accepts every Corretto build of the same feature version at or
+above the minimum. It compares the version numbers only, so `21.0.13.1+2` and `21.0.14+7` pass for `21.0.13.1`,
+and `21.0.13+11` and `25.0.1` fail. The minimum excludes JDKs without the fix for CVE-2026-114938.
+The build info of a release records the exact runtime and Corretto build.
 
-GitHub Actions requests Java `21` with `check-latest: true`, so each runner gets the newest Azul build for its platform.
-`verifyGithubActionsSecurity` requires this for every `actions/setup-java` step. The release-builder image uses the tag
-`azul/zulu-openjdk:21` by digest, and Dependabot updates the digest.
+GitHub Actions requests Java `21` with `distribution: corretto` and `check-latest: true`, so each runner gets the newest
+Corretto build for its platform. `verifyGithubActionsSecurity` requires this for every `actions/setup-java` step.
+The release-builder image pins Ubuntu 24.04 by digest and downloads the Corretto JDK by version and SHA-256 checksum.
+Dependabot updates the base-image digest. Update the archive URL and checksum when upgrading the release-builder JDK;
+`verifyReleaseBuilderImage` checks that its Java version meets the minimum.
 
 Raise `releaseBuild.javaVersion` when a release must not ship without a fix of a newer Java build, for example a
 security fix. The installers bundle a runtime made from the JDK of the build.

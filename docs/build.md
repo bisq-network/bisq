@@ -124,7 +124,9 @@ above: it overwrites both local URLs with the URL from `.gitmodules`.
 
 1. You do _not_ need to install Gradle to build Bisq. The `gradlew` shell script will install it for you, if necessary.
 
-2. Bisq currently works with JDK 21. You can find out which version you have with:
+2. Bisq uses Amazon Corretto 21, at least **21.0.13.1** (Corretto **21.0.13.1.2**), which fixes
+   CVE-2026-114938. Use the latest Corretto 21 security update for both Gradle and the application.
+   You can find out which version you have with:
 
    ```sh
    javac -version
@@ -139,11 +141,11 @@ above: it overwrites both local URLs with the URL from `.gitmodules`.
    and if the version number on the JVM line is not a supported one, you can pick the correct JDK at runtime with this syntax (verify your system path):
 
    ```sh
-   JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 PATH=/usr/lib/jvm/java-21-openjdk-amd64/bin:$PATH ./gradlew clean build
+   JAVA_HOME=/usr/lib/jvm/java-21-amazon-corretto PATH=/usr/lib/jvm/java-21-amazon-corretto/bin:$PATH ./gradlew clean build
    ```
 
-If you do not have JDK 21 installed, check out scripts in the [scripts](../scripts) directory or download it manually
-from https://jdk.java.net/archive/.
+If Corretto 21 is not installed, follow the [Amazon Corretto installation instructions](https://docs.aws.amazon.com/corretto/latest/corretto-21-ug/downloads-list.html).
+The Gradle toolchain and installer packaging also select Amazon Corretto.
 
 3. Bisq brings its own Tor on every operating system. The build downloads the Tor expert bundle from
    archive.torproject.org and verifies it; Bisq does not use the tor package of your Linux distribution. On Linux, this
@@ -164,7 +166,7 @@ On macOS and Linux:
 ```
 or, to select a specific version of Java:
 ```sh
-env JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 ./scripts/desktop
+env JAVA_HOME=/usr/lib/jvm/java-21-amazon-corretto ./scripts/desktop
 ```
 
 On Windows:

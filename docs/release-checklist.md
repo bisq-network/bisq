@@ -314,18 +314,18 @@ Document: [reproducible-builds/](reproducible-builds/) and
 The build environment is pinned in `gradle.properties`:
 
 ```
-releaseBuild.javaVersion=21.0.13.0.3
-releaseBuild.javaVendor=Azul Systems, Inc.
+releaseBuild.javaVersion=21.0.13.1
+releaseBuild.javaVendor=Amazon.com Inc.
 releaseBuild.gradleVersion=9.0.0
 ```
 
 `verifyReleaseEnvironment` compares these values with the Java virtual machine that runs Gradle, not
 with the Java toolchain. The vendor and the Gradle version must match exactly. `releaseBuild.javaVersion`
-is the minimum: every Azul build of Java 21 at or above it passes, so `21.0.13.0.3+1` and `21.0.14+7`
+is the minimum: every Corretto build of Java 21 at or above it passes, so `21.0.13.1+2` and `21.0.14+7`
 pass, and `21.0.13+9` fails.
 
-Build the installers with the newest Azul Zulu 21 build that is available for each OS. The installers
-bundle it as their runtime. The build info records the exact runtime and Zulu build. Raise
+Build the installers with the newest Amazon Corretto 21 build that is available for each OS. The installers
+bundle it as their runtime. The build info records the exact runtime and Corretto build. Raise
 `releaseBuild.javaVersion` before the build when the release must not ship without a fix of a newer
 Java build, for example a security fix.
 
