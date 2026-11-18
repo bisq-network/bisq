@@ -30,8 +30,14 @@ class RegtestPlugin @Inject constructor(
 
     override fun apply(project: Project) {
         val initialDaoSetupTask = project.tasks.register<Copy>("initialDaoSetup") {
+            val destinationDir: Directory = project.layout.projectDirectory.dir(".localnet")
+
+            onlyIf("Target directory has not been initialized yet") {
+                !destinationDir.asFile.exists()
+            }
+
             from(archiveOperations.zipTree("docs/dao-setup.zip"))
-            into(project.layout.projectDirectory.dir(".localnet"))
+            into(destinationDir)
 
             exclude("dao-setup/Bitcoin-regtest/bitcoin.conf")
 
