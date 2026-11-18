@@ -130,8 +130,7 @@ public class OtherOfferBookViewModel extends OfferBookViewModel {
                             !offer.getCurrencyCode().equals(GUIUtil.TOP_ALTCOIN.getCode()) &&
                             !offer.getCurrencyCode().equals(GUIUtil.BSQ.getCode())) ||
                             offer.getCurrencyCode().equals(selectedTradeCurrency.getCode()));
-            boolean paymentMethodResult = showAllPaymentMethods ||
-                    offer.getPaymentMethod().equals(selectedPaymentMethod);
+            boolean paymentMethodResult = isMatchingSelectedPaymentMethod(offer);
             boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
             return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
         };

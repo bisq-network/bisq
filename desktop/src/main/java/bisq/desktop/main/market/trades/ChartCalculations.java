@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.market.trades;
 
+import bisq.desktop.main.market.trades.TradesChartsViewModel.PaymentMethodGroup;
 import bisq.desktop.main.market.trades.TradesChartsViewModel.TickUnit;
 import bisq.desktop.main.market.trades.charts.CandleData;
 import bisq.desktop.util.DisplayUtils;
@@ -106,9 +107,11 @@ public class ChartCalculations {
 
     static CompletableFuture<List<TradeStatistics3>> getTradeStatisticsForCurrency(Set<TradeStatistics3> tradeStatisticsSet,
                                                                                    String currencyCode,
-                                                                                   boolean showAllTradeCurrencies) {
+                                                                                   boolean showAllTradeCurrencies,
+                                                                                   PaymentMethodGroup paymentMethodGroup) {
         return CompletableFuture.supplyAsync(() -> tradeStatisticsSet.stream()
                 .filter(e -> showAllTradeCurrencies || e.getCurrency().equals(currencyCode))
+                .filter(e -> paymentMethodGroup.matches(e.getPaymentMethodId()))
                 .collect(Collectors.toList()));
     }
 
