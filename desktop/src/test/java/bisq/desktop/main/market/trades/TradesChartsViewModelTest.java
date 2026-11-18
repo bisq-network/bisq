@@ -420,4 +420,32 @@ public class TradesChartsViewModelTest {
             assertEquals(2, model.volumeItems.size());
         }
     }
+
+    // Stablecoin payment methods are payment methods of the USD market, so the trades of USD can be filtered by them
+    @Test
+    public void tradesOfACurrencyAreFilteredByTheGroupOfTheirPaymentMethods() throws Exception {
+        long date = 1_700_000_000_000L;
+        TradeStatistics3 sepa = new TradeStatistics3("USD", Price.parse("USD", "50000").getValue(), 10_000_000L,
+                PaymentMethod.CLEAR_X_CHANGE_ID, date, null, null, (TreeMap<String, String>) null);
+        TradeStatistics3 custom = new TradeStatistics3("USD", Price.parse("USD", "50000").getValue(), 10_000_000L,
+                PaymentMethod.CUSTOM_ID, date + 1, null, null, (TreeMap<String, String>) null);
+        TradeStatistics3 usdt = new TradeStatistics3("USD", Price.parse("USD", "50000").getValue(), 10_000_000L,
+                "USDT_TRC20", date + 2, null, null, (TreeMap<String, String>) null);
+        TradeStatistics3 eur = new TradeStatistics3("EUR", Price.parse("EUR", "50000").getValue(), 10_000_000L,
+                PaymentMethod.SEPA_ID, date + 3, null, null, (TreeMap<String, String>) null);
+        Set<TradeStatistics3> set = Set.of(sepa, custom, usdt, eur);
+
+        assertEquals(Set.of(sepa, custom, usdt), Set.copyOf(ChartCalculations.getTradeStatisticsForCurrency(set, "USD",
+                false, TradesChartsViewModel.PaymentMethodGroup.FIAT_AND_STABLECOINS).get()));
+        assertEquals(Set.of(sepa, custom), Set.copyOf(ChartCalculations.getTradeStatisticsForCurrency(set, "USD",
+                false, TradesChartsViewModel.PaymentMethodGroup.FIAT_ONLY).get()));
+        assertEquals(Set.of(usdt), Set.copyOf(ChartCalculations.getTradeStatisticsForCurrency(set, "USD",
+                false, TradesChartsViewModel.PaymentMethodGroup.STABLECOINS_ONLY).get()));
+    }
+
+    @Test
+    public void onlyCurrenciesWithStableCoinsOfferTheGroupsOfPaymentMethods() {
+        assertTrue(TradesChartsViewModel.hasStableCoins("USD"));
+        assertFalse(TradesChartsViewModel.hasStableCoins("EUR"));
+    }
 }
