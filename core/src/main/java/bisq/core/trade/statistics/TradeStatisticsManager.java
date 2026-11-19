@@ -55,6 +55,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
@@ -89,7 +90,8 @@ public class TradeStatisticsManager {
     // Kept up to date as statistics arrive, so that a received statistic costs no search through all statistics
     private final Map<String, TradeStatistics3> newestTradeStatisticsByCurrency = new HashMap<>();
     private final NavigableSet<TradeStatistics3> bsqTradeStatisticsSet = new TreeSet<>();
-    private boolean bsqMarketPriceUpdatePending;
+    private final Set<String> currenciesOfReceivedStatistics = new HashSet<>();
+    private boolean marketPriceUpdatePending;
     private JsonFileManager jsonFileManager;
 
     @Inject
@@ -122,14 +124,9 @@ public class TradeStatisticsManager {
                 if (!tradeStatistics.isValid()) {
                     return;
                 }
-                // A statistic can arrive after newer ones of its currency, for example when a trader republishes it
-                TradeStatistics3 newest = add(tradeStatistics);
-                if (newest.getCurrency().equals("BSQ")) {
-                    requestBsqMarketPriceUpdate();
-                } else {
-                    priceFeedService.setBisqMarketPrice(newest.getCurrency(), newest.getTradePrice());
-                }
-                maybeDumpStatistics();
+                add(tradeStatistics);
+                currenciesOfReceivedStatistics.add(tradeStatistics.getCurrency());
+                requestMarketPriceUpdate();
             }
         });
 
@@ -146,27 +143,33 @@ public class TradeStatisticsManager {
         maybeDumpStatistics();
     }
 
-    // Returns the newest statistic of the currency of the added one
-    private TradeStatistics3 add(TradeStatistics3 tradeStatistics) {
+    // A statistic can arrive after newer ones of its currency, for example when a trader republishes it
+    private void add(TradeStatistics3 tradeStatistics) {
         observableTradeStatisticsSet.add(tradeStatistics);
         String currencyCode = tradeStatistics.getCurrency();
         if (currencyCode.equals("BSQ")) {
             bsqTradeStatisticsSet.add(tradeStatistics);
         }
-        return newestTradeStatisticsByCurrency.merge(currencyCode, tradeStatistics,
+        newestTradeStatisticsByCurrency.merge(currencyCode, tradeStatistics,
                 (newest, added) -> added.compareTo(newest) > 0 ? added : newest);
     }
 
-    // The statistics of a bundle arrive as one task each on the user thread. The update runs after them, so that it
-    // reads the BSQ statistics of the period once, not once per statistic.
-    private void requestBsqMarketPriceUpdate() {
-        if (bsqMarketPriceUpdatePending) {
+    // The statistics of a bundle arrive as one task each on the user thread. The update runs after the tasks which wait
+    // at that time, so that it derives the prices, notifies the listeners of the price feed and writes the dump once for
+    // them, not once per statistic.
+    private void requestMarketPriceUpdate() {
+        if (marketPriceUpdatePending) {
             return;
         }
-        bsqMarketPriceUpdatePending = true;
+        marketPriceUpdatePending = true;
         UserThread.execute(() -> {
-            bsqMarketPriceUpdatePending = false;
-            priceFeedService.setBisqMarketPrice("BSQ", getBisqMarketPrice(newestTradeStatisticsByCurrency.get("BSQ")));
+            marketPriceUpdatePending = false;
+            Map<String, Price> marketPriceByCurrencyCode = new HashMap<>();
+            currenciesOfReceivedStatistics.forEach(currencyCode -> marketPriceByCurrencyCode.put(currencyCode,
+                    getBisqMarketPrice(newestTradeStatisticsByCurrency.get(currencyCode))));
+            currenciesOfReceivedStatistics.clear();
+            priceFeedService.setBisqMarketPrices(marketPriceByCurrencyCode);
+            maybeDumpStatistics();
         });
     }
 
