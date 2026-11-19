@@ -128,8 +128,8 @@ public class CustomPaymentMethodTest {
     // A text with an argument is a message format, in which a single quote or a brace has a meaning
     @Test
     public void displayStringsWithArgumentsAreFormatted() {
-        String info = Res.get("payment.custom.info", "0.05 BTC");
-        assertTrue(info.contains("the limit is 0.05 BTC per trade"), info);
+        String info = Res.get("payment.custom.info", "0.01 BTC");
+        assertTrue(info.contains("the limit is 0.01 BTC per trade"), info);
         assertFalse(info.contains("{0}"), info);
 
         assertTrue(Res.get("payment.custom.name.prompt", CustomPaymentMethodUtil.MAX_NAME_LENGTH)

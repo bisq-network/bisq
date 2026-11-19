@@ -118,7 +118,7 @@ Bisq knows nothing about that.
 
 ### Limits
 
-20. The trade limit is the limit of the highest risk category, but at most 0.05 BTC. The 0.05 BTC
+20. The trade limit is the limit of the highest risk category, but at most 0.01 BTC. The 0.01 BTC
     are not adjusted to the trade limit of the DAO.
 21. The custom payment method is not in the list of payment methods with chargeback risk. Its trade
     limit does not depend on the age or the signing of the account.
@@ -199,7 +199,10 @@ Bisq knows nothing about that.
   would not start for a payment method which few traders use, and buyers would stay at the limit of
   unsigned accounts. The price of that choice: in EUR, USD, GBP, CAD, AUD and BRL an unsigned
   buyer with a payment method of the chargeback list is limited to 0.002 BTC, and a buyer with a
-  new custom account to 0.05 BTC, 25 times as much. A limit of 0.002 BTC for buyers of the custom
+  new custom account to 0.01 BTC, 5 times as much. A buyer can give a payment method of the
+  chargeback list a custom name, and no check of the name can prevent that. The cap of 0.01 BTC
+  keeps this gap small. It applies in all currencies and to both traders, as Bisq does not know
+  the payment method in any of them. A limit of 0.002 BTC for buyers of the custom
   payment method in these currencies was considered and dropped: without signing it would hold
   every custom trade in these currencies at 0.002 BTC, and a buyer can only trade with a seller who
   has set up an account with the same name and confirmed the warning of rule 23.
@@ -262,7 +265,7 @@ Bisq knows nothing about that.
 - For other payment methods the payment method of the revealed account is still not compared with
   the payment method of the contract. Rule 17 only keeps accounts of the custom payment method out
   of trades of other payment methods, and the reverse.
-- The 0.05 BTC of rule 20 are a fixed BTC amount. They do not follow the BTC price.
+- The 0.01 BTC of rule 20 are a fixed BTC amount. They do not follow the BTC price.
 - The normalization, the case conversion and the classes of characters follow the Unicode tables
   of the Java runtime (Java 21: Unicode 15.0). A character which a runtime does not know is
   refused. An offer with such a character in its name has no name for that client, and account
