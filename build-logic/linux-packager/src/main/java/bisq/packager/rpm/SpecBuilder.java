@@ -18,7 +18,7 @@ public class SpecBuilder {
 
     public String build() throws IOException {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Name: ").append(metadata.appName()).append('\n');
+        stringBuilder.append("Name: bisq\n");
         stringBuilder.append("Version: ").append(metadata.appVersion()).append('\n');
         stringBuilder.append("Release: 1%{?dist}\n");
         stringBuilder.append("Vendor: Bisq\n");
@@ -43,7 +43,7 @@ public class SpecBuilder {
         stringBuilder.append("No account registration or identity verification (KYC) is required.\n");
         stringBuilder.append("\n");
         stringBuilder.append("%prep\n");
-        stringBuilder.append("%setup -q -n %{name}\n");
+        stringBuilder.append("%setup -q -n ").append(metadata.sourceDirectoryName()).append('\n');
         stringBuilder.append("\n");
         stringBuilder.append("%build\n");
         stringBuilder.append("\n");

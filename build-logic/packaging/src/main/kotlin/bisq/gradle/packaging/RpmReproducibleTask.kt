@@ -3,7 +3,6 @@ package bisq.gradle.packaging
 import bisq.packager.rpm.SpecMetadata
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -16,6 +15,9 @@ import java.io.File
 abstract class RpmReproducibleTask : DefaultTask() {
     @get:Input
     abstract val appVersion: Property<String>
+
+    @get:Input
+    val sourceDateEpoch = project.providers.environmentVariable("SOURCE_DATE_EPOCH").orElse("0")
 
     @get:InputFile
     abstract val tarballPath: RegularFileProperty
@@ -40,7 +42,8 @@ abstract class RpmReproducibleTask : DefaultTask() {
             outputDirectory.asFile.get().toPath(),
             tarballPath.asFile.get().toPath(),
             specMetadata,
-            distDirFile.get().toPath()
+            distDirFile.get().toPath(),
+            sourceDateEpoch.get().toLong()
         )
         rpmPackager.createPackage()
     }

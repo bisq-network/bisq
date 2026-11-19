@@ -14,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 
 
 import bisq.packager.Packager;
-import bisq.packager.deb.DataArchiveCreator;
 
 public class RpmPackager implements Packager {
     private static final String SOURCES_DIR_NAME = "SOURCES";
@@ -25,12 +24,14 @@ public class RpmPackager implements Packager {
     private final Path tarballPath;
     private final SpecMetadata specMetadata;
     private final Path installDistDir;
+    private final long sourceDateEpoch;
 
-    public RpmPackager(Path workingDirectory, Path tarballPath, SpecMetadata specMetadata, Path installDistDir) {
+    public RpmPackager(Path workingDirectory, Path tarballPath, SpecMetadata specMetadata, Path installDistDir, long sourceDateEpoch) {
         this.workingDirectory = workingDirectory;
         this.tarballPath = tarballPath;
         this.specMetadata = specMetadata;
         this.installDistDir = installDistDir;
+        this.sourceDateEpoch = sourceDateEpoch;
     }
 
     @Override
@@ -56,7 +57,7 @@ public class RpmPackager implements Packager {
     private void copyTarballToSourcesDir() {
         try {
             Path targetPath = workingDirectory.resolve(SOURCES_DIR_NAME)
-                    .resolve("desktop.tar");
+                    .resolve(specMetadata.sourceFileName());
             Files.copy(tarballPath, targetPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to copy tarball file.", e);
@@ -95,7 +96,6 @@ public class RpmPackager implements Packager {
                     .redirectErrorStream(true)
                     .redirectOutput(logFile.toFile());
 
-            long sourceDateEpoch = DataArchiveCreator.getSourceDateEpoch();
             processBuilder.environment().put(SOURCE_DATE_EPOCH, String.valueOf(sourceDateEpoch));
 
             Process process = processBuilder.start();
