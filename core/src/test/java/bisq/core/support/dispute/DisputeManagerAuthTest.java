@@ -23,6 +23,7 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferDirection;
+import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -573,6 +574,20 @@ class DisputeManagerAuthTest {
         assertOpenNewDisputePayloadStateRejected(
                 dispute -> dispute.setDelayedPayoutTxId("not-a-tx-id"),
                 "delayedPayoutTxId must be a canonical 32-byte transaction ID");
+    }
+
+    @Test
+    void ignoresPeerOpenedDisputeForCanceledOffer() {
+        OpenOffer canceledOffer = mock(OpenOffer.class);
+        when(closedTradableManager.getTradableById(TRADE_ID)).thenReturn(Optional.of(canceledOffer));
+        PubKeyRing agent = pubKeyRing();
+        PeerOpenedDisputeMessage message = new PeerOpenedDisputeMessage(dispute(TRADE_ID, agent),
+                PEER_NODE_ADDRESS, "uid", SupportType.MEDIATION);
+
+        manager.onPeerOpenedDispute(message, agent.getSignaturePubKey());
+
+        verify(closedTradableManager, never()).remove(canceledOffer);
+        verify(tradeManager, never()).addTradeToPendingTrades(org.mockito.ArgumentMatchers.any());
     }
 
     @Test

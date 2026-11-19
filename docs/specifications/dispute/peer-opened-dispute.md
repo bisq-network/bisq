@@ -9,6 +9,8 @@ accepts.
 
 ## Rules
 
+- A closed offer alone cannot be reopened as a trade. The node resolves a peer-opened dispute only
+  against a pending, closed or failed Bisq v1 trade.
 - The node accepts the dispute only if it is addressed to this trader: the trader key ring of the
   dispute is the node's own key ring, and the trader ID is the hash code of that key ring, as for
   the disputes that the node opens itself.
