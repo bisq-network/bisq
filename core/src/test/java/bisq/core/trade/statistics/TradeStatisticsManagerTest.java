@@ -170,6 +170,26 @@ public class TradeStatisticsManagerTest {
         assertEquals(100, priceFeedService.getMarketPrice("USD").getPrice(), 1e-6);
     }
 
+    // The prices of the currencies of earlier statistics are applied already. Deriving them again for each received
+    // statistic would cost work which grows with the number of currencies received, and old statistics may carry any
+    // currency code.
+    @Test
+    public void receivedStatisticUpdatesOnlyThePriceOfItsCurrency() {
+        P2PDataStorage p2PDataStorage = mock(P2PDataStorage.class);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        manager(p2PDataStorage, priceFeedService, new HashMap<>()).onAllServicesInitialized();
+        AppendOnlyDataStoreListener listener = appendOnlyDataStoreListener(p2PDataStorage);
+        TradeStatistics3 usd = usdStatistics(Price.parse("USD", "100").getValue(), System.currentTimeMillis());
+        TradeStatistics3 xyz = new TradeStatistics3("XYZ", 1, 1, "X", 1, null, null, null, hash(500_000));
+
+        listener.onAdded(usd);
+        listener.onAdded(xyz);
+
+        verify(priceFeedService).setBisqMarketPrices(Map.of("USD", usd.getTradePrice()));
+        verify(priceFeedService).setBisqMarketPrices(Map.of("XYZ", xyz.getTradePrice()));
+        verify(priceFeedService, times(2)).setBisqMarketPrices(any());
+    }
+
     // Statistics are unlimited, so the BSQ price reads only the newest BSQ trades of the day. No day of the history had
     // more than 49.
     @Test
