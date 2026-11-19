@@ -69,6 +69,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TradesChartsViewModelTest {
     TradesChartsViewModel model;
@@ -441,6 +442,18 @@ public class TradesChartsViewModelTest {
                 false, TradesChartsViewModel.PaymentMethodGroup.FIAT_ONLY).get()));
         assertEquals(Set.of(usdt), Set.copyOf(ChartCalculations.getTradeStatisticsForCurrency(set, "USD",
                 false, TradesChartsViewModel.PaymentMethodGroup.STABLECOINS_ONLY).get()));
+    }
+
+    @Test
+    public void reselectingTheCurrencyKeepsItsPaymentMethodGroup() {
+        FiatCurrency usd = new FiatCurrency("USD");
+        model.selectedTradeCurrencyProperty.set(usd);
+        model.paymentMethodGroupProperty.set(TradesChartsViewModel.PaymentMethodGroup.STABLECOINS_ONLY);
+        when(tradeStatisticsManager.getObservableTradeStatisticsSet()).thenReturn(FXCollections.observableSet());
+
+        model.onSetTradeCurrency(usd);
+
+        assertEquals(TradesChartsViewModel.PaymentMethodGroup.STABLECOINS_ONLY, model.getAppliedPaymentMethodGroup());
     }
 
     @Test
