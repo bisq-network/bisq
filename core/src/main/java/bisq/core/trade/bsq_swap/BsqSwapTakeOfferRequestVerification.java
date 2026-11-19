@@ -22,6 +22,8 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapRequest;
+import bisq.core.trade.protocol.bsq_swap.messages.BuyersBsqSwapRequest;
+import bisq.core.trade.protocol.bsq_swap.messages.SellersBsqSwapRequest;
 import bisq.core.trade.validation.MinerFeeValidation;
 import bisq.core.util.Validator;
 
@@ -70,6 +72,15 @@ public class BsqSwapTakeOfferRequestVerification {
             Offer offer = openOffer.getOffer();
             checkTradeId(offer.getId(), request);
             checkArgument(offer.isMyOffer(keyRing), "Offer must be mine");
+            // The swap takes the fixed price of the offer as the price of BSQ in BTC, so a fiat or altcoin offer
+            // would be settled in BSQ at a price set for another currency.
+            checkArgument(offer.isBsqSwapOffer(), "Offer must be a BSQ swap offer");
+            if (request instanceof BuyersBsqSwapRequest) {
+                checkArgument(offer.isSellOffer(), "Offer must be a sell offer for a BuyersBsqSwapRequest");
+            } else {
+                checkArgument(request instanceof SellersBsqSwapRequest, "Unexpected request type");
+                checkArgument(offer.isBuyOffer(), "Offer must be a buy offer for a SellersBsqSwapRequest");
+            }
 
             long tradeAmount = request.getTradeAmount();
             Coin amountAsCoin = Coin.valueOf(request.getTradeAmount());
