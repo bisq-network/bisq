@@ -924,7 +924,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (allowBroadcast && wasAdded)
             broadcaster.broadcast(new AddPersistableNetworkPayloadMessage(payload), sender);
 
-        return true;
+        return payloadHashAlreadyInStore || wasAdded;
     }
 
     // When we receive initial data we skip several checks to improve performance. We requested only missing entries so we
