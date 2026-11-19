@@ -33,6 +33,7 @@ import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
 import bisq.common.UserThread;
+import bisq.common.file.JsonFileManager;
 
 import org.bitcoinj.core.Coin;
 
@@ -58,6 +59,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.MockedConstruction;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -65,7 +67,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -168,6 +173,31 @@ public class TradeStatisticsManagerTest {
             assertNotNull(priceFeedService.getMarketPrice("X" + i));
         }
         assertEquals(100, priceFeedService.getMarketPrice("USD").getPrice(), 1e-6);
+    }
+
+    // A node started with --dumpStatistics writes all statistics to a file, which costs time in their number. The
+    // statistics which arrive together, as in one bundle, are written once after them.
+    @Test
+    public void statisticsReceivedTogetherAreDumpedOnce() {
+        long now = System.currentTimeMillis();
+        List<Runnable> userThreadTasks = new ArrayList<>();
+        UserThread.setExecutor(userThreadTasks::add);
+        P2PDataStorage p2PDataStorage = mock(P2PDataStorage.class);
+        try (MockedConstruction<JsonFileManager> jsonFileManagers = mockConstruction(JsonFileManager.class)) {
+            manager(p2PDataStorage, mock(PriceFeedService.class), new HashMap<>(), true).onAllServicesInitialized();
+            AppendOnlyDataStoreListener listener = appendOnlyDataStoreListener(p2PDataStorage);
+            JsonFileManager jsonFileManager = jsonFileManagers.constructed().get(0);
+            // The dump at startup
+            verify(jsonFileManager, times(1)).writeToDiscThreaded(anyString(), eq("trade_statistics"));
+
+            for (int i = 1; i <= 3; i++) {
+                listener.onAdded(usdStatistics(Price.parse("USD", "100").getValue(), now - TimeUnit.HOURS.toMillis(i)));
+            }
+            verify(jsonFileManager, times(1)).writeToDiscThreaded(anyString(), eq("trade_statistics"));
+            new ArrayList<>(userThreadTasks).forEach(Runnable::run);
+
+            verify(jsonFileManager, times(2)).writeToDiscThreaded(anyString(), eq("trade_statistics"));
+        }
     }
 
     // The prices of the currencies of earlier statistics are applied already. Deriving them again for each received
@@ -503,12 +533,20 @@ public class TradeStatisticsManagerTest {
             P2PDataStorage p2PDataStorage,
             PriceFeedService priceFeedService,
             Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapOfAllData) {
+        return manager(p2PDataStorage, priceFeedService, mapOfAllData, false);
+    }
+
+    private static TradeStatisticsManager manager(
+            P2PDataStorage p2PDataStorage,
+            PriceFeedService priceFeedService,
+            Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapOfAllData,
+            boolean dumpStatistics) {
         TradeStatistics3StorageService storageService = mock(TradeStatistics3StorageService.class);
         when(storageService.getMapOfAllData()).thenReturn(mapOfAllData);
         P2PService p2PService = mock(P2PService.class);
         when(p2PService.getP2PDataStorage()).thenReturn(p2PDataStorage);
         return new TradeStatisticsManager(p2PService, priceFeedService,
-                storageService, mock(AppendOnlyDataStoreService.class), new File("."), false);
+                storageService, mock(AppendOnlyDataStoreService.class), new File("."), dumpStatistics);
     }
 
     private static Price bsqPriceOfATypicalDayAnd(TradeStatistics3 newest) {
