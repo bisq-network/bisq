@@ -21,6 +21,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.StableCoinAccountPayload;
 import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -127,6 +128,8 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
                 checkArgument(Arrays.equals(sellerPaymentAccountPayloadHash, peersPaymentAccountPayloadHash),
                         "Hash of payment account is invalid");
                 checkPaymentMethodFromContract(sellerPaymentAccountPayload, contract, pubKeyRing);
+                checkArgument(!StableCoinAccountPayload.isOfAnotherPaymentMethod(offer.getPaymentMethod(), sellerPaymentAccountPayload),
+                        "Seller payment account details do not match the payment rail of the offer");
 
                 tradePeer.setPaymentAccountPayload(sellerPaymentAccountPayload);
                 PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade),

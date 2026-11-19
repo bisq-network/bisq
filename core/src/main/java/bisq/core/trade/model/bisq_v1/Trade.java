@@ -22,7 +22,9 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.payload.StableCoinAccountPayload;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.dispute.refund.RefundResultState;
@@ -999,6 +1001,13 @@ public abstract class Trade extends TradeModel {
 
     public boolean isPayoutPublished() {
         return getTradePhase().ordinal() >= Phase.PAYOUT_PUBLISHED.ordinal() || isWithdrawn();
+    }
+
+    // Trades loaded from disk can contain details received before the buyer checked the payload type.
+    public boolean hasMismatchedSellerPaymentRail() {
+        PaymentAccountPayload sellerAccount = contract == null ? null : contract.getSellerPaymentAccountPayload();
+        return sellerAccount != null && StableCoinAccountPayload.isOfAnotherPaymentMethod(
+                checkNotNull(getOffer()).getPaymentMethod(), sellerAccount);
     }
 
     public boolean isMediatedPayoutPublished() {

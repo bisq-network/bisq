@@ -486,7 +486,7 @@ public class BuyerStep2View extends TradeStepView {
             // details to show. Render a warning instead of dereferencing null here,
             // which used to throw an NPE and leave the whole trade step pane blank.
             SimpleMarkdownLabel missingLabel = addSimpleMarkdownLabel(gridPane, ++gridRow,
-                    Res.get(isSellersPaymentAccountPayloadOfAnotherRail() ?
+                    Res.get(trade.hasMismatchedSellerPaymentRail() ?
                             "portfolio.pending.step2_buyer.stablecoin.paymentAccountPayloadMismatch" :
                             "portfolio.pending.step2_buyer.paymentAccountPayloadMissing"), 10);
             missingLabel.getStyleClass().add("medium-text");
@@ -577,7 +577,7 @@ public class BuyerStep2View extends TradeStepView {
             return;
         }
 
-        if (isSellersPaymentAccountPayloadOfAnotherRail()) {
+        if (trade.hasMismatchedSellerPaymentRail()) {
             // The button is disabled in that case
             return;
         }
@@ -720,20 +720,9 @@ public class BuyerStep2View extends TradeStepView {
         });
     }
 
-    // A stablecoin payment method fixes the coin and its network, and the same address can be valid on another
-    // network. The trade protocol checks which payment method the payment account data of the seller names, but not
-    // that the data is of the kind of that payment method. So data of another payment method or of another kind
-    // than the one of the offer is not shown, and the payment cannot be started with it.
-    private boolean isSellersPaymentAccountPayloadOfAnotherRail() {
-        PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
-        return paymentAccountPayload != null &&
-                StableCoinAccountPayload.isOfAnotherPaymentMethod(checkNotNull(trade.getOffer()).getPaymentMethod(),
-                        paymentAccountPayload);
-    }
-
     @Nullable
     private PaymentAccountPayload getSellersPaymentAccountPayloadOfOffersRail() {
-        return isSellersPaymentAccountPayloadOfAnotherRail() ? null : model.dataModel.getSellersPaymentAccountPayload();
+        return trade.hasMismatchedSellerPaymentRail() ? null : model.dataModel.getSellersPaymentAccountPayload();
     }
 
     private void showPopup() {

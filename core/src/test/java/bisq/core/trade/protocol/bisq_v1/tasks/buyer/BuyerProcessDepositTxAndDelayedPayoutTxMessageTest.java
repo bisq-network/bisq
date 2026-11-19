@@ -52,6 +52,8 @@ import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.wallet.Wallet;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import org.mockito.MockedStatic;
 
@@ -325,8 +327,14 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
     // The seller has committed the hash of the revealed account in the contract, but has agreed there to another
     // payment method than the one of that account. The check comes after the deposit tx was applied, as the check
     // of the hash does, so the buyer keeps the deposit tx but does not take the account for the payment.
-    @Test
-    void runRejectsSellerPaymentAccountOfAnotherPaymentMethodThanInContract() {
+    @ParameterizedTest
+    @CsvSource({
+            "REVOLUT, SEPA, peersPaymentMethodId mismatch",
+            "USDT_ERC20, USDT_ERC20, Seller payment account details do not match the payment rail"
+    })
+    void runRejectsSellerAccountWithWrongPaymentMethodOrPayloadType(String declaredId,
+                                                                    String expectedId,
+                                                                    String expectedError) {
         Transaction depositTx = depositTx(0);
         Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 144);
         Wallet wallet = mock(Wallet.class);
@@ -334,7 +342,9 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
         byte[] paymentAccountHash = {3};
         PaymentAccountPayload sellerPaymentAccountPayload = mock(PaymentAccountPayload.class);
         when(sellerPaymentAccountPayload.getHashForContract()).thenReturn(paymentAccountHash);
-        when(sellerPaymentAccountPayload.getPaymentMethodId()).thenReturn("REVOLUT");
+        when(sellerPaymentAccountPayload.getPaymentMethodId()).thenReturn(declaredId);
+        Offer expectedOffer = offer(expectedId);
+        when(trade.getOffer()).thenReturn(expectedOffer);
         ProcessModel processModel = trade.getProcessModel();
         when(processModel.getTradeMessage()).thenReturn(new DepositTxAndDelayedPayoutTxMessage("uid",
                 "trade-id",
@@ -346,7 +356,7 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
         when(trade.getContract()).thenReturn(contract);
         when(contract.getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing()))
                 .thenReturn(paymentAccountHash);
-        when(contract.getPeersPaymentMethodId(processModel.getPubKeyRing())).thenReturn("SEPA");
+        when(contract.getPeersPaymentMethodId(processModel.getPubKeyRing())).thenReturn(expectedId);
 
         try (MockedStatic<WalletService> walletService = mockStatic(WalletService.class)) {
             walletService.when(() -> WalletService.maybeAddSelfTxToWallet(any(Transaction.class), same(wallet)))
@@ -359,7 +369,7 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
         verify(processModel.getTradePeer(), never()).setPaymentAccountPayload(any());
         verify(contract, never()).setPaymentAccountPayloads(any(), any(), any());
         verify(trade, never()).setContractAsJson(any());
-        verify(trade).setErrorMessage(contains("peersPaymentMethodId mismatch. current=REVOLUT, expected=SEPA"));
+        verify(trade).setErrorMessage(contains(expectedError));
     }
 
     private static Trade trade(Transaction depositTx, byte[] delayedPayoutTxBytes, Wallet wallet) {

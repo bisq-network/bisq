@@ -222,6 +222,10 @@ class CoreTradesService {
                                 trade.getId()));
             }
 
+            if (trade.hasMismatchedSellerPaymentRail()) {
+                throw new FailedPreconditionException("Seller payment account details do not match the payment rail of the offer.");
+            }
+
             // The protocol carries this as a FluentProtocol precondition, which returns
             // before the task runner holding our handlers is built, so the call would look
             // successful while nothing was sent.
