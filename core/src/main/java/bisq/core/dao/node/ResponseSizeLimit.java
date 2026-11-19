@@ -38,7 +38,7 @@ public final class ResponseSizeLimit {
      * Returns the leading elements whose serialized sizes add up to at most maxSize, and at least the first element,
      * so that a response is never empty because of one large element.
      */
-    public static <T> List<T> leadingElementsWithin(List<T> elements, ToIntFunction<T> serializedSize, int maxSize) {
+    public static <T> List<T> leadingElementsWithin(Iterable<T> elements, ToIntFunction<T> serializedSize, int maxSize) {
         List<T> result = new ArrayList<>();
         long size = 0;
         for (T element : elements) {
