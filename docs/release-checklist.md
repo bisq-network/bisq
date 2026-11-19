@@ -672,6 +672,28 @@ Historical hard fork heights must not be changed. Only check that they are uncha
 | `core/src/main/java/bisq/core/dao/governance/merit/MeritConsensus.java` | `MERIT_CONSENSUS_V2_ACTIVATION_HEIGHT` | `954_200` |
 | `core/src/main/java/bisq/core/dao/governance/bond/role/BondedRolesRepository.java` | `LEGACY_REGISTRATION_CUTOFF_HEIGHT_MAINNET` | `963_350` |
 
+### Consensus fixes without activation height
+
+Some fixes change the parsing of transactions on which every older node fails, so they need no
+activation height. Their rollout still has an order.
+
+The OP_RETURN type byte `0x00` (`fix(dao): treat the OP_RETURN type byte 0x00 as an unknown type`):
+a node without the fix throws on a BSQ transaction with such an OP_RETURN and keeps a half parsed
+block. Before the release:
+
+1. Update the seed nodes and the other block providers of lite nodes first. A seed node without the
+   fix keeps running after the exception and serves its incomplete block, signed, and updated lite
+   nodes accept it.
+2. Publish the commit only after the seed nodes run the fix, as the change shows how to trigger the
+   failure.
+3. If such a transaction occurred before the release, take the bundled DAO state from a node with
+   the fix, and resync every node which parsed that block with an older release: its snapshots keep
+   the incomplete block and are not parsed again.
+4. After the release, require it for the DAO with the filter field `disableDaoBelowVersion`.
+
+The rule is described in `specifications/dao/transactions/parsing.md` (rule `op-return-type-zero`) on
+branch `dao-bsq-transaction-specs`, which is not merged yet.
+
 ### Activation dates
 
 Some rules activate on a calendar date instead of a block height. Check that the release ships before
