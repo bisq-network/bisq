@@ -7,9 +7,10 @@
 # Corretto 21.0.13.1.2, including the fix for CVE-2026-114938, on amd64 and arm64.
 FROM amazoncorretto:21-al2023-headless@sha256:71b005271e4df1a2fb44f6d261bad4318e66aff82ea7541b4d2968a9a31357d7
 
-# nmap-ncat supplies both nc and ncat on Amazon Linux.
+# nmap-ncat supplies both nc and ncat on Amazon Linux. The Gradle start scripts of the
+# install dists need xargs and sed; the Corretto base image has no findutils (xargs).
 RUN dnf install -y --setopt=install_weak_deps=False \
-        bash curl-minimal nmap-ncat ca-certificates \
+        bash curl-minimal nmap-ncat ca-certificates findutils sed \
     && dnf clean all
 
 # Pre-fetch the Linux-classifier javafx jars (Gradle install-dist ships empty
