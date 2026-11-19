@@ -19,6 +19,8 @@ package bisq.apitest.dao;
 
 import bisq.cli.GrpcClient;
 
+import bisq.common.app.Version;
+
 import bisq.proto.grpc.DaoPhaseEnum;
 import bisq.proto.grpc.EvaluatedProposalInfo;
 import bisq.proto.grpc.GetVoteResultsReply;
@@ -96,8 +98,19 @@ public class VoteEdgeCasesTest extends DaoTestBase {
         for (GrpcClient node : List.of(alice, bob)) {
             String name = node == alice ? "alice" : "bob";
             List<EvaluatedProposalInfo> evaluated = node.getVoteResults(-1).getEvaluatedProposalsList();
-            assertFalse(evaluated.stream().anyMatch(e -> e.getProposal().getTxId().equals(p.getTxId())),
-                    "all-ignore proposal must not be in evaluated list of " + name);
+            var ignored = evaluated.stream()
+                    .filter(e -> e.getProposal().getTxId().equals(p.getTxId()))
+                    .findFirst();
+            if (Version.isNewVersion("1.10.12", node.getVersion())) {
+                // Older peers keep an evaluated rejection for the all-ignore proposal.
+                EvaluatedProposalInfo rejection = ignored.orElseThrow();
+                assertFalse(rejection.getIsAccepted(), name);
+                assertEquals(0, rejection.getNumAcceptedVotes(), name);
+                assertEquals(0, rejection.getNumRejectedVotes(), name);
+                assertTrue(rejection.getNumIgnoredVotes() >= 2, name);
+            } else {
+                assertTrue(ignored.isEmpty(), "all-ignore proposal must not be in evaluated list of " + name);
+            }
             EvaluatedProposalInfo controlResult = evaluated.stream()
                     .filter(e -> e.getProposal().getTxId().equals(control.getTxId()))
                     .findFirst()
