@@ -21,16 +21,21 @@ import bisq.desktop.Navigation;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.popups.PopupManager;
 
+import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
 
+import java.math.BigDecimal;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 
@@ -143,6 +148,27 @@ class BsqOfferPriceRangeHintTest {
         hint.update();
         hintTimer.run();
         assertEquals(1, popups.constructed().size());
+    }
+
+    // Invented trade statistics can move the average so far that every factor below the largest one hides the offers at
+    // the market price, and the preferences do not say that the largest factor turns the range off
+    @Test
+    void hintNamesTheFactorWhichShowsAllOffers() {
+        Locale previousLocale = GlobalSettings.getLocale();
+        // The translations do not name it yet
+        GlobalSettings.setLocale(Locale.ENGLISH);
+        try {
+            hint.update();
+            hintTimer.run();
+        } finally {
+            GlobalSettings.setLocale(previousLocale);
+        }
+
+        ArgumentCaptor<String> message = ArgumentCaptor.forClass(String.class);
+        verify(popups.constructed().get(0)).information(message.capture());
+        String largestFactor = BigDecimal.valueOf(Preferences.MAX_BSQ_OFFER_PRICE_RANGE_FACTOR).stripTrailingZeros()
+                .toPlainString();
+        assertTrue(message.getValue().contains(largestFactor), message.getValue());
     }
 
     private Popup showBlockingPopup() {

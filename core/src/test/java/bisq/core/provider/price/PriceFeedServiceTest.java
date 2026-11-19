@@ -17,6 +17,7 @@
 
 package bisq.core.provider.price;
 
+import bisq.core.monetary.Price;
 import bisq.core.provider.PriceFeedNodeAddressProvider;
 import bisq.core.provider.PriceHttpClient;
 import bisq.core.provider.fee.FeeService;
@@ -29,13 +30,19 @@ import java.time.Instant;
 
 import java.io.IOException;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -101,5 +108,46 @@ public class PriceFeedServiceTest {
                 (errorMessage, throwable) -> fail("no request expected"));
 
         verify(httpClient, after(1000).never()).get(any(), any(), any());
+    }
+
+    // Rule 5 of trade-statistics-market-price.md: a price of the price feed is not replaced by a price derived from
+    // trade statistics, which any peer can publish. The listeners run once for the derived prices which were applied,
+    // and not at all if none was.
+    @Test
+    public void pricesFromTradeStatisticsKeepThePricesOfThePriceFeed() throws Exception {
+        applyResponseOfThePriceNode("{\"data\":[{\"currencyCode\":\"USD\",\"price\":50000.0,\"timestampSec\":" +
+                Instant.now().getEpochSecond() + ",\"provider\":\"test\"}],\"bitcoinFeesTs\":0}");
+        int updates = priceFeedService.updateCounterProperty().get();
+
+        priceFeedService.setBisqMarketPrices(Map.of("USD", Price.parse("USD", "1")));
+
+        assertEquals(50000, priceFeedService.getMarketPrice("USD").getPrice(), 1e-6);
+        assertEquals(updates, priceFeedService.updateCounterProperty().get());
+
+        // USD comes last, so that the listeners also run when the last price is not applied
+        Map<String, Price> prices = new LinkedHashMap<>();
+        prices.put("BSQ", Price.valueOf("BSQ", 1500));
+        prices.put("USD", Price.parse("USD", "1"));
+        priceFeedService.setBisqMarketPrices(prices);
+
+        assertEquals(50000, priceFeedService.getMarketPrice("USD").getPrice(), 1e-6);
+        assertEquals(0.000015, priceFeedService.getMarketPrice("BSQ").getPrice(), 1e-12);
+        assertEquals(updates + 1, priceFeedService.updateCounterProperty().get());
+    }
+
+    // The price feed applies the response in a task of the user thread, which runs here on the test thread
+    private void applyResponseOfThePriceNode(String response) throws Exception {
+        when(httpClient.get(any(), any(), any())).thenReturn(response);
+        BlockingQueue<Runnable> userThreadTasks = new LinkedBlockingQueue<>();
+        UserThread.setExecutor(userThreadTasks::add);
+        priceFeedService.setCurrencyCode("USD");
+
+        priceFeedService.startRequestingPrices();
+        // The UserThread is shared, so a task of another test can come first
+        while (priceFeedService.getMarketPrice("USD") == null) {
+            Runnable task = userThreadTasks.poll(10, TimeUnit.SECONDS);
+            assertNotNull(task, "response was not applied");
+            task.run();
+        }
     }
 }
