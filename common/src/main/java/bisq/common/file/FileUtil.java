@@ -355,9 +355,10 @@ public class FileUtil {
         return notCopied;
     }
 
-    // The permissions apply when a directory is created. A file system without them, for example FAT on a USB drive,
-    // ignores them.
-    private static void createOwnerOnlyDirectories(Path directory) throws IOException {
+    // Creates the directory and its missing parents accessible to the owner only (0700) on a file system with POSIX
+    // permissions. The permissions apply when a directory is created. A file system without them, for example FAT on a
+    // USB drive, ignores them.
+    public static void createOwnerOnlyDirectories(Path directory) throws IOException {
         java.nio.file.Files.createDirectories(directory, ownerOnly("rwx------"));
     }
 

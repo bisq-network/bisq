@@ -8,6 +8,13 @@ data and the logs.
 
 ## Rules
 
+- On a file system with POSIX permissions the node creates the data directory, and in it the
+  directory of the network, for example `btc_mainnet`, with `keys`, `db`, `tor` and `wallet`, with
+  the mode `0700`, so that they are owner-only before anything is written in them, also after a
+  start which ends before the log is set up, for example with `--help`, with an option which is not
+  supported anymore or, for the daemon, without `--apiPassword`. Parent directories which the node
+  creates on the way to the data directory keep the default mode of the process: they are no part
+  of the data directory.
 - On a file system with POSIX permissions the node sets the mode of the data directory and of every
   directory below it to `0700` at every start, right after the log is set up and before Tor starts,
   so that only their owner can enter them. This includes the directories of an earlier version.
@@ -45,6 +52,10 @@ directory does not apply to a lookup which starts below it. So the mode of the d
 does not protect the files below it, and every directory gets the mode, at every start, also the
 directories of an earlier version, which other users could open at any time before. A file is
 opened by a lookup in its directory, so the files need no mode of their own.
+
+A start which ends before the log is set up sets no mode. If it created the data directory with the
+default mode, other users could open its directories until a later start gets that far, and keep
+them open. Created owner-only, a new data directory is never open to others.
 
 ## Known gaps
 
