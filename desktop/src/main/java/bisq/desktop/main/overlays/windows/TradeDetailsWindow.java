@@ -185,7 +185,10 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             rows++;
 
             buyerPaymentAccountPayload = contract.getBuyerPaymentAccountPayload();
-            sellerPaymentAccountPayload = contract.getSellerPaymentAccountPayload();
+            // As in the payment step of the buyer and in the API, details of another payment rail are not shown, so
+            // that nobody pays to them. Only trades received before the buyer checked the rail can have such details.
+            sellerPaymentAccountPayload = trade.hasMismatchedSellerPaymentRail() ? null :
+                    contract.getSellerPaymentAccountPayload();
             if (buyerPaymentAccountPayload != null)
                 rows++;
 
