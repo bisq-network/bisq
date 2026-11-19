@@ -17,9 +17,11 @@ verification before.
 ## Rules
 
 - A node verifies a signature only with a DSA public key which includes its parameters, whose
-  encoding occupies at most 600 bytes and whose modulus has at most 2,048 bits. With any other key
-  the verification does not run and the entry is rejected. This holds for every DSA signature that a
-  node verifies, also outside of storage entries, for example of a trade message.
+  encoding occupies at most 600 bytes and whose modulus is positive and has at most 2,048 bits. With
+  any other key the verification does not run and the entry is rejected. This holds for every DSA
+  signature that a node verifies, also outside of storage entries, for example of a trade message.
+- A verification whose computation fails, which can happen for key parameters that no node creates,
+  counts as a verification that cannot run.
 - A node does not apply these bounds when it reads a key, from a message or from its stored data. It
   reads every key which earlier versions read.
 - A node verifies the signature of an entry before it stores the entry, applies the removal or applies

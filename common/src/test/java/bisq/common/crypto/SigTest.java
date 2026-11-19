@@ -97,6 +97,37 @@ public class SigTest {
         assertTrue(e.getMessage().contains("modulus exceeds the permitted size"), e.getMessage());
     }
 
+    // The JDK reads a key with such parameters and fails with an ArithmeticException when it verifies with it
+    @Test
+    public void doesNotVerifyWithAModulusWhichIsNotPositive() throws Exception {
+        BigInteger q = BigInteger.ONE.shiftLeft(159).nextProbablePrime();
+        for (BigInteger p : new BigInteger[]{BigInteger.ZERO, BigInteger.valueOf(-7)}) {
+            PublicKey publicKey = Sig.getPublicKeyFromBytes(KeyFactory.getInstance(Sig.KEY_ALGO)
+                    .generatePublic(new DSAPublicKeySpec(BigInteger.ONE, p, q, BigInteger.TWO)).getEncoded());
+
+            CryptoException e = assertThrows(CryptoException.class,
+                    () -> Sig.verify(publicKey, DATA, derSequence(BigInteger.ONE, BigInteger.ONE)));
+            assertTrue(e.getMessage().contains("modulus is not positive"), e.getMessage());
+        }
+    }
+
+    // With an even q an even signature value has no inverse, which the JDK reports as an ArithmeticException
+    @Test
+    public void reportsAFailedComputationOfTheVerificationAsCryptoException() throws Exception {
+        BigInteger p = BigInteger.ONE.shiftLeft(1023).setBit(0);
+        BigInteger q = BigInteger.ONE.shiftLeft(159);
+        PublicKey publicKey = Sig.getPublicKeyFromBytes(KeyFactory.getInstance(Sig.KEY_ALGO)
+                .generatePublic(new DSAPublicKeySpec(BigInteger.ONE, p, q, BigInteger.TWO)).getEncoded());
+        byte[] signature = derSequence(BigInteger.ONE, BigInteger.TWO);
+        Signature jdkSignature = Signature.getInstance("SHA256withDSA");
+        jdkSignature.initVerify(publicKey);
+        jdkSignature.update(DATA);
+        assertThrows(ArithmeticException.class, () -> jdkSignature.verify(signature), "Test premise");
+
+        CryptoException e = assertThrows(CryptoException.class, () -> Sig.verify(publicKey, DATA, signature));
+        assertTrue(e.getCause() instanceof ArithmeticException, String.valueOf(e.getCause()));
+    }
+
     @Test
     public void rejectsMalformedEncoding() {
         assertThrows(KeyConversionException.class, () -> Sig.getPublicKeyFromBytes(new byte[]{1, 2, 3}));

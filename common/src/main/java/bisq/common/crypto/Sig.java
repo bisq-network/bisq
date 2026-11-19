@@ -119,7 +119,9 @@ public class Sig {
             sig.initVerify(publicKey);
             sig.update(data);
             return sig.verify(signature);
-        } catch (SignatureException | InvalidKeyException | NoSuchAlgorithmException e) {
+        } catch (SignatureException | InvalidKeyException | NoSuchAlgorithmException | ArithmeticException e) {
+            // The JDK does not check the parameters of a DSA key. With parameters which no generated key has, its
+            // arithmetic can fail, for example for a signature value which has no inverse modulo q.
             throw new CryptoException("Signature verification failed", e);
         }
     }
@@ -163,6 +165,9 @@ public class Sig {
     private static void checkKeyForVerification(PublicKey publicKey) throws CryptoException {
         if (!(publicKey instanceof DSAPublicKey dsaKey) || dsaKey.getParams() == null) {
             throw new CryptoException("Sig public key is not a DSA key with parameters");
+        }
+        if (dsaKey.getParams().getP().signum() <= 0) {
+            throw new CryptoException("Sig public key modulus is not positive");
         }
         int modulusBitLength = dsaKey.getParams().getP().bitLength();
         if (modulusBitLength > MAX_MODULUS_BIT_LENGTH) {
