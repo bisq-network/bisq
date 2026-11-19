@@ -57,11 +57,11 @@ introduced:
   75 to 110 days on April 7. No current role type's numeric terms changed after genesis.
 - A temporary `ANALYTICS_OPERATOR` type was added with unit 1, changed to 2 and removed in September
   2019. It is absent from the bundled role-proposal data and does not alter any current role type.
-- At bundled DAO-state height `971800`, all 61 evaluated role proposals (59 accepted and two rejected)
+- At bundled DAO-state height `976481`, all 61 evaluated role proposals (59 accepted and two rejected)
   and all 61 append-only role proposal payloads exactly match the current mainnet role-type units and
   15840-block unlock time. Of the evaluated proposals, 38 were mined before the factor change and 23
   from its activation height onward. No role proposal was evaluated after the previous audit at height
-  `968341`, and no role proposal was mined after height `963120`.
+  `971800`, and no role proposal was mined after height `963120`.
 
 This audit establishes compatibility only through the bundled height. Source-defined enum constants
 remain a consensus risk: changing an existing unit or unlock time after hard-fork-3 would make nodes
@@ -270,7 +270,7 @@ Height `963_350` is the finalized mainnet compatibility cutoff and matches the h
 height. The bundled role-lockup history through height `963120` was audited before that boundary. The
 cutoff is a protocol constant and must not be advanced with a later release height: advancing it would
 add lockup keys to the legacy authority set and requires a new audit and an explicit protocol decision.
-The bundled resources through height `971800` also cover the final pre-cutoff interval, heights
+The bundled resources through height `976481` also cover the final pre-cutoff interval, heights
 `963121` through `963349`. That interval contains no `BONDED_ROLE` lockup, so every lockup that a
 version `1` request can use was mined within the history audited at height `963120`.
 
