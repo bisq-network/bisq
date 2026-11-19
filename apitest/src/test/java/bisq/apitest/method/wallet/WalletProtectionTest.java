@@ -71,6 +71,27 @@ public class WalletProtectionTest extends DockerMethodTest {
     }
 
     @Test
+    @Order(4)
+    public void testUnlockWithWrongPasswordKeepsWalletLocked() {
+        // Up to v1.10.11 the failed unlock stored the wrong key before checking it, and any
+        // stored key counted as unlocked: the wallet calls below passed the lock check.
+        Throwable ex = assertThrows(StatusRuntimeException.class,
+                () -> aliceClient.unlockWallet("wrong-password", 60));
+        assertEquals("INVALID_ARGUMENT: incorrect password", ex.getMessage());
+
+        ex = assertThrows(StatusRuntimeException.class, aliceClient::getBtcBalances);
+        assertEquals("FAILED_PRECONDITION: wallet is locked", ex.getMessage());
+        String address = chain.runBitcoinCli("getnewaddress").trim();
+        ex = assertThrows(StatusRuntimeException.class,
+                () -> aliceClient.sendBtc(address, "0.001", "", ""));
+        assertEquals("FAILED_PRECONDITION: wallet is locked", ex.getMessage());
+
+        aliceClient.unlockWallet(PW1, 60);
+        aliceClient.getBtcBalances();
+        aliceClient.lockWallet();
+    }
+
+    @Test
     @Order(5)
     public void testLockWalletBeforeUnlockTimeoutExpiry() {
         aliceClient.unlockWallet(PW1, 60);

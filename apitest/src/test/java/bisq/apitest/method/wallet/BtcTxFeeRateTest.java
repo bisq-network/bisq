@@ -63,8 +63,30 @@ public class BtcTxFeeRateTest extends DockerMethodTest {
         assertTrue(txFeeRateInfo.getFeeServiceRate() > 0);
     }
 
+    /**
+     * Without fee data the daemon uses 5 sat/vB for the fee rate and the minimum (v1.10.11:
+     * 50 and 15). With data from a provider the fee rate is at least the minimum and at least
+     * the trading floor of 2 sat/vB. The stack has no price node of its own, so the default
+     * provider may or may not answer; the last request time tells which case applies.
+     */
     @Test
     @Order(2)
+    public void testFeeRateDefaultsAndFloor(final TestInfo testInfo) {
+        var txFeeRateInfo = TxFeeRateInfo.fromProto(aliceClient.getTxFeeRate());
+        log.debug("{} -> Fee rates: {}", testName(testInfo), txFeeRateInfo);
+
+        if (txFeeRateInfo.getLastFeeServiceRequestTs() == 0) {
+            assertEquals(5, txFeeRateInfo.getFeeServiceRate());
+            assertEquals(5, txFeeRateInfo.getMinFeeServiceRate());
+        } else {
+            assertTrue(txFeeRateInfo.getMinFeeServiceRate() > 0);
+            assertTrue(txFeeRateInfo.getFeeServiceRate() >= txFeeRateInfo.getMinFeeServiceRate());
+            assertTrue(txFeeRateInfo.getFeeServiceRate() >= 2);
+        }
+    }
+
+    @Test
+    @Order(3)
     public void testSetInvalidTxFeeRateShouldThrowException(final TestInfo testInfo) {
         var currentTxFeeRateInfo = TxFeeRateInfo.fromProto(aliceClient.getTxFeeRate());
         Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.setTxFeeRate(1));
@@ -75,7 +97,7 @@ public class BtcTxFeeRateTest extends DockerMethodTest {
     }
 
     @Test
-    @Order(3)
+    @Order(4)
     public void testSetValidTxFeeRate(final TestInfo testInfo) {
         var currentTxFeeRateInfo = TxFeeRateInfo.fromProto(aliceClient.getTxFeeRate());
         var customFeeRate = currentTxFeeRateInfo.getMinFeeServiceRate() + 5;
@@ -88,7 +110,7 @@ public class BtcTxFeeRateTest extends DockerMethodTest {
     }
 
     @Test
-    @Order(4)
+    @Order(5)
     public void testUnsetTxFeeRate(final TestInfo testInfo) {
         var txFeeRateInfo = TxFeeRateInfo.fromProto(aliceClient.unsetTxFeeRate());
         log.debug("{} -> Fee rate with no preference: {}", testName(testInfo), txFeeRateInfo);

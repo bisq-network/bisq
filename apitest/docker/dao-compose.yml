@@ -45,6 +45,15 @@ services:
       SEEDNODE_OPTS: "${SEEDNODE_OPTS:--Xms256M -Xmx1024M}"
     volumes:
       - seednode-data:/bisq/data
+    # A daemon that finds no seed node at startup did not finish its P2P setup within the
+    # 60 s the tests wait, and requested no DAO state hashes, so its getDaoStatus turned false
+    # at the next block. So the daemons start only once the seed node accepts connections.
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/2002' >/dev/null 2>&1 || exit 1"]
+      interval: 2s
+      timeout: 5s
+      retries: 90
+      start_period: 10s
 
   arb:
     image: bisq-daemon:ci
@@ -54,7 +63,7 @@ services:
       bitcoind:
         condition: service_healthy
       seednode:
-        condition: service_started
+        condition: service_healthy
     networks: [bisqnet]
     environment:
       ROLE: daemon
@@ -79,7 +88,7 @@ services:
       bitcoind:
         condition: service_healthy
       seednode:
-        condition: service_started
+        condition: service_healthy
     networks: [bisqnet]
     environment:
       ROLE: daemon
@@ -103,7 +112,7 @@ services:
       bitcoind:
         condition: service_healthy
       seednode:
-        condition: service_started
+        condition: service_healthy
     networks: [bisqnet]
     environment:
       ROLE: daemon
