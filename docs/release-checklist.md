@@ -707,9 +707,9 @@ resync of those nodes does not resolve it.
 |------|---------------|-----------------------------|
 | A proposal without an accept or reject vote is not part of the vote result (v1.10.12) | [specifications/dao/vote-result-validation.md](specifications/dao/vote-result-validation.md) | The first RESULT block after the release: block `978 897` for the cycle which started at `974 227`, unless a vote changes the phase durations |
 
-A seed node which ran an earlier release at the RESULT block `969 537` recorded the proposal without
-votes. The DAO state hash checkpoints remove its DAO data at the first start of v1.10.12, and it must
-be restarted once.
+A seed node which processed the RESULT block `969 537` while running an earlier release recorded the
+proposal without votes. If its DAO state still holds it, the checkpoints at `970 000` and `971 000`,
+shipped since v1.10.10, remove its DAO data at its next start, and it must be restarted once.
 
 ### Activation dates
 

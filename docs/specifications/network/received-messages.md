@@ -47,8 +47,9 @@ A `BundleOfEnvelopes` carries several messages, its elements. Since v1.8.0 only 
 bundles messages: it sends the broadcast messages of 2 seconds to a peer in one bundle. It sends them
 earlier if the bundle with the next message would be larger than 10 MB, because a peer of this version
 closes the connection at such a message (see below). Before, a relay which received more than 10 MB of
-broadcast messages within 2 seconds, for example the stored entries of a getdata response which a node
-broadcasts again after its start, put them all into one bundle.
+broadcast messages within 2 seconds put them all into one bundle. A node broadcasts the entries of high
+priority of a getdata response again 60 seconds after it received them, also entries which it did not
+store, so a response full of such entries led to such a bundle.
 
 - An element of a known type which cannot be parsed violates `INVALID_DATA_TYPE` and is not passed
   to the handlers, as a single message which cannot be parsed. The other elements are passed to the
@@ -122,6 +123,9 @@ A node keeps its responses below the limit of 10 MB:
 - A response with BSQ blocks or with Burning Man accounting blocks holds only the leading blocks
   whose serialized sizes add up to at most half of 10 MB, but at least one block
   ([`dao/lite-node-blocks.md`](../dao/lite-node-blocks.md)).
+- A bundle of broadcast messages, which is not a response, holds at most 10 MB (see Bundles of messages).
+  The sender does not check the limit of the type of a message, and a message which alone exceeds 10 MB is
+  sent on its own.
 
 ## Rationale
 

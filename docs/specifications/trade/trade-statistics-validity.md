@@ -85,7 +85,10 @@ The average BSQ prices of 30 and 90 days weight each statistic by its volume and
 prices more than 10 standard deviations from the trimmed mean. A valid statistic of 2 BTC is more than
 the BSQ volume of a month. On the BSQ trades of the 30 days to 2026-11-16, one such statistic at twice
 the average stays in the average and moves it from 1,386 to 2,141 satoshis per BSQ, and one at half the
-average moves it to 813 satoshis.
+average moves it to 813 satoshis. A statistic at a very low price moves it further, because its BSQ volume
+is its BTC amount divided by its price and the band of 10 standard deviations reaches below zero: one
+statistic of 2 BTC at 10 satoshis per BSQ moves the average of 30 days to about 14 and the average of 90
+days to about 29 satoshis per BSQ (statistics to 2026-11-18).
 
 The trade volume of an altcoin in trade statistics over its look-back period decides whether the
 node shows the altcoin as actively traded or as delisted (DAO parameter `ASSET_MIN_VOLUME`). Only
