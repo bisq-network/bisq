@@ -382,11 +382,13 @@ class BundledDaoStateAuditTest {
 
     @Test
     void refreshedBundledStoresAreReadableAndInternallyNonEmpty() throws IOException {
+        List<String> versionTags = Version.HISTORICAL_RESOURCE_FILE_VERSION_TAGS;
+        String latestVersionTag = versionTags.get(versionTags.size() - 1);
         protobuf.PersistableEnvelope accountAge =
-                readDelimitedEnvelope("/AccountAgeWitnessStore_1.10.5_BTC_MAINNET");
+                readDelimitedEnvelope("/AccountAgeWitnessStore_" + latestVersionTag + "_BTC_MAINNET");
         protobuf.PersistableEnvelope signedWitness = readDelimitedEnvelope("/SignedWitnessStore_BTC_MAINNET");
         protobuf.PersistableEnvelope tradeStatistics =
-                readDelimitedEnvelope("/TradeStatistics3Store_1.10.5_BTC_MAINNET");
+                readDelimitedEnvelope("/TradeStatistics3Store_" + latestVersionTag + "_BTC_MAINNET");
         protobuf.PersistableEnvelope blindVotes = readDelimitedEnvelope(BLIND_VOTE_RESOURCE);
         protobuf.PersistableEnvelope proposals = readDelimitedEnvelope("/ProposalStore_BTC_MAINNET");
         protobuf.PersistableEnvelope accounting =
@@ -441,7 +443,7 @@ class BundledDaoStateAuditTest {
                         .map(protobuf.AccountAgeWitness::getHash)
                         .distinct()
                         .count(),
-                "duplicate account-age witness hashes in the 1.10.5 store");
+                "duplicate account-age witness hashes in the " + latestVersionTag + " store");
         Set<protobuf.SignedWitness> uniqueSignedWitnesses = new HashSet<>();
         Set<ByteString> signedAccountAgeHashes = new HashSet<>();
         signedWitness.getSignedWitnessStore().getItemsList().forEach(witness -> {
@@ -514,14 +516,14 @@ class BundledDaoStateAuditTest {
                 addressListService.getAddressList(addressListService.getLatestVersion());
 
         System.out.println("Refreshed bundled P2P store audit"
-                + "\n  account-age witnesses in 1.10.5 store=" + accountAgeCount
+                + "\n  account-age witnesses in " + latestVersionTag + " store=" + accountAgeCount
                 + "\n  account-age historical stores=" + accountAgeStoreCount
                 + " (records=" + accountAgeRecordsAcrossStores + ", unique hashes=" + accountAgeDateByHash.size() + ")"
                 + "\n  signed witnesses=" + signedWitnessCount
                 + " (account hashes=" + signedAccountAgeHashes.size() + ")"
                 + "\n  signed-witness account hashes absent from all bundled account-age stores="
                 + signedAccountAgeHashesMissingFromAccountStores.size()
-                + "\n  trade statistics=" + tradeStatisticsCount
+                + "\n  trade statistics in " + latestVersionTag + " store=" + tradeStatisticsCount
                 + "\n  blind votes=" + blindVoteCount
                 + "\n  append-only proposals=" + proposalCount
                 + " (role proposals=" + proposalRoleCount + ", role-term mismatches="
