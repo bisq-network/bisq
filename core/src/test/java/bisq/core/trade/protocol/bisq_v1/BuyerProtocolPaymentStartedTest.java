@@ -61,27 +61,15 @@ class BuyerProtocolPaymentStartedTest {
         assertTrue(protocol.executedTasks.contains(BuyerSendCounterCurrencyTransferStartedMessage.class));
     }
 
-    // Without the reset a second failure sets BUYER_SEND_FAILED again, which observers of the state do not see
-    @Test
-    void retryAfterAFailedSendRestartsTheStatesOfThePhase() {
-        BuyerAsTakerTrade trade = trade(Trade.State.BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG);
-        TestBuyerProtocol protocol = new TestBuyerProtocol(trade);
-
-        protocol.retryPaymentStarted(() -> {
-        }, message -> {
-        });
-
-        verify(trade).setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
-        assertTrue(protocol.executedTasks.contains(BuyerSendCounterCurrencyTransferStartedMessage.class));
-    }
-
+    // From BUYER_SEND_FAILED the next start resends the message also if a task before the send fails
     @ParameterizedTest
     @EnumSource(value = Trade.State.class, names = {
             "BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED",
             "BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG",
             "BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG",
-            "BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG"})
-    void retryKeepsTheStateOfAPendingOrDeliveredMessage(Trade.State state) {
+            "BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG",
+            "BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG"})
+    void retryKeepsTheStateOfThePhase(Trade.State state) {
         BuyerAsTakerTrade trade = trade(state);
         TestBuyerProtocol protocol = new TestBuyerProtocol(trade);
 

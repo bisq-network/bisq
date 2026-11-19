@@ -206,11 +206,10 @@ public abstract class BuyerProtocol extends DisputeProtocol {
                                     handleTaskRunnerFault(event, errorMessage);
                                 })))
                 .run(() -> {
-                    // A retry after a failed send restarts the states of this phase. Otherwise a second failure sets
-                    // the same state again and observers of the state, like the busy indicator of the UI, get no
-                    // update. Other states of the phase stay, so a retry never moves back from a delivered message.
-                    if (expectedPhase == Trade.Phase.DEPOSIT_CONFIRMED ||
-                            trade.getTradeState() == Trade.State.BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG) {
+                    // A retry keeps the state. From BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG the next start resends
+                    // the message also if a task before the send fails, which it would not do from
+                    // BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED.
+                    if (expectedPhase == Trade.Phase.DEPOSIT_CONFIRMED) {
                         trade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
                         processModel.getTradeManager().requestPersistence();
                     }
