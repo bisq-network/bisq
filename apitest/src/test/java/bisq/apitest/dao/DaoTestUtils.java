@@ -419,7 +419,6 @@ public class DaoTestUtils {
 
     public String runBitcoinCli(String... args) {
         java.util.List<String> cmd = new java.util.ArrayList<>();
-        cmd.add("docker");
         cmd.add("exec");
         cmd.add(bitcoindContainer);
         cmd.add("bitcoin-cli");
@@ -427,6 +426,14 @@ public class DaoTestUtils {
         cmd.add("-rpcuser=bisqdao");
         cmd.add("-rpcpassword=bsq");
         for (String a : args) cmd.add(a);
+        return runDocker(cmd);
+    }
+
+    /** Run {@code docker <args>} and return its stdout; throws if it fails or exits non-zero. */
+    public static String runDocker(java.util.List<String> args) {
+        java.util.List<String> cmd = new java.util.ArrayList<>();
+        cmd.add("docker");
+        cmd.addAll(args);
         try {
             Process p = new ProcessBuilder(cmd).start();
             // The command's stdout is the return value, so anything the container
@@ -440,17 +447,17 @@ public class DaoTestUtils {
             String err = errReader.completeOnTimeout("", 60, TimeUnit.SECONDS).join();
             if (!p.waitFor(60, TimeUnit.SECONDS)) {
                 p.destroyForcibly();
-                throw new IllegalStateException("bitcoin-cli timed out: " + String.join(" ", cmd));
+                throw new IllegalStateException("docker timed out: " + String.join(" ", cmd));
             }
             if (p.exitValue() != 0) {
-                throw new IllegalStateException("bitcoin-cli failed (" + p.exitValue() + "): "
+                throw new IllegalStateException("docker failed (" + p.exitValue() + "): "
                         + String.join(" ", cmd) + (out.isEmpty() ? "" : "\n" + out)
                         + (err.isEmpty() ? "" : "\n" + err));
             }
             return out;
         } catch (IOException | InterruptedException ex) {
             if (ex instanceof InterruptedException) Thread.currentThread().interrupt();
-            throw new IllegalStateException("bitcoin-cli invocation failed", ex);
+            throw new IllegalStateException("docker invocation failed: " + String.join(" ", cmd), ex);
         }
     }
 
