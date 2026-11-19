@@ -1,0 +1,14 @@
+# Compatibility override for dao-compose.yml with the release on the maker side.
+# Points alice at the release-built image: alice (maker in the trade tests) runs
+# the latest tagged release, seednode + arb + bob (taker) run master. The mirror
+# of dao-compose.compat.yml, which puts the release on bob (taker).
+#
+# Only the trade tests with alice as maker make sense here: the other tests check
+# master behaviour on alice. run-e2e-tests-compat.sh selects them when
+# RELEASE_PEER=alice.
+#
+# bisq-daemon:release must be built beforehand, as for dao-compose.compat.yml.
+
+services:
+  alice:
+    image: bisq-daemon:release

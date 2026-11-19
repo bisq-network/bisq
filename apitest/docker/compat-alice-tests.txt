@@ -1,0 +1,10 @@
+# Fresh-stack classes for the compat run with alice on the release (RELEASE_PEER=alice).
+# Alice is the maker and bob the taker in each: fiat and BSQ swap, XMR in both
+# directions, an offer with the minimum deposit (the taker's deposit check of #260
+# against an old maker) and a payment message from an old buyer through the mailbox.
+# Read by run-e2e-tests-compat.sh and .github/workflows/e2e-tests-compat.yml.
+bisq.apitest.dao.TradeScenarioTest
+bisq.apitest.method.trade.TakeBuyXMROfferTest
+bisq.apitest.method.trade.TakeSellXMROfferTest
+bisq.apitest.method.trade.TakeMinDepositOfferTest
+bisq.apitest.method.trade.MailboxDeliveryAfterRestartTest
