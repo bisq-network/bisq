@@ -22,10 +22,12 @@ import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapRequest;
+import bisq.core.trade.protocol.bsq_swap.messages.BuyersBsqSwapRequest;
 import bisq.core.trade.protocol.bsq_swap.messages.SellersBsqSwapRequest;
 import bisq.core.trade.validation.MinerFeeValidation;
 
@@ -37,6 +39,7 @@ import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.Coin;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -138,6 +141,79 @@ class BsqSwapTakeOfferRequestVerificationTest {
                 newRequest(NETWORK_MIN, MAKER_FEE, TAKER_FEE, Long.MAX_VALUE)));
     }
 
+    @Test
+    void acceptsBuyersRequestForBsqSwapSellOffer() {
+        Fixture fixture = new Fixture(NETWORK_MIN, true, OfferDirection.SELL);
+
+        assertTrue(BsqSwapTakeOfferRequestVerification.isValid(fixture.openOfferManager,
+                fixture.feeService,
+                fixture.keyRing,
+                PEER,
+                newBuyersRequest()));
+    }
+
+    // A swap reads the fixed price of the offer as the price of BSQ in BTC. For a fiat or altcoin offer the maker
+    // would sell its BTC for an amount of BSQ that has nothing to do with the value of the BTC.
+    @Test
+    void rejectsBuyersRequestForSellOfferWhichIsNoBsqSwapOffer() {
+        Fixture fixture = new Fixture(NETWORK_MIN, false, OfferDirection.SELL);
+
+        assertFalse(BsqSwapTakeOfferRequestVerification.isValid(fixture.openOfferManager,
+                fixture.feeService,
+                fixture.keyRing,
+                PEER,
+                newBuyersRequest()));
+    }
+
+    @Test
+    void rejectsSellersRequestForBuyOfferWhichIsNoBsqSwapOffer() {
+        Fixture fixture = new Fixture(NETWORK_MIN, false, OfferDirection.BUY);
+
+        assertFalse(BsqSwapTakeOfferRequestVerification.isValid(fixture.openOfferManager,
+                fixture.feeService,
+                fixture.keyRing,
+                PEER,
+                newRequest(NETWORK_MIN)));
+    }
+
+    @Test
+    void rejectsBuyersRequestForBsqSwapBuyOffer() {
+        Fixture fixture = new Fixture(NETWORK_MIN, true, OfferDirection.BUY);
+
+        assertFalse(BsqSwapTakeOfferRequestVerification.isValid(fixture.openOfferManager,
+                fixture.feeService,
+                fixture.keyRing,
+                PEER,
+                newBuyersRequest()));
+    }
+
+    @Test
+    void rejectsSellersRequestForBsqSwapSellOffer() {
+        Fixture fixture = new Fixture(NETWORK_MIN, true, OfferDirection.SELL);
+
+        assertFalse(BsqSwapTakeOfferRequestVerification.isValid(fixture.openOfferManager,
+                fixture.feeService,
+                fixture.keyRing,
+                PEER,
+                newRequest(NETWORK_MIN)));
+    }
+
+    private static BsqSwapRequest newBuyersRequest() {
+        return new BuyersBsqSwapRequest(TRADE_ID,
+                PEER,
+                mock(PubKeyRing.class),
+                TRADE_AMOUNT.value,
+                NETWORK_MIN,
+                MAKER_FEE,
+                TAKER_FEE,
+                System.currentTimeMillis(),
+                List.of(),
+                0,
+                "btcPayoutAddress",
+                "bsqChangeAddress");
+    }
+
+    // A seller's request.
     private static BsqSwapRequest newRequest(long txFeePerVbyte) {
         return newRequest(txFeePerVbyte, MAKER_FEE, TAKER_FEE);
     }
@@ -165,7 +241,12 @@ class BsqSwapTakeOfferRequestVerificationTest {
         private final KeyRing keyRing = mock(KeyRing.class);
         private final OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
 
+        // A BSQ swap buy offer, which a seller's request takes.
         private Fixture(long txFeePerVbyte) {
+            this(txFeePerVbyte, true, OfferDirection.BUY);
+        }
+
+        private Fixture(long txFeePerVbyte, boolean isBsqSwapOffer, OfferDirection direction) {
             feeService = configureFeeService(txFeePerVbyte);
 
             Offer offer = mock(Offer.class);
@@ -173,6 +254,10 @@ class BsqSwapTakeOfferRequestVerificationTest {
             when(offer.isMyOffer(keyRing)).thenReturn(true);
             when(offer.getMinAmount()).thenReturn(Coin.valueOf(10_000));
             when(offer.getAmount()).thenReturn(TRADE_AMOUNT);
+            when(offer.isBsqSwapOffer()).thenReturn(isBsqSwapOffer);
+            when(offer.getDirection()).thenReturn(direction);
+            when(offer.isBuyOffer()).thenReturn(direction == OfferDirection.BUY);
+            when(offer.isSellOffer()).thenReturn(direction == OfferDirection.SELL);
 
             OpenOffer openOffer = new OpenOffer(offer);
             when(openOfferManager.getOpenOfferById(TRADE_ID)).thenReturn(Optional.of(openOffer));
