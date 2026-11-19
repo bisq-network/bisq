@@ -1,7 +1,7 @@
 # Bisq 1.10.12 Notable Changes
 
 > **Draft. The maintainer completes it before the release** (see the list at the top of `full-release-notes.md`):
-> it covers `release-candidate-v1.10.12` through `d2d9bf479a`. The commits are named by their hashes on that branch;
+> it covers `release-candidate-v1.10.12` through `2b4b82de6c`. The commits are named by their hashes on that branch;
 > link them to `https://github.com/bisq-network/bisq/commit/<hash>`.
 
 Bisq 1.10.12 adds stablecoins and custom payment methods to the fiat markets, computes the BSQ price from recent
@@ -23,12 +23,15 @@ API and switches the Java runtime to Amazon Corretto.
 - The trade steps show the coin, the network and the token contract. The account creation and the creation or taking
   of an offer show the risk that the issuer freezes the coins.
 - Revealed payment account data is accepted only if its payment method is the one which the peer named in the
-  contract, for the buyer and for the seller.
+  contract, for the buyer and for the seller. The buyer also refuses seller account data of another stablecoin rail
+  than the one of the offer. The buyer step, the trade details and the API hide such data of trades of earlier builds
+  of this release, and the API refuses the payment confirmation for such a trade.
 - Versions up to 1.10.11 show such offers as USD offers with an unknown payment method and cannot take them. They
   cannot read accounts, trades, contracts or disputes with stablecoin data, so mediators and refund agents update
   before the first such trade.
 
-Related commits: `b61c4c9d2f`, `4318ef9ed2`, `ef1b806f4f`, `6729ea9b98`, `52abfd8a37`, `6b14531b80`.
+Related commits: `b61c4c9d2f`, `4318ef9ed2`, `ef1b806f4f`, `6729ea9b98`, `52abfd8a37`, `6b14531b80`, `8b99ddca82`,
+`4378608316`.
 
 ## Custom Payment Method
 
@@ -54,8 +57,12 @@ Related commits: `a8906941a8`, `a68bfacb9c`, `ef34634a1a`, `4c1568565c`, `b040b6
 - The API cannot create stablecoin or custom accounts, but it can use accounts created in the desktop application.
 - The API `takeoffer` refuses a payment account which does not match the offer in payment method, currency, country
   or bank, as the desktop application does.
+- After a new account was canceled, choosing the same payment method again shows its form again. Before, the form
+  stayed empty.
+- Market > Trades keeps the selected payment method filter when the same currency is selected again.
 
-Related commits: `0b533c72e8`, `b1d9a1a185`, `5f493719be`, `449e892917`, `5eb4db3d70`, `5cd1fe6ba7`.
+Related commits: `0b533c72e8`, `b1d9a1a185`, `5f493719be`, `449e892917`, `5eb4db3d70`, `5cd1fe6ba7`, `e25b682eb5`,
+`75d9abfb9b`.
 
 ## BSQ Price and BSQ Offer Book
 
@@ -90,10 +97,13 @@ Related commits: `6b2124e2e7`, `ec4170fd11`, `d6ed434326`, `5c3ffb48a0`, `efa5c1
 - A peer signature which arrives before the trader's own copy of the mediation result is kept and checked once the
   result is applied. Before, it was rejected and the trade showed an error.
 - During a refund request, a mediated payout is accepted only when the wallet has it confirmed.
+- During a wallet rescan, a trade whose deposit transaction the wallet has not reached yet watches its payout address
+  as the scan advances, so a payout which the scan finds completes the trade. Before, the setup of that watch
+  failed.
 
 Related commits: `604380732a`, `3183c9dd2d`, `e3cd39bf9d`, `2c7ae7a08e`, `21c131a763`, `62ab4e8068`, `bda91b9706`,
 `82ead81bf5`, `6fd76365b1`, `716562d829`, `1d15cb703c`, `819fdc6d33`, `11f62b7dd9`, `2f55ee4fc0`, `72bcabdd9a`,
-`44c003d28e`.
+`44c003d28e`, `df428a0d30`.
 
 ## Disputes
 
@@ -112,9 +122,17 @@ Related commits: `604380732a`, `3183c9dd2d`, `e3cd39bf9d`, `2c7ae7a08e`, `21c131
 - A dispute result message without its chat message is dropped.
 - The dispute summary used the buyer's deposit for the payout "seller gets trade amount minus penalty". It uses the
   seller's deposit now.
+- The trader chat, mediation, refund and arbitration each queue only the messages of their own type and apply each
+  message on its own. Before, a message whose handling failed stopped the others and was applied again with every
+  later message, a message which arrived while the queue was applied was lost, and every manager removed the messages
+  and acks of the others from the mailbox. A mailbox message is removed once it was handled; one whose handling fails
+  is tried again at the next start.
+- A dispute opened by the peer with the ID of a canceled offer is ignored. Before, it failed with an error which
+  blocked the other messages of the manager. A closed offer alone is never reopened as a trade.
 
 Related commits: `1b0c574a4c`, `80720310c3`, `bc36df2840`, `a946885fba`, `f243b5efc3`, `be372b2dec`, `12114fac16`,
-`40cbf241e4`, `4742515e0b`, `fe13288006`, `5dd6fbf5f5`, `7613682aa1`, `b5b6b5699e`, `c1c54cddcd`, `4f30e91b3c`.
+`40cbf241e4`, `4742515e0b`, `fe13288006`, `5dd6fbf5f5`, `7613682aa1`, `b5b6b5699e`, `c1c54cddcd`, `4f30e91b3c`,
+`1aa779e110`.
 
 ## Trade Protocol
 
@@ -135,6 +153,15 @@ Related commits: `1b0c574a4c`, `80720310c3`, `bc36df2840`, `a946885fba`, `f243b5
 - A seller who confirms the payment again reuses the stored payout transaction. After a mediation result without a
   penalty of the seller, the seller confirms only until the mediated payout is signed or published.
 - The "payment started" and "payment received" confirmations act only on the trade for which they were opened.
+- A buyer who confirms "payment started" again, for example after a failed send, no longer sets the trade back to
+  "deposit confirmed". The message is sent again from the current state, and a restart still resends a message
+  whose send failed. The confirmation shows "Sending confirmation..." for at most 10 seconds and then offers the
+  next retry, also when the state did not change.
+- The maker accepts a BSQ swap request only for a BSQ swap offer and only with the request type of the offer's
+  direction: a buyer's request for a sell offer, a seller's request for a buy offer. It checks this before it reserves
+  the offer. Before, a taker could take a fiat or altcoin offer with a fixed price with a BSQ swap request, and the
+  maker's node settled it in BSQ at a price set for another currency without a confirmation of the user. A request of
+  the wrong direction kept the offer reserved for 60 seconds.
 - The buyer cannot confirm "payment started" for a trade with an error and is told not to pay. A stale timeout error
   is cleared once the deposit transactions arrived and were checked.
 - A payout seen in a block completes the trade also without witness data, as filtered blocks carry none. The inputs
@@ -144,7 +171,8 @@ Related commits: `1b0c574a4c`, `80720310c3`, `bc36df2840`, `a946885fba`, `f243b5
 
 Related commits: `42184f113e`, `88a6f696a2`, `8f3b01ca2e`, `3d46344482`, `3536d6e575`, `bd7855b13c`, `559f569e86`,
 `4398841e75`, `0ac1978040`, `03a28868f5`, `0aa91ff4c8`, `af9a2b5183`, `852d9c7abb`, `ed06cba64d`, `c47b10b71e`,
-`267cdd0fe0`, `e2eb36490d`, `9cbacdbe7f`, `9985ee8914`, `94a366530c`, `d68ff63eb6`.
+`267cdd0fe0`, `e2eb36490d`, `9cbacdbe7f`, `9985ee8914`, `94a366530c`, `d68ff63eb6`, `0b32c7b0cd`, `00528474b1`,
+`514c5c7c71`, `a388cf97ad`, `b68424a864`, `bfeba866c7`.
 
 ## Fees
 
@@ -184,7 +212,11 @@ Related commits: `5424ffb9be`, `8cea22038e`, `17a7949e81`.
 - A fix of the parsing of BSQ transactions keeps full nodes from stopping at a block. Details follow once the seed
   nodes run 1.10.12.
 - Block responses stay below 5 MiB (at least one block), and state hash responses hold at most the 50 000 newest
-  hashes. The accounting lite node waits for the synced wallet and requests blocks until it reaches the chain height.
+  hashes. A full node stops signing blocks once the response is full. The accounting lite node waits for the
+  synced wallet and requests blocks until it reaches the chain height.
+- A lite node ignores the broadcast of a block which is 1024 or more blocks behind its DAO tip; such blocks come with
+  the block requests. It remembers the accepted broadcasts of the blocks within that window, so a signed old block
+  can no longer circulate again. Before, the history of accepted broadcasts grew without a limit.
 - While the DAO state needs a resync, the warning appears when it is first seen and at most once per new block.
   Creating, cloning and taking offers, DAO transactions and BSQ sends are blocked meanwhile; BTC withdrawals, trades
   and disputes stay available.
@@ -193,7 +225,7 @@ Related commits: `5424ffb9be`, `8cea22038e`, `17a7949e81`.
   address list v0008.
 
 Related commits: `f74f08413e`, `058643a557`, `f75a2a3e3d`, `c7b40f72e2`, `8b2f951ed1`, `089429a7be`, `3937241c4f`,
-`728efc004a`, `72781e0fa5`, `cd164b1600`, `65928c7b3d`, `d37b496ba0`, `473e22ecf6`.
+`728efc004a`, `72781e0fa5`, `cd164b1600`, `65928c7b3d`, `d37b496ba0`, `473e22ecf6`, `89586ced12`, `432231703d`.
 
 ## Network and Data Validation
 
@@ -223,11 +255,33 @@ Related commits: `f74f08413e`, `058643a557`, `f75a2a3e3d`, `c7b40f72e2`, `8b2f95
 - A failing listener of the data storage no longer stops the others. An out-of-memory error in a connection shuts a
   headless node down.
 - Own offers are no longer backdated when the connection to the own onion address closes.
+- The ignore list of mailbox entries is stored in the new file `IgnoredMailboxPayloadHashes`, because the old file
+  holds UIDs chosen by the senders, which can look like payload hashes.
+- A DSA signature is verified only with a key of at most 600 bytes, with its parameters, whose modulus is positive
+  and has at most 2048 bits. The cost of a verification grows with the square of the modulus, and a key with a large
+  modulus can have the size of a usual key. A key outside the bounds counts as an invalid signature. The bounds apply
+  at the verification and not where a key is read, because nodes up to 1.10.11 accept such keys: an entry with such
+  an owner key can be relayed by honest nodes, and a trade or a dispute with such a peer key can be stored. A
+  verification which fails because of key parameters that no node creates counts as invalid too.
+- A trade statistic may have at most 256 bytes, and each trade statistics store holds at most 100,000 records. A
+  statistic is stored only if it is within the size limit and passes the validity rules except the check of its
+  currency, and only a stored statistic is announced and relayed. A statistic of a currency which this version does
+  not know is stored and relayed, as by earlier versions, but not used. At capacity a node keeps its records and
+  refuses new ones.
+- A node counts a received statistic which it cannot parse as a rule violation of the peer which relayed it, and it
+  cannot tell an honest relay from the creator. So a received trade statistic is parsed and checked by its hash as
+  1.10.4 to 1.10.11 do: a statistic above the size limit is parsed and then not stored, and of the payment method
+  names only those which 1.10.11 knows are replaced by their positions before the hash is checked. A statistic of a
+  new payment method (`CUSTOM` and the stablecoins) is accepted with the position, as 1.10.12 creates it, and with
+  the name spelled out, as 1.10.11 relays it. 1.10.11 shows the number of a position which it does not know.
+- The caches of currency lookups hold at most 1024 codes. Before, every trade statistic with an invented currency
+  code added entries.
 
 Related commits: `2e1f37614a`, `d8649caeae`, `c67c87cea2`, `16d9dce426`, `b0ce053af8`, `8b84d90942`, `c222dd7258`,
 `3132ea8e38`, `cf61f73f63`, `12b7391778`, `8c2730974b`, `e862479265`, `2320dd22f4`, `c6dc817bc7`, `27d5795b5e`,
 `8320366abb`, `25dd2e1734`, `23ba911378`, `8df0ac94c6`, `38e92e249a`, `b7ca9b7a93`, `3737576f63`, `6dfc69cbf0`,
-`f801dc4679`, `58aaafb77e`.
+`f801dc4679`, `58aaafb77e`, `91b099732e`, `d0b47cd142`, `82549c6cf1`, `87ce788258`, `962172ffe5`, `04ba4630b4`,
+`e49e5231dd`, `c0dccbf7df`, `2ab7dafb5e`.
 
 ## Tor
 
@@ -240,9 +294,13 @@ Related commits: `2e1f37614a`, `d8649caeae`, `c67c87cea2`, `16d9dce426`, `b0ce05
 - On macOS, a sandboxed Tor no longer fails when the data directory is reached through a symbolic link.
 - A malformed `--torrcOptions` value or an unreadable `--torrcFile` stops the start of Tor. The error names the
   position of the bad part, not its text.
+- A line of the torrc file is split at its first whitespace, as Tor does. Before, a line with a tab between key and
+  value, such as `ExcludeNodes<TAB>{ru}`, was skipped without a message, and Tor started without the restriction.
+- "Zip log files" leaves out the excerpt of `tor.log` which a node log quotes for a failed Tor start, as it can begin
+  in the middle of a bridge identity. The files on disk keep it.
 
 Related commits: `cb569986b3`, `e85f8f086c`, `172f50554c`, `6f8852f36c`, `6e028ee341`, `34b7b200aa`, `a106cec8f9`,
-`073d2e512f`, `7abfdc3936`.
+`073d2e512f`, `7abfdc3936`, `ebffc0ed74`, `5a8204640c`.
 
 ## Bitcoin Wallet and Local Node
 
@@ -265,9 +323,13 @@ Related commits: `e1edd89441`, `00907333e9`, `d6a3abd484`, `17df5f929c`, `6627a7
   `UNAVAILABLE`. The daemon and the REST node request prices every minute.
 - `confirmpaymentstarted` and `confirmpaymentreceived` fail with `FAILED_PRECONDITION` when the dispute state forbids
   the confirmation, instead of reporting success.
+- `confirmpaymentstarted` and `confirmpaymentstartedxmr` fail with `FAILED_PRECONDITION` once payment started was
+  confirmed. Before, they reported success while nothing was sent, and the XMR variant replaced the transaction ID and
+  key of the stored payment proof. The node resends an unacknowledged message itself.
 - The role of a BSQ swap is shown after a restart.
 
-Related commits: `0e29f08e8c`, `bdb202b81d`, `595ac9cf53`, `291172e020`, `7abe861f29`, `893a8a9aa1`, `ce0bb34f6b`.
+Related commits: `0e29f08e8c`, `bdb202b81d`, `595ac9cf53`, `291172e020`, `7abe861f29`, `893a8a9aa1`, `ce0bb34f6b`,
+`8908a604de`.
 
 ## Desktop Application
 
@@ -307,7 +369,12 @@ Related commits: `9dcb5448d4`, `292d0d83e9`, `4ce72f1c36`, `13d27022d0`, `d7a3ad
 - The installer evidence and signing tasks work with the configuration cache.
 - A CodeQL workflow, `setup-gradle` instead of the deprecated `gradle-build-action`, read-only tokens for the e2e
   workflows, base images pinned by digest and a 7-day delay of Dependabot updates.
-- `replace_version_number.sh` updates every version file.
+- `replace_version_number.sh` updates every version file, also the default release tag of the RPM builder.
+- The RPM builder clones the release tag by default, runs on Amazon Corretto 21 and takes the build date of the
+  package from `SOURCE_DATE_EPOCH`. The reproducible RPM is called `bisq-reproducible`: it runs on the system Java
+  instead of the bundled runtime and has no menu entry, so it must not replace an installation of the shipped `bisq`
+  RPM.
 
 Related commits: `81cef09452`, `116746085c`, `29acccc6ef`, `92dbe91a72`, `90f2356f3d`, `04bad0f806`, `d763a6beb0`,
-`1b247694f0`, `c592fd291f`, `c4cb4368de`, `a17e03d10d`, `6d0bc85cf2`, `4316aedc93`.
+`1b247694f0`, `c592fd291f`, `c4cb4368de`, `a17e03d10d`, `6d0bc85cf2`, `4316aedc93`, `930e5ab1d5`, `47c00ab573`,
+`43b70a7e83`, `d5e0206016`.

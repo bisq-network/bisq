@@ -1,7 +1,7 @@
 # Bisq 1.10.12 Highlights
 
 > **Draft. The maintainer completes it before the release** (see the list at the top of `full-release-notes.md`):
-> it covers `release-candidate-v1.10.12` through `d2d9bf479a`. Confirm the version number and set the dates.
+> it covers `release-candidate-v1.10.12` through `2b4b82de6c`. Confirm the version number and set the dates.
 
 ## New Payment Methods
 
@@ -18,6 +18,8 @@
   newest trade.
 - The BSQ offer book hides offers whose price is far worse than the 90-day average. The factor is set in the
   preferences; 1000 turns it off.
+- A maker's node accepts BSQ swap requests only for BSQ swap offers, so fixed-price fiat and altcoin offers can no
+  longer be settled in BSQ.
 
 ## Trades and Disputes
 
@@ -39,7 +41,7 @@
 - The daemon requires `--apiPassword`, and the API listens only on `127.0.0.1` unless `--apiHost` says otherwise.
 - The data directory is owner-only on Linux and macOS.
 - Incoming messages are size-checked before they are read, and malformed network data, offers, trade statistics,
-  alerts and mailbox entries are rejected.
+  alerts and mailbox entries are rejected. Signatures are verified only with keys of a bounded size.
 - Alerts need a signature over all their fields; alerts of earlier versions are ignored.
 
 ## DAO

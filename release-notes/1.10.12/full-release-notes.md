@@ -2,11 +2,11 @@
 
 > **Draft. The maintainer completes these points before the release and then removes this block:**
 >
-> - These notes cover `release-candidate-v1.10.12` from `v1.10.11` (`ea9d5dff90`) through `d2d9bf479a`. The local
+> - These notes cover `release-candidate-v1.10.12` from `v1.10.11` (`ea9d5dff90`) through `2b4b82de6c`. The local
 >   tag `v1.10.11` points to another commit and was not used. The tag `v1.10.12` (`f594669f4c`) is `v1.10.11` with
 >   only the version bump; it is not this branch. Move the tag before the release.
 > - Confirm the version number `1.10.12` (set by `32c1fa0fbc`), and set the release date and the "Generated on" date.
-> - `rc-pr-numbers-private-repo`: the pull requests #182 to #316 are pull requests of the private repository
+> - `rc-pr-numbers-private-repo`: the pull requests #182 to #324 are pull requests of the private repository
 >   `bisq-network/bisq-security`. Readers of the public repository cannot open them. Decide whether the notes name
 >   them, and link the commits to `https://github.com/bisq-network/bisq/commit/<hash>` once the branch is public.
 >   The hashes change if the branch is rebased.
@@ -14,27 +14,30 @@
 >   `0x00` (`6946e7bdf0`) only after the seed nodes run it. These notes name it only vaguely, in "DAO", and the commit
 >   table leaves out its subject. Fill in the details once the seed nodes are updated.
 > - `security-fix-disclosure-level`: the notes describe the effect of the security fixes, not how to exploit them.
->   Decide whether that level of detail may be published at the release, or only after most nodes updated.
+>   Decide whether that level of detail may be published at the release, or only after most nodes updated. This
+>   applies in particular to the BSQ swap request admission (`b68424a864`), whose description names the offers of
+>   makers which did not update, and to the DSA key bounds (`d0b47cd142`, `82549c6cf1`).
 > - `corretto-cve-id-unconfirmed`: confirm the CVE ID `CVE-2026-114938` before the notes name it.
 > - `stablecoin-contracts-unverified`: the specification of the stablecoins asks to check the token contracts
 >   against the documentation of the issuers before the release.
 > - `fee-pricenode-floor-deployment`: the minimum fee rate of 2 sat/vB relies on price nodes which apply the same
 >   minimum. Confirm that the price nodes run it.
-> - `reproducible-build-tag-default`: `reproducible-build/deb/Dockerfile` and `reproducible-build/rpm/Dockerfile`
->   default to `TAG_NAME=v10.0.4`, which is no Bisq 1 tag. Builders pass `--build-arg TAG_NAME=v1.10.12`.
+> - `reproducible-build-tag-default`: `reproducible-build/rpm/Dockerfile` defaults to `TAG_NAME=v1.10.12`, and
+>   `replace_version_number.sh` updates it. `reproducible-build/deb/Dockerfile` still defaults to `TAG_NAME=v10.0.4`,
+>   which is no Bisq 1 tag. Builders of the DEB package pass `--build-arg TAG_NAME=v1.10.12`.
 > - `sochain-selected-explorer`: the renamed SoChain explorer has no migration of a stored selection. Check whether
 >   users who selected "SoChain. Wow." keep the old URLs.
 
-These release notes cover the changes after `v1.10.11` (`ea9d5dff90`) through `d2d9bf479a` of
+These release notes cover the changes after `v1.10.11` (`ea9d5dff90`) through `2b4b82de6c` of
 `release-candidate-v1.10.12`. The branch is `master` with the 1.10.11 release merged in, plus the pull requests of
 the release candidate. The `tor` submodule is pinned at `2cd94b971b` of the Tor library.
 
-- Total commits: 546
-- Non-merge commits: 414, of which 14 shipped already in 1.10.10 or 1.10.11 under other hashes (DAO resources of
+- Total commits: 592
+- Non-merge commits: 454, of which 14 shipped already in 1.10.10 or 1.10.11 under other hashes (DAO resources of
   height 971800, renewed GPG keys, netlayer 0.7.12, "Set version 1.10.10" and two Dependabot updates). They are left
   out below.
-- Merge commits: 132
-- Files changed: 601
+- Merge commits: 138
+- Files changed: 637
 - Generated on: TODO (draft of 2026-11-19)
 
 ## Compatibility and Operator Notes
@@ -75,7 +78,9 @@ the release candidate. The `tor` submodule is pinned at `2cd94b971b` of the Tor 
 - The Tor log files `tor-stdout.log`, `tor-stdout.log.1` and `tor-stderr.log` are replaced by `tor.log` and
   `tor.log.1`. The old files are deleted at the start.
 - A malformed `--torrcOptions` value or an unreadable `--torrcFile` now stops the start of Tor with an error. Up to
-  1.10.11, Bisq started Tor without the custom entries of the user.
+  1.10.11, Bisq started Tor without the custom entries of the user. A line of the torrc file with a tab between key
+  and value now reaches Tor as an entry; up to 1.10.11 it was skipped without a message, and an invalid such line now
+  stops the start.
 - The hard cap of the trade amount in the code rises from 0.25 BTC to 0.5 BTC. The DAO parameter of the maximum
   trade limit stays 0.25 BTC. Before a DAO vote raises it above 0.25 BTC, set the filter field
   `disableTradeBelowVersion` to `1.10.12` before the activation height of the vote, because 1.10.11 limits trades to
@@ -87,7 +92,20 @@ the release candidate. The `tor` submodule is pinned at `2cd94b971b` of the Tor 
 - The trusted BSQ block provider list replaces the bridge `hn6qahy7...onion` with `iyiudcaq...onion` and a new key.
   The default price nodes gain `bsqprcgpyw7z337btcbjxvvtmud4mr6k552piui4xq62qdeqej2cgryd.onion`.
 - The first start after the update tries again to decrypt mailbox entries of the last 15 days which it had ignored,
-  because the ignore list is now keyed by the hash of the entry.
+  because the ignore list is now keyed by the hash of the entry. It is stored in the new file
+  `IgnoredMailboxPayloadHashes`; the old file `IgnoredMailboxMap` is no longer read.
+- A node verifies a DSA signature only with a key of at most 600 bytes whose modulus is positive and has at most
+  2048 bits. No unmodified node creates another key, but nodes up to 1.10.11 accept entries and messages signed with
+  one, and 1.10.12 rejects them. Such keys are still read, so stored trades and disputes with such a peer key load.
+- A trade statistic above 256 bytes is neither stored nor relayed, and each trade statistics store holds at most
+  100,000 records. The shipped data stays far below both limits. Nodes up to 1.10.11 relay larger statistics, so
+  receiving one is no rule violation of the peer.
+- A trade statistic of a new payment method (`CUSTOM` and the stablecoins) which 1.10.12 creates carries the
+  position of the method in the payment method list of the statistics. 1.10.11 keeps and relays it and shows the
+  number instead of the name. 1.10.12 checks a received statistic as 1.10.4 to 1.10.11 do, so it also accepts such a
+  statistic with the name spelled out, which those versions relay.
+- The reproducible RPM of `:desktop:reproducibleRpm` is called `bisq-reproducible`, so the RPM which the release
+  ships is the only package called `bisq`.
 
 ## Notable Changes
 
@@ -112,7 +130,11 @@ See `notable-changes.md` for the changes grouped by topic, with their commits.
   stablecoin trades. A popup at the start introduces both features once.
 - The API `takeoffer` refuses a payment account which does not match the offer (payment method, currency, country or
   bank), as the desktop application does.
-- The revealed payment account data of the peer is accepted only with the payment method named in the contract.
+- The revealed payment account data of the peer is accepted only with the payment method named in the contract. A
+  buyer also refuses seller account data of another stablecoin rail than the offer's. The API and the trade details
+  hide such data of trades of earlier builds, and the API refuses the payment confirmation for them.
+- After a new account was canceled, choosing the same payment method again shows its form again.
+- Market > Trades keeps the payment method filter when the same currency is selected again.
 
 ### BSQ Market
 
@@ -137,6 +159,14 @@ See `notable-changes.md` for the changes grouped by topic, with their commits.
   revealed yet.
 - A seller who confirms the payment again reuses the stored payout transaction. Payment confirmations act only on
   the trade for which they were opened.
+- A buyer who confirms "payment started" again no longer sets the trade back to "deposit confirmed"; the message is
+  sent again from the current state. The confirmation shows its status for at most 10 seconds and then offers the
+  next retry.
+- During a wallet rescan, a trade whose deposit transaction the wallet has not reached yet watches its payout address,
+  so a payout found by the scan completes the trade.
+- The maker accepts a BSQ swap request only for a BSQ swap offer, and only with the request type of the offer's
+  direction, before it reserves the offer. Before, a fiat or altcoin offer with a fixed price could be settled in BSQ
+  at a price set for another currency.
 - The buyer cannot confirm "payment started" for a trade with an error and is told not to pay. A stale timeout error
   no longer blocks the confirmation once the deposit transactions arrived.
 - A payout seen in a block completes the trade even without witness data.
@@ -149,6 +179,9 @@ See `notable-changes.md` for the changes grouped by topic, with their commits.
   offers for one hour; answers count only when they are signed with the offer key.
 - Offers with a security deposit below 0.0003 BTC cannot be taken.
 - The dispute summary uses the seller's deposit for the "seller gets trade amount minus penalty" payout.
+- Each support manager queues only the messages of its own support type and applies each message on its own. A
+  message whose handling fails no longer blocks or repeats the other messages, and a message which arrives while the
+  queue is applied is no longer lost. A dispute opened by the peer for a canceled offer is ignored instead of failing.
 
 ### Fees
 
@@ -166,8 +199,11 @@ See `notable-changes.md` for the changes grouped by topic, with their commits.
   block.
 - Full nodes no longer stop parsing at a script type which their Bitcoin Core does not know.
 - A further parsing fix of BSQ transactions keeps full nodes in sync (details after the update of the seed nodes).
-- Block and state hash responses stay below 5 MiB and 50 000 hashes. The accounting lite node waits for the wallet
-  and requests blocks until it reaches the chain height.
+- Block and state hash responses stay below 5 MiB and 50 000 hashes. A full node stops signing blocks once a
+  response is full. The accounting lite node waits for the wallet and requests blocks until it reaches the chain
+  height.
+- A lite node ignores the broadcast of a block which is 1024 or more blocks behind its DAO tip, and it remembers the
+  accepted broadcasts of the blocks within that window, so an old signed block no longer circulates again.
 - While a DAO resync is needed, the warning appears at most once per block, and offers, DAO transactions and BSQ
   sends are blocked.
 - Bundled DAO resources and state hash checkpoints up to block 976 000 and Burning Man address list v0008.
@@ -185,6 +221,15 @@ See `notable-changes.md` for the changes grouped by topic, with their commits.
 - Peer dates from other nodes are replaced with the local time. Alerts need a signature over all fields and a valid
   version number.
 - At the start, witnesses are taken from the first seed node response which carries any.
+- A DSA signature is verified only with a key within the size and modulus bounds; a key outside them counts as an
+  invalid signature. A verification which fails because of key parameters that no node creates counts as invalid too.
+- Trade statistics have a size limit of 256 bytes and a limit of 100,000 records per store. A statistic is stored
+  and relayed only if it is within the size limit and passes the validity rules except the check of its currency. A
+  statistic of a currency which this version does not know is stored and relayed, but not used.
+- A received trade statistic is parsed and checked by its hash as 1.10.4 to 1.10.11 do, so a statistic which those
+  versions relay is no rule violation of the peer which relayed it.
+- The caches of currency lookups hold at most 1024 codes, so trade statistics with invented currencies no longer grow
+  them.
 
 ### Tor
 
@@ -193,6 +238,9 @@ See `notable-changes.md` for the changes grouped by topic, with their commits.
   in `bisq.properties` and shut down.
 - The output and errors of Tor go to `tor.log`, and a failed start quotes it.
 - On macOS, a sandboxed Tor starts when the data directory is reached through a link.
+- A tab between key and value of a line of the torrc file is accepted, as Tor accepts it.
+- "Zip log files" leaves out the excerpt of `tor.log` which a node log quotes for a failed Tor start, as it can begin
+  in the middle of a bridge identity.
 
 ### Desktop Application
 
@@ -210,11 +258,16 @@ See `notable-changes.md` for the changes grouped by topic, with their commits.
 - `confirmpaymentstarted` and `confirmpaymentreceived` fail with `FAILED_PRECONDITION` when the dispute state forbids
   them.
 - A failed `unlockwallet` no longer leaves the wallet unlocked. The role of a BSQ swap is shown after a restart.
+- `confirmpaymentstarted` and `confirmpaymentstartedxmr` fail with `FAILED_PRECONDITION` once payment started was
+  confirmed, instead of reporting success without sending anything. The XMR variant no longer replaces the stored
+  payment proof in that case.
 
 ### Build
 
 - Amazon Corretto 21 (at least 21.0.13.1) instead of Azul Zulu 21.0.13, which lacks the fix of CVE-2026-114938.
-- Reproducible RPM packages (`:desktop:reproducibleRpm`) and DEB and RPM packages built from an app image.
+- Reproducible RPM packages (`:desktop:reproducibleRpm`, package `bisq-reproducible`) and DEB and RPM packages
+  built from an app image. The RPM builder uses Corretto and the release tag, and takes the build date from
+  `SOURCE_DATE_EPOCH`.
 - The Gradle build cache is no longer enabled by the project. CodeQL and hardened GitHub workflows.
 
 ## Known Issues
@@ -222,6 +275,8 @@ See `notable-changes.md` for the changes grouped by topic, with their commits.
 - The Bitcoin connections drop the SOCKS credentials of `--torStreamIsolation`, so they share one isolation group.
 - A full node of 1.10.11 or earlier still stops at a block with a script type which its Bitcoin Core does not know.
 - Trade statistics can be published by any peer. The BSQ market price and the BSQ offer price range rely on them.
+  Invented statistics can fill the 100,000 records of the writable store, and then a node stores and relays no new
+  statistic until a release bundles the store.
 - Data responses are cut to fit 10 MiB, but account age witnesses, signed witnesses, filters, alerts and dispute agent
   entries do not count toward the size limit of a response. This is a mitigation.
 - The block of offers of a maker who ignores the user is kept in memory and ends with a restart.
@@ -231,11 +286,13 @@ See `notable-changes.md` for the changes grouped by topic, with their commits.
 
 New specifications describe the taker trade transaction fee, the admission of take requests, the received message
 limits, the mediated payout finalization and detection, the peer-opened dispute validation, the alert admission, the
-vote result validation, the local Bitcoin node, the BSQ market price, the trade statistics validity and the
-stablecoin and custom payment methods. Docker end-to-end tests cover the API refusals of the new accounts, the
-0.5 BTC cap, wrong passwords, mailbox delivery to a restarted seller, vote results after a restart, the fee rate
-defaults and a compatibility run with the release on the maker side. This release note summarizes source changes;
-it does not claim that release builds or tests were run for this note.
+vote result validation, the local Bitcoin node, the BSQ market price, the trade statistics validity and storage, the
+stablecoin and custom payment methods, the BSQ swap request admission, the repeated payment started confirmation and
+the DSA key bounds of signature verifications. Docker end-to-end tests cover the API refusals of the new accounts,
+the 0.5 BTC cap, wrong passwords, mailbox delivery to a restarted seller, vote results after a restart, the fee rate
+defaults and a compatibility run with the release on the maker side, and the e2e daemons get their fee rates from a
+local stub. This release note summarizes source changes; it does not claim that release builds or tests were run for
+this note.
 
 ## Commit Summary
 
@@ -644,3 +701,43 @@ shipped in 1.10.10 or 1.10.11 already, in the order of their pull requests.
 | #316 | `cc83f11c4a` | test(price): check that statistics received together are dumped once |
 | #316 | `d30fc95c77` | test(price): check that prices from trade statistics keep the feed prices |
 | #316 | `ebc2d7b14d` | test(offerbook): check that the BSQ price range hint names the off state |
+| #317 | `e25b682eb5` | fix(desktop): discard removed payment account forms |
+| #317 | `8b99ddca82` | fix(trade): enforce the stablecoin payment rail for API buyers |
+| #317 | `df428a0d30` | fix(trade): watch the payout address while the wallet rescans |
+| #317 | `0b32c7b0cd` | fix(trade): retry desktop payment confirmation without rewinding the trade |
+| #317 | `91b099732e` | fix(p2p): keep the mailbox hash cache separate from legacy UIDs |
+| #317 | `930e5ab1d5` | fix(build): select the release source and Corretto for the RPM builder |
+| #317 | `47c00ab573` | fix(build): package the distribution as bisq with a reproducible RPM epoch |
+| #317 | `e24ee36e97` | test(apitest): give the e2e daemons fee data from a local stub |
+| #317 | `ffcad9d024` | test(dao): check all-ignore vote results against each peer version |
+| #317 | `5a8204640c` | fix: omit native Tor startup log excerpts from support archives |
+| #317 | `4d3471df40` | test(api): cover seller payment details in trade replies |
+| #317 | `89586ced12` | perf(dao): stop signing blocks once a response is full |
+| #317 | `e3e15d7dd1` | docs(p2p): describe the bundle limits enforced by the candidate |
+| #317 | `4bd4619711` | docs(tor): clarify the separator required in torrc files |
+| #317 | `75d9abfb9b` | fix(market): keep the payment filter when reselecting a currency |
+| #317 | `00528474b1` | fix(trade): restart the payment message states on a retry after a failed send |
+| #317 | `c0533fa12d` | test(apitest): stop the daemon start when the fee stub does not answer |
+| #317 | `514c5c7c71` | fix(desktop): offer the next payment confirmation retry after the timeout |
+| #317 | `a388cf97ad` | fix(trade): keep the trade state on a retry of the payment confirmation |
+| #317 | `8908a604de` | fix(api): refuse a payment confirmation once payment started was confirmed |
+| #317 | `4378608316` | fix(desktop): hide seller details of another rail in the trade details |
+| #317 | `7334dea69c` | docs(trade): specify the repeated payment started confirmation |
+| #317 | `ebffc0ed74` | fix(tor): accept a tab between key and value in the torrc file |
+| #318 | `549c053f55` | docs: add the draft release notes of 1.10.12 |
+| #319 | `b68424a864` | fix(trade): accept BSQ swap requests only for BSQ swap offers |
+| #319 | `46370c0a6c` | docs(trade): correct the BSQ swap request admission spec |
+| #319 | `4dcaaa9c27` | test(trade): check the BSQ swap request admission with real offers |
+| #319 | `bfeba866c7` | fix(trade): require a sell offer for a buyer's BSQ swap request |
+| #321 | `43b70a7e83` | fix(build): update the RPM builder tag default with the release version |
+| #321 | `d5e0206016` | fix(build): give the reproducible RPM a package name of its own |
+| #322 | `d0b47cd142` | fix: bound DSA public key size accepted from the wire |
+| #322 | `82549c6cf1` | fix(crypto): apply the DSA key bounds at the verification, not at parsing |
+| #322 | `432231703d` | fix(dao): bound the lite node block broadcast history |
+| #322 | `1aa779e110` | fix(support): isolate queued messages and validate closed trade types |
+| #322 | `e49e5231dd` | fix(locale): bound currency lookups for historical trade statistics |
+| #322 | `87ce788258` | docs(network): specify accepted DSA key bounds |
+| #322 | `962172ffe5` | fix(crypto): report a failed DSA verification computation as CryptoException |
+| #322 | `04ba4630b4` | fix(statistics): bound persisted records and reject invalid additions |
+| #324 | `c0dccbf7df` | fix(trade): check a received trade statistic as earlier versions do |
+| #324 | `2ab7dafb5e` | fix(statistics): apply the size limit of a trade statistic at the store |
