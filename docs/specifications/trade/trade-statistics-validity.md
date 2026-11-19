@@ -35,6 +35,23 @@ through its trigger price.
    shown or compared, such as the volume in the charts or the traded amount of an altcoin, is the
    largest long if the sum exceeds the long range.
 
+## Storage and relay
+
+The serialized trade statistic may occupy at most 256 bytes, including optional metadata. A node
+checks this limit before hashing an incoming record and when reading a store. Each store holds at
+most 100,000 distinct records. The writable store and each versioned archive have separate limits.
+The largest record and archive shipped through v1.10.12 contain 76 bytes and 75,912 records
+respectively.
+
+A new statistic must pass the validity rules before admission, for both broadcasts and initial
+sync, except the rule that its currency is in the currency list. A node stores and relays a
+statistic of a currency which it does not know, and does not use it (rule 1). Only a successful
+insertion triggers persistence, listener notification or relay. At capacity the node keeps the
+records it has and declines further additions. This also means fabricated records can occupy the
+available slots and exclude later genuine trades. When an updated release bundles records from the
+writable store, their removal from that store frees space. On loading an older file above the limit
+the node keeps the first 100,000 distinct decodable records in file order.
+
 ## Trust model
 
 A trade statistic is an unauthenticated claim: no signature binds it to a trade or to a trader, and
@@ -56,6 +73,10 @@ volumes, are therefore informational. They must not change an offer, a trade, a 
 - Rule 2, volume: the charts, the trades table and the average prices compute the volume from the
   price and the amount, and some of them divide by it. For values which no trade can have, this
   computation fails or gives zero.
+- Storage and relay, currency: the currency list differs between versions. A later version can add
+  a currency, and its statistics must reach the nodes of that version through nodes of this version
+  as well. A node which updates then already holds the statistics of the new currency. Nodes of
+  earlier versions stored and relayed every statistic.
 - Rule 4: a price derived from trade statistics is for display only. The state of an offer depends
   only on the price feed.
 - Rule 5: the validity rules bound single values (rule 2), not every combination of them. A view
@@ -69,8 +90,8 @@ volumes, are therefore informational. They must not change an offer, a trade, a 
 
 ## Compatibility
 
-No message, no persisted data and no hash change. Trade statistics are stored and relayed as
-before. All statistics in the bundled stores pass the date, price and volume checks. A node whose
+The wire format, persisted format and hash calculation stay compatible with earlier versions. All
+statistics in the bundled stores pass the date, price and volume checks. A node whose
 clock is more than one day behind does not use new statistics until its clock is corrected and it
 is restarted. While no recent price from the price feed is available, for example right after
 startup or during an outage of the price feed, no offer is deactivated by its trigger price.
@@ -96,7 +117,3 @@ altcoins which are not delisted can be chosen for a new payment account and in t
 Valid but invented statistics can therefore keep a delisted altcoin listed on every node which
 receives them. They cannot delist an altcoin, because statistics are never removed and the traded
 amount never wraps around (rule 6).
-
-## Not covered
-
-Rules for storing and relaying trade statistics.

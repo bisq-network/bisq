@@ -31,6 +31,7 @@ import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 
 import com.google.common.base.Suppliers;
+import com.google.common.cache.CacheBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,7 +43,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -68,9 +68,15 @@ public class CurrencyUtil {
     // the caching still reduces performance costs by about 20% for isCryptoCurrency (1752 ms vs 2121 ms) and about 50%
     // for isFiatCurrency calls (1777 ms vs 3467 ms).
     // See: https://github.com/bisq-network/bisq/pull/4955#issuecomment-745302802
-    private static final Map<String, Boolean> isFiatCurrencyMap = new ConcurrentHashMap<>();
-    private static final Map<String, Boolean> isCryptoCurrencyMap = new ConcurrentHashMap<>();
-    private static final Map<String, Integer> cryptoPrecisionMap = new ConcurrentHashMap<>();
+    // Historical statistics may name delisted currencies. Bound lookups even when the statistic is later refused.
+    private static final int MAX_CACHED_CURRENCIES = 1024;
+    private static final Map<String, Boolean> isFiatCurrencyMap = currencyCache();
+    private static final Map<String, Boolean> isCryptoCurrencyMap = currencyCache();
+    private static final Map<String, Integer> cryptoPrecisionMap = currencyCache();
+
+    private static <T> Map<String, T> currencyCache() {
+        return CacheBuilder.newBuilder().maximumSize(MAX_CACHED_CURRENCIES).<String, T>build().asMap();
+    }
 
     private static final Supplier<Map<String, FiatCurrency>> fiatCurrencyMapSupplier = Suppliers.memoize(
             CurrencyUtil::createFiatCurrencyMap);
@@ -201,8 +207,9 @@ public class CurrencyUtil {
     }
 
     public static boolean isFiatCurrency(String currencyCode) {
-        if (currencyCode != null && isFiatCurrencyMap.containsKey(currencyCode)) {
-            return isFiatCurrencyMap.get(currencyCode);
+        Boolean cached = currencyCode == null ? null : isFiatCurrencyMap.get(currencyCode);
+        if (cached != null) {
+            return cached;
         }
 
         try {
@@ -238,8 +245,9 @@ public class CurrencyUtil {
      * contains 3 entries (CryptoCurrency, Fiat, Undefined).
      */
     public static boolean isCryptoCurrency(String currencyCode) {
-        if (currencyCode != null && isCryptoCurrencyMap.containsKey(currencyCode)) {
-            return isCryptoCurrencyMap.get(currencyCode);
+        Boolean cached = currencyCode == null ? null : isCryptoCurrencyMap.get(currencyCode);
+        if (cached != null) {
+            return cached;
         }
 
         boolean isCryptoCurrency;

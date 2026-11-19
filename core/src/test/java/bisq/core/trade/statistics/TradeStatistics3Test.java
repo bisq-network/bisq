@@ -220,6 +220,39 @@ public class TradeStatistics3Test {
     }
 
     @Test
+    public void sizeLimitIncludesOptionalFieldsAndAppliesBeforeLegacyHashHandling() {
+        TradeStatistics3 valid = tradeStatistics("USD");
+        protobuf.TradeStatistics3 oversized = valid.toProtoTradeStatistics3().toBuilder()
+                .setDate(1)
+                .putExtraData("referralId", "x".repeat(TradeStatistics3.MAX_SERIALIZED_BYTES))
+                .build();
+
+        assertThrows(InvalidPersistableNetworkPayloadException.class, () -> TradeStatistics3.fromProto(oversized));
+        TradeStatistics3Store store = TradeStatistics3Store.fromProto(protobuf.TradeStatistics3Store.newBuilder()
+                .addItems(oversized).addItems(valid.toProtoTradeStatistics3()).build());
+        assertEquals(1, store.getMap().size());
+        assertTrue(store.containsKey(new P2PDataStorage.ByteArray(valid.getHash())));
+    }
+
+    @Test
+    public void reloadCountsOnlyDistinctDecodableStatisticsTowardsCapacity() {
+        TradeStatistics3 first = tradeStatistics("USD");
+        TradeStatistics3 second = tradeStatistics("EUR");
+        protobuf.TradeStatistics3Store records = protobuf.TradeStatistics3Store.newBuilder()
+                .addItems(withWrongHash(second))
+                .addItems(first.toProtoTradeStatistics3())
+                .addItems(first.toProtoTradeStatistics3())
+                .addItems(second.toProtoTradeStatistics3())
+                .addItems(tradeStatistics("GBP").toProtoTradeStatistics3())
+                .build();
+
+        TradeStatistics3Store store = TradeStatistics3Store.fromProto(records, 2);
+        assertEquals(2, store.getMap().size());
+        assertTrue(store.containsKey(new P2PDataStorage.ByteArray(first.getHash())));
+        assertTrue(store.containsKey(new P2PDataStorage.ByteArray(second.getHash())));
+    }
+
+    @Test
     public void tradeStatistics3StoreFromProtoSkipsOnlyInvalidTradeStatistics() {
         TradeStatistics3 validTradeStatistics = tradeStatistics("USD");
         TradeStatistics3 invalidTradeStatistics = tradeStatistics("EUR");

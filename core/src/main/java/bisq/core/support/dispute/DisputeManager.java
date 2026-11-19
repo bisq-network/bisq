@@ -330,8 +330,8 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                 // if so, dispute can close and the mediator needs to be informed so they can close their ticket.
                 tradeManager.getTradeById(dispute.getTradeId()).ifPresentOrElse(
                         t -> checkForMediatedTradePayout(t, dispute),
-                        () -> closedTradableManager.getTradableById(dispute.getTradeId()).ifPresent(
-                                t -> checkForMediatedTradePayout((Trade) t, dispute)));
+                        () -> findClosedTrade(dispute.getTradeId()).ifPresent(
+                                t -> checkForMediatedTradePayout(t, dispute)));
             }
         });
     }
@@ -555,12 +555,16 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         Dispute dispute = peerOpenedDisputeMessage.getDispute();
         tradeManager.getTradeById(dispute.getTradeId()).ifPresentOrElse(
                 trade -> peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade, senderSignaturePubKey, false),
-                () -> closedTradableManager.getTradableById(dispute.getTradeId()).ifPresentOrElse(
-                        closedTradable -> newDisputeRevertsClosedTrade(peerOpenedDisputeMessage, dispute, (Trade) closedTradable, senderSignaturePubKey),
+                () -> findClosedTrade(dispute.getTradeId()).ifPresentOrElse(
+                        trade -> newDisputeRevertsClosedTrade(peerOpenedDisputeMessage, dispute, trade, senderSignaturePubKey),
                         () -> failedTradesManager.getTradeById(dispute.getTradeId()).ifPresentOrElse(
                                 trade -> newDisputeRevertsFailedTrade(peerOpenedDisputeMessage, dispute, trade, senderSignaturePubKey),
-                                () -> log.warn("Dropping {} for trade {}: no local trade, closed tradable, or failed trade found.",
+                                () -> log.warn("Dropping {} for trade {}: no pending, closed or failed trade found.",
                                         peerOpenedDisputeMessage.getClass().getSimpleName(), dispute.getTradeId()))));
+    }
+
+    private Optional<Trade> findClosedTrade(String tradeId) {
+        return closedTradableManager.getTradableById(tradeId).filter(Trade.class::isInstance).map(Trade.class::cast);
     }
 
     private void newDisputeRevertsFailedTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage,

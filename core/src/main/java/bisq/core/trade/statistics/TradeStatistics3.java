@@ -104,6 +104,10 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     @VisibleForTesting
     static final long MAX_PRICE = 1_000_000_000_000_000_000L;
 
+    // Shipped historical records are at most 76 bytes. Include optional fields and unknown protobuf fields.
+    @JsonExclude
+    static final int MAX_SERIALIZED_BYTES = 256;
+
     public static TradeStatistics3 from(Trade trade,
                                         @Nullable String referralId,
                                         boolean isTorNetworkNode) {
@@ -366,6 +370,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     }
 
     public static TradeStatistics3 fromProto(protobuf.TradeStatistics3 proto) {
+        if (proto.getSerializedSize() > MAX_SERIALIZED_BYTES) {
+            throw new InvalidPersistableNetworkPayloadException("Trade statistic exceeds its size limit");
+        }
         long date = proto.getDate();
         TradeStatistics3 tradeStatistics = new TradeStatistics3(
                 proto.getCurrency(),
@@ -477,14 +484,18 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     }
 
     public boolean isValid() {
+        return isValidForStorage() && isCurrencyKnown();
+    }
+
+    // The rules of isValid which do not depend on the currency list of this version. A node stores and relays a
+    // statistic of a currency which a later version adds, so that nodes of all versions hold the same statistics.
+    public boolean isValidForStorage() {
         if (currency == null) {
             return false;
         }
 
         boolean validHistoricalTradeAmount = true;
-        boolean currencyFound = true;
-        // We had historically higher trade limits and assets which are not in the currency list anymore, so we apply
-        // the filter only for data after STRICT_FILTER_DATE.
+        // We had historically higher trade limits, so we apply the filter only for data after STRICT_FILTER_DATE.
         if (date > STRICT_FILTER_DATE) {
             // Trade statistics are historical facts. Do not validate them against the
             // current payment-method or DAO trade limit: those limits can be lowered after
@@ -492,9 +503,6 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
             // storage, charts and republishing. Keep only a stable sanity cap based on the
             // historical global trade limit.
             validHistoricalTradeAmount = amount <= HISTORICAL_MAX_TRADE_AMOUNT;
-
-            currencyFound = CurrencyUtil.getCryptoCurrency(currency).isPresent() ||
-                    CurrencyUtil.getFiatCurrency(currency).isPresent();
         }
 
         return amount > 0 &&
@@ -506,8 +514,15 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                 paymentMethod != null &&
                 !paymentMethod.isEmpty() &&
                 !currency.isEmpty() &&
-                currencyFound &&
                 hasPositiveTradeVolume();
+    }
+
+    // We had historically assets which are not in the currency list anymore, so we apply the filter only for data
+    // after STRICT_FILTER_DATE.
+    private boolean isCurrencyKnown() {
+        return date <= STRICT_FILTER_DATE ||
+                CurrencyUtil.getCryptoCurrency(currency).isPresent() ||
+                CurrencyUtil.getFiatCurrency(currency).isPresent();
     }
 
     // Consumers compute the volume from the price and the amount and divide by it. For values which no trade can have,

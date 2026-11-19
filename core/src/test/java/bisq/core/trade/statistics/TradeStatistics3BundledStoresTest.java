@@ -44,7 +44,10 @@ class TradeStatistics3BundledStoresTest {
         int numStatistics = 0;
         List<String> rejected = new ArrayList<>();
         for (String version : Version.HISTORICAL_RESOURCE_FILE_VERSION_TAGS) {
-            for (protobuf.TradeStatistics3 proto : readStore("/TradeStatistics3Store_" + version + "_BTC_MAINNET")) {
+            List<protobuf.TradeStatistics3> records = readStore("/TradeStatistics3Store_" + version + "_BTC_MAINNET");
+            assertTrue(records.size() <= TradeStatistics3Store.MAX_ITEMS, version);
+            for (protobuf.TradeStatistics3 proto : records) {
+                assertTrue(proto.getSerializedSize() <= TradeStatistics3.MAX_SERIALIZED_BYTES, version);
                 TradeStatistics3 tradeStatistics;
                 try {
                     tradeStatistics = TradeStatistics3.fromProto(proto);

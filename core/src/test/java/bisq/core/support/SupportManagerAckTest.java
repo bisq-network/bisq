@@ -28,6 +28,7 @@ import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.mailbox.MailboxMessageService;
+import bisq.network.p2p.messaging.DecryptedMailboxListener;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
@@ -42,6 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -81,7 +83,39 @@ class SupportManagerAckTest {
         assertEquals(0, manager.getRequestPersistenceCalls());
     }
 
+    @Test
+    void mailboxHandlerFailureDoesNotBlockTheNextMessageOrReplayTheBatch() {
+        P2PService p2p = mock(P2PService.class);
+        MailboxMessageService mailbox = mock(MailboxMessageService.class);
+        when(p2p.getMailboxMessageService()).thenReturn(mailbox);
+        WalletsSetup wallets = mock(WalletsSetup.class);
+        when(p2p.isBootstrapped()).thenReturn(true);
+        when(wallets.isDownloadComplete()).thenReturn(true);
+        when(wallets.hasSufficientPeersForBroadcast()).thenReturn(true);
+        TestSupportManager manager = new TestSupportManager(p2p, wallets);
+        ArgumentCaptor<DecryptedMailboxListener> listener = ArgumentCaptor.forClass(DecryptedMailboxListener.class);
+        verify(mailbox).addDecryptedMailboxListener(listener.capture());
+        PublicKey key = Sig.generateKeyPair().getPublic();
+        SupportMessage first = mock(SupportMessage.class);
+        SupportMessage second = mock(SupportMessage.class);
+        when(first.getSupportType()).thenReturn(SupportType.MEDIATION);
+        when(second.getSupportType()).thenReturn(SupportType.MEDIATION);
+        manager.failingMessage = first;
+        listener.getValue().onMailboxMessageAdded(new DecryptedMessageWithPubKey(first, key), PEER_NODE_ADDRESS);
+        listener.getValue().onMailboxMessageAdded(new DecryptedMessageWithPubKey(second, key), PEER_NODE_ADDRESS);
+
+        manager.onAllServicesInitialized();
+        manager.tryApplyMessages();
+        manager.tryApplyMessages();
+
+        assertEquals(2, manager.supportMessageCalls);
+        verify(mailbox).removeMailboxMsg(second);
+        verify(mailbox, never()).removeMailboxMsg(first);
+    }
+
     private static final class TestSupportManager extends SupportManager {
+        private SupportMessage failingMessage;
+        private int supportMessageCalls;
         private final AtomicInteger getPeerPubKeyRingCalls = new AtomicInteger();
         private final AtomicInteger requestPersistenceCalls = new AtomicInteger();
 
@@ -99,6 +133,10 @@ class SupportManagerAckTest {
 
         @Override
         protected void onSupportMessage(SupportMessage networkEnvelope, PublicKey senderSignaturePubKey) {
+            supportMessageCalls++;
+            if (networkEnvelope == failingMessage) {
+                throw new IllegalArgumentException("test failure");
+            }
         }
 
         @Override
