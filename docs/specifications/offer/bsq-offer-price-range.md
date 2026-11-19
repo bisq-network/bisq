@@ -39,8 +39,9 @@ range, and the hint shown when the range hides every offer of one of these views
    A changed factor applies when the view is opened again.
 6. When the BSQ tab is selected and the offer book shows no offer, but at least one offer passes all other
    filters of the offer book and only the range hides it, the user gets a hint: the range may need to be
-   adjusted, with a button that opens the preferences. There is no hint when the offer book has no offer for
-   the selection at all, or when other filters hide every offer.
+   adjusted, with a button that opens the preferences. The hint says that any peer can move the average with
+   invented statistics and that the factor 1000 shows all BSQ offers. There is no hint when the offer book has
+   no offer for the selection at all, or when other filters hide every offer.
    - The hint depends on the settled state: it appears only if the condition still holds about one second
      after it began. The offer book passes through intermediate states, for example when an edited offer is
      replaced, when offers arrive one by one, or while the screen opens.
@@ -108,8 +109,9 @@ the market from emptying the offer book or the chart without explanation.
 - Rule 4, own offers: a maker sees and manages their own offers in the offer book, whatever their price.
 - Rule 6: an empty offer book or chart looks like a market without offers. The hint names the range as the
   reason only when it is the reason, so that it never asks the user to change a setting which would not show
-  any offer. Both views share the hint and its "Don't show again", as it says the same about the same
-  setting.
+  any offer. It names the factor 1000, because a moved average can make every smaller factor useless, and the
+  settings do not say that 1000 turns the range off. Both views share the hint and its "Don't show again", as
+  it says the same about the same setting.
 
 ## Compatibility
 
@@ -130,6 +132,9 @@ data or API changes.
   hides all of them.
 - The range hides offers of one side of the book only. A moved average can empty one offer list of the chart
   while the other one shows offers; the chart then shows no hint, the offer book of that side does.
+- The translations of the hint and of the label of the preference are older than the one-sided range and
+  the off state of the factor 1000. Until they are updated, they describe both sides and do not name the
+  off state.
 - Trade statistics which the node receives while the offer book is open count from the next filtering
   (rule 5).
 
