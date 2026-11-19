@@ -127,6 +127,8 @@ import bisq.common.util.Tuple4;
 
 import org.bitcoinj.core.Transaction;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
@@ -182,13 +184,8 @@ public class BuyerStep2View extends TradeStepView {
                         switch (state) {
                             case BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED:
                             case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:
-                                busyAnimation.play();
-                                statusLabel.setText(Res.get("shared.sendingConfirmation"));
+                                showSendingConfirmation();
                                 model.setMessageStateProperty(MessageState.SENT);
-                                timeoutTimer = UserThread.runAfter(() -> {
-                                    busyAnimation.stop();
-                                    statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
-                                }, 10);
                                 break;
                             case BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG:
                                 busyAnimation.stop();
@@ -704,14 +701,39 @@ public class BuyerStep2View extends TradeStepView {
     }
 
     private void confirmPaymentStarted() {
-        busyAnimation.play();
-        statusLabel.setText(Res.get("shared.sendingConfirmation"));
+        // A retry leaves the state of the trade as it is, for example while the message was sent and the seller has
+        // not acknowledged it, so the timeout must not wait for a change of the state.
+        showSendingConfirmation();
 
         model.dataModel.onPaymentStarted(trade, () -> {
         }, errorMessage -> {
-            busyAnimation.stop();
+            // The confirmation was refused, so the view must not offer to send it again
+            stopSendingTimeout();
+            showStatus(false, "");
             new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
+    }
+
+    // Without an answer of the seller within 10 seconds, the user can send the confirmation again
+    private void showSendingConfirmation() {
+        stopSendingTimeout();
+        showStatus(true, Res.get("shared.sendingConfirmation"));
+        timeoutTimer = UserThread.runAfter(() -> showStatus(false, Res.get("shared.sendingConfirmationAgain")), 10);
+    }
+
+    private void stopSendingTimeout() {
+        if (timeoutTimer != null)
+            timeoutTimer.stop();
+    }
+
+    @VisibleForTesting
+    void showStatus(boolean isBusy, String text) {
+        if (isBusy) {
+            busyAnimation.play();
+        } else {
+            busyAnimation.stop();
+        }
+        statusLabel.setText(text);
     }
 
     @Nullable
