@@ -66,10 +66,16 @@ public class TradeStatistics3Store extends PersistableNetworkPayloadStore<TradeS
     @VisibleForTesting
     static TradeStatistics3Store fromProto(protobuf.TradeStatistics3Store proto, int maxItems) {
         TradeStatistics3Store store = new TradeStatistics3Store();
+        int numAboveSizeLimit = 0;
         for (protobuf.TradeStatistics3 record : proto.getItemsList()) {
             if (store.map.size() >= maxItems) {
                 log.warn("Trade statistics store reached its limit of {} entries on load", maxItems);
                 break;
+            }
+            // A store written by v1.10.11 or earlier can hold such records. We skip them before we hash them.
+            if (record.getSerializedSize() > TradeStatistics3.MAX_SERIALIZED_BYTES) {
+                numAboveSizeLimit++;
+                continue;
             }
             try {
                 TradeStatistics3 item = TradeStatistics3.fromProto(record);
@@ -77,6 +83,10 @@ public class TradeStatistics3Store extends PersistableNetworkPayloadStore<TradeS
             } catch (InvalidPersistableNetworkPayloadException e) {
                 log.warn("Ignoring invalid TradeStatistics3 from TradeStatistics3Store. {}", e.getMessage());
             }
+        }
+        if (numAboveSizeLimit > 0) {
+            log.warn("Ignoring {} TradeStatistics3 above the size limit of {} bytes from TradeStatistics3Store",
+                    numAboveSizeLimit, TradeStatistics3.MAX_SERIALIZED_BYTES);
         }
         return store;
     }

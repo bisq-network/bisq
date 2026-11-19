@@ -60,7 +60,8 @@ store, so a response full of such entries led to such a bundle.
   - This counts as a violation of the relay, so a payload which nodes of earlier versions accept and
     relay must parse, also where its check depends on the version: a received trade statistic is
     checked as the nodes since v1.10.4 check it (rules 8 and 9 of
-    [`trade/trade-statistics-validity.md`](../trade/trade-statistics-validity.md)).
+    [`trade/trade-statistics-validity.md`](../trade/trade-statistics-validity.md)), and its size
+    limit applies where it is stored, not where it is parsed.
   - An element with a payload of a type which the node does not know, for example a stored entry
     of a newer version, or with such a type nested in its payload, for example a new type of
     proposal in a `TempProposalPayload`, counts in the same way. Before, it failed the conversion of

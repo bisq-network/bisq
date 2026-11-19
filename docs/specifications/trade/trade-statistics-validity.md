@@ -50,9 +50,11 @@ statistics a node accepts by their hash.
 ## Storage and relay
 
 The serialized trade statistic may occupy at most 256 bytes, including optional metadata. A node
-checks this limit before hashing an incoming record and when reading a store. Each store holds at
-most 100,000 distinct records. The writable store and each versioned archive have separate limits.
-The largest record and archive shipped through v1.10.12 contain 76 bytes and 75,912 records
+checks this limit when it admits a statistic to its store and when it reads a store, where it skips
+a larger record before it hashes it. A received statistic above the limit is parsed like any other,
+and then neither stored nor relayed. It is no rule violation of the peer which sent it. Each store
+holds at most 100,000 distinct records. The writable store and each versioned archive have separate
+limits. The largest record and archive shipped through v1.10.12 contain 76 bytes and 75,912 records
 respectively.
 
 A new statistic must pass the validity rules before admission, for both broadcasts and initial
@@ -89,6 +91,13 @@ volumes, are therefore informational. They must not change an offer, a trade, a 
   a currency, and its statistics must reach the nodes of that version through nodes of this version
   as well. A node which updates then already holds the statistics of the new currency. Nodes of
   earlier versions stored and relayed every statistic.
+- Storage and relay, size: nodes up to v1.10.11 have no size limit, and the hash of a statistic does
+  not cover its extra data, its mediator and its refund agent. They accept and relay a statistic
+  with a valid hash above the limit. If this version rejected it while it is parsed, that would
+  count as a rule violation of the honest relay, as for rule 8, and any peer could make nodes of
+  this version close their connections to relays of v1.10.11
+  (`tradestats-size-limit-version-split`). So the limit applies where a statistic is stored. The cost
+  of a received statistic stays bounded by the size limit of its message.
 - Rule 4: a price derived from trade statistics is for display only. The state of an offer depends
   only on the price feed.
 - Rule 5: the validity rules bound single values (rule 2), not every combination of them. A view
@@ -117,8 +126,9 @@ volumes, are therefore informational. They must not change an offer, a trade, a 
 
 The wire format, persisted format and hash calculation stay compatible with earlier versions. A node
 creates the same statistics with the same hashes as before (rule 7), and it checks the hash of a
-received statistic as nodes of v1.10.4 to v1.10.11 do (rule 8). All statistics in the bundled stores
-pass the date, price and volume checks. A node whose
+received statistic as nodes of v1.10.4 to v1.10.11 do (rule 8). It parses every received statistic
+which these nodes parse; the limits of the store apply after that. All statistics in the bundled
+stores pass the date, price and volume checks. A node whose
 clock is more than one day behind does not use new statistics until its clock is corrected and it
 is restarted. While no recent price from the price feed is available, for example right after
 startup or during an outage of the price feed, no offer is deactivated by its trigger price.

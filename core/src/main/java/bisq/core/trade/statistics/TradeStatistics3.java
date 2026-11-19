@@ -104,7 +104,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     @VisibleForTesting
     static final long MAX_PRICE = 1_000_000_000_000_000_000L;
 
-    // Shipped historical records are at most 76 bytes. Include optional fields and unknown protobuf fields.
+    // Shipped historical records are at most 76 bytes. Includes the optional fields. The store applies the limit
+    // when it adds a statistic and when it is loaded, not fromProto: nodes up to v1.10.11 have no limit and relay
+    // a larger statistic, and a received statistic which fails to parse counts as a rule violation of the relay.
     @JsonExclude
     static final int MAX_SERIALIZED_BYTES = 256;
 
@@ -389,9 +391,6 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     }
 
     public static TradeStatistics3 fromProto(protobuf.TradeStatistics3 proto) {
-        if (proto.getSerializedSize() > MAX_SERIALIZED_BYTES) {
-            throw new InvalidPersistableNetworkPayloadException("Trade statistic exceeds its size limit");
-        }
         long date = proto.getDate();
         TradeStatistics3 tradeStatistics = new TradeStatistics3(
                 proto.getCurrency(),

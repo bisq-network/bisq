@@ -35,6 +35,7 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.common.app.Version;
 import bisq.common.crypto.Hash;
 import bisq.common.proto.ProtobufferException;
+import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.util.ExtraDataMapValidator;
 
 import com.google.common.collect.Sets;
@@ -230,18 +231,44 @@ public class TradeStatistics3Test {
     }
 
     @Test
-    public void sizeLimitIncludesOptionalFieldsAndAppliesBeforeLegacyHashHandling() {
+    public void storeSkipsAStatisticAboveTheSizeLimitWithItsOptionalFieldsOnLoad() {
         TradeStatistics3 valid = tradeStatistics("USD");
-        protobuf.TradeStatistics3 oversized = valid.toProtoTradeStatistics3().toBuilder()
-                .setDate(1)
-                .putExtraData("referralId", "x".repeat(TradeStatistics3.MAX_SERIALIZED_BYTES))
-                .build();
+        protobuf.TradeStatistics3 oversized = aboveTheSizeLimit(valid);
 
-        assertThrows(InvalidPersistableNetworkPayloadException.class, () -> TradeStatistics3.fromProto(oversized));
         TradeStatistics3Store store = TradeStatistics3Store.fromProto(protobuf.TradeStatistics3Store.newBuilder()
                 .addItems(oversized).addItems(valid.toProtoTradeStatistics3()).build());
         assertEquals(1, store.getMap().size());
         assertTrue(store.containsKey(new P2PDataStorage.ByteArray(valid.getHash())));
+    }
+
+    // Nodes up to v1.10.11 have no size limit and the hash does not cover the extra data, so they accept and relay
+    // such a statistic. A statistic which fails to parse would count as a rule violation of the relay. It parses,
+    // alone and in a bundle, and the store refuses it (TradeStatistics3StorageServiceTest).
+    @Test
+    public void relayedStatisticAboveTheSizeLimitParses() throws Exception {
+        protobuf.TradeStatistics3 oversized = aboveTheSizeLimit(tradeStatistics("USD"));
+        CoreNetworkProtoResolver resolver = new CoreNetworkProtoResolver(Clock.systemUTC());
+        protobuf.NetworkEnvelope envelope = addPersistableNetworkPayloadEnvelope(oversized);
+
+        NetworkEnvelope message = resolver.fromProto(envelope);
+
+        TradeStatistics3 statistic = (TradeStatistics3) ((AddPersistableNetworkPayloadMessage) message)
+                .getPersistableNetworkPayload();
+        assertTrue(statistic.toProtoTradeStatistics3().getSerializedSize() > TradeStatistics3.MAX_SERIALIZED_BYTES);
+        BundleOfEnvelopes bundle = BundleOfEnvelopes.fromProto(
+                protobuf.BundleOfEnvelopes.newBuilder().addEnvelopes(envelope).build(),
+                resolver,
+                Version.getP2PMessageVersion());
+        assertEquals(1, bundle.getEnvelopes().size());
+        assertEquals(0, bundle.getNumUnparsableEnvelopes());
+    }
+
+    private static protobuf.TradeStatistics3 aboveTheSizeLimit(TradeStatistics3 tradeStatistics) {
+        protobuf.TradeStatistics3 oversized = tradeStatistics.toProtoTradeStatistics3().toBuilder()
+                .putExtraData("referralId", "x".repeat(TradeStatistics3.MAX_SERIALIZED_BYTES))
+                .build();
+        assertTrue(oversized.getSerializedSize() > TradeStatistics3.MAX_SERIALIZED_BYTES);
+        return oversized;
     }
 
     @Test
