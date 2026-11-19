@@ -108,9 +108,23 @@ class TorrcOverridesTest {
         assertEquals(Map.of("ExcludeNodes", "{ch}"), parseFromCommandLine(null, torrcOptions));
     }
 
+    // A tab separates the key as in a torrc of Tor. netlayer took only a space and dropped such a line, so Tor started
+    // without the restriction of ExcludeNodes and StrictNodes.
+    @Test
+    void aTabSeparatesTheKeyInTheTorrcFile(@TempDir Path tempDir) throws IOException {
+        File torrcFile = writeTorrcFile(tempDir,
+                "ExcludeNodes\t{ru},{by}",
+                "StrictNodes\t1",
+                "Log\tnotice stdout");
+
+        assertEquals(Map.of("ExcludeNodes", "{ru},{by}", "StrictNodes", "1", "Log", "notice stdout"),
+                parseFromCommandLine(torrcFile, ""));
+    }
+
+    // Whitespace which does not separate the key in a torrc of Tor stays in the key
     @Test
     void rejectsAKeyWithWhitespace(@TempDir Path tempDir) throws IOException {
-        File torrcFile = writeTorrcFile(tempDir, "Log\tnotice stdout");
+        File torrcFile = writeTorrcFile(tempDir, "Log\u2003notice stdout");
 
         assertThrows(IllegalArgumentException.class, () -> parseFromCommandLine(torrcFile, ""));
     }
