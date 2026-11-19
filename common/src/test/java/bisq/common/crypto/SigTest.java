@@ -18,7 +18,12 @@
 package bisq.common.crypto;
 
 import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.MessageDigest;
 import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Signature;
+import java.security.interfaces.DSAPublicKey;
 import java.security.spec.DSAPublicKeySpec;
 
 import java.math.BigInteger;
@@ -27,46 +32,104 @@ import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SigTest {
+    private static final byte[] DATA = "data".getBytes();
+
     @Test
-    public void acceptsKeysWeGenerateOurselves() {
-        byte[] encoded = Sig.getPublicKeyBytes(Sig.generateKeyPair().getPublic());
+    public void acceptsKeysWeGenerateOurselves() throws Exception {
+        KeyPair keyPair = Sig.generateKeyPair();
+        byte[] encoded = Sig.getPublicKeyBytes(keyPair.getPublic());
 
         assertTrue(encoded.length <= Sig.MAX_SIG_PUB_KEY_BYTES,
                 "Our own keys must fit into the accepted size, but were " + encoded.length + " bytes");
-        assertEquals(encoded.length, Sig.getPublicKeyBytes(Sig.getPublicKeyFromBytes(encoded)).length);
+        PublicKey publicKey = Sig.getPublicKeyFromBytes(encoded);
+        assertEquals(encoded.length, Sig.getPublicKeyBytes(publicKey).length);
+        assertTrue(Sig.verify(publicKey, DATA, Sig.sign(keyPair.getPrivate(), DATA)));
     }
 
+    // Nodes up to v1.10.11 accept a key of any size. Such a key can be in an entry which an honest peer relays and
+    // in a trade or dispute which we have stored, so we must still read it. We refuse it when we verify with it.
     @Test
-    public void rejectsOversizedEncoding() {
-        byte[] encoded = Sig.getPublicKeyBytes(Sig.generateKeyPair().getPublic());
-        byte[] oversized = Arrays.copyOf(encoded, Sig.MAX_SIG_PUB_KEY_BYTES + 1);
+    public void readsOversizedEncodingButDoesNotVerifyWithIt() throws Exception {
+        BigInteger p = BigInteger.ONE.shiftLeft(2047).setBit(0);
+        BigInteger q = BigInteger.ONE.shiftLeft(159).nextProbablePrime();
+        PublicKey key = KeyFactory.getInstance(Sig.KEY_ALGO)
+                .generatePublic(new DSAPublicKeySpec(p.subtract(BigInteger.TWO), p, q, p.subtract(BigInteger.ONE)));
+        byte[] encoded = key.getEncoded();
+        assertTrue(encoded.length > Sig.MAX_SIG_PUB_KEY_BYTES,
+                "Test premise: the encoding must be above the size limit, but was " + encoded.length + " bytes");
 
-        assertThrows(KeyConversionException.class, () -> Sig.getPublicKeyFromBytes(oversized));
+        PublicKey publicKey = Sig.getPublicKeyFromBytes(encoded);
+
+        assertArrayEquals(encoded, Sig.getPublicKeyBytes(publicKey));
+        CryptoException e = assertThrows(CryptoException.class, () -> Sig.verify(publicKey, DATA, new byte[46]));
+        assertTrue(e.getMessage().contains("exceeds the permitted size"), e.getMessage());
     }
 
     // A hand crafted SPKI can carry a large modulus in few bytes by pairing it with a tiny generator and public
-    // value, so the encoded size alone does not bound the cost of a verification.
+    // value, so the encoded size alone does not bound the cost of a verification. With a public value of 1 anyone
+    // can create signatures which the JDK accepts, so the key works as an identity on nodes without the bound.
     @Test
-    public void rejectsSmallEncodingCarryingAnOversizedModulus() throws Exception {
-        BigInteger p = BigInteger.ONE.shiftLeft(2560).subtract(BigInteger.ONE);
-        BigInteger q = BigInteger.ONE.shiftLeft(159).setBit(159).nextProbablePrime();
-        PublicKey key = KeyFactory.getInstance(Sig.KEY_ALGO)
-                .generatePublic(new DSAPublicKeySpec(BigInteger.valueOf(3), p, q, BigInteger.TWO));
-        byte[] encoded = key.getEncoded();
-
+    public void readsSmallEncodingCarryingAnOversizedModulusButDoesNotVerifyWithIt() throws Exception {
+        SecureRandom random = new SecureRandom();
+        BigInteger p = new BigInteger(3072, random).setBit(3071).setBit(0);
+        BigInteger q = BigInteger.probablePrime(160, random);
+        byte[] encoded = KeyFactory.getInstance(Sig.KEY_ALGO)
+                .generatePublic(new DSAPublicKeySpec(BigInteger.ONE, p, q, BigInteger.TWO)).getEncoded();
         assertTrue(encoded.length <= Sig.MAX_SIG_PUB_KEY_BYTES,
                 "Test premise: the oversized modulus must pass the size check, but the encoding was "
                         + encoded.length + " bytes");
-        assertThrows(KeyConversionException.class, () -> Sig.getPublicKeyFromBytes(encoded));
+
+        PublicKey publicKey = Sig.getPublicKeyFromBytes(encoded);
+
+        assertEquals(3072, ((DSAPublicKey) publicKey).getParams().getP().bitLength());
+        byte[] signature = signatureForPublicValueOne(p, q, DATA, random);
+        Signature jdkSignature = Signature.getInstance("SHA256withDSA");
+        jdkSignature.initVerify(publicKey);
+        jdkSignature.update(DATA);
+        assertTrue(jdkSignature.verify(signature), "Test premise: the JDK accepts the signature");
+        CryptoException e = assertThrows(CryptoException.class, () -> Sig.verify(publicKey, DATA, signature));
+        assertTrue(e.getMessage().contains("modulus exceeds the permitted size"), e.getMessage());
     }
 
     @Test
     public void rejectsMalformedEncoding() {
         assertThrows(KeyConversionException.class, () -> Sig.getPublicKeyFromBytes(new byte[]{1, 2, 3}));
+    }
+
+    // For g = 2 and y = 1 the verification computes (2^(z/s) mod p) mod q, with z from the hash of the data, and
+    // compares it with r. So r = (2^e mod p) mod q and s = z/e are a signature, for any e.
+    private static byte[] signatureForPublicValueOne(BigInteger p, BigInteger q, byte[] data, SecureRandom random)
+            throws Exception {
+        byte[] hash = Arrays.copyOf(MessageDigest.getInstance("SHA-256").digest(data), q.bitLength() / 8);
+        BigInteger z = new BigInteger(1, hash);
+        BigInteger r;
+        BigInteger s;
+        do {
+            BigInteger e = new BigInteger(q.bitLength() - 1, random).add(BigInteger.ONE);
+            r = BigInteger.TWO.modPow(e, p).mod(q);
+            s = z.multiply(e.modInverse(q)).mod(q);
+        } while (r.signum() == 0 || s.signum() == 0);
+        return derSequence(r, s);
+    }
+
+    private static byte[] derSequence(BigInteger r, BigInteger s) {
+        byte[] rBytes = r.toByteArray();
+        byte[] sBytes = s.toByteArray();
+        byte[] der = new byte[6 + rBytes.length + sBytes.length];
+        der[0] = 0x30;
+        der[1] = (byte) (4 + rBytes.length + sBytes.length);
+        der[2] = 0x02;
+        der[3] = (byte) rBytes.length;
+        System.arraycopy(rBytes, 0, der, 4, rBytes.length);
+        der[4 + rBytes.length] = 0x02;
+        der[5 + rBytes.length] = (byte) sBytes.length;
+        System.arraycopy(sBytes, 0, der, 6 + rBytes.length, sBytes.length);
+        return der;
     }
 }
