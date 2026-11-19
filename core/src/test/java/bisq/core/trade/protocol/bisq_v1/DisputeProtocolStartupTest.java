@@ -52,10 +52,12 @@ import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -116,6 +118,25 @@ class DisputeProtocolStartupTest {
         verify(trade, never()).setErrorMessage(anyString());
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void watchesPayoutAddressWhileWalletRescansDeposit(boolean depositInWallet) {
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+        Trade trade = tradeWithWallet(OWN_SIGNATURE, btcWalletService);
+        if (depositInWallet) {
+            TransactionConfidence confidence = trade.getDepositTx().getConfidence();
+            when(confidence.getConfidenceType()).thenReturn(TransactionConfidence.ConfidenceType.PENDING);
+        } else {
+            when(trade.getDepositTx()).thenReturn(null);
+        }
+
+        new DisputeProtocol(trade).onInitialized();
+
+        verify(btcWalletService, never()).getConfidenceForAddressFromBlockHeight(any(Address.class), anyLong());
+        verify(btcWalletService).addAddressConfidenceListener(any(AddressConfidenceListener.class));
+        verify(trade, never()).setErrorMessage(anyString());
+    }
+
     @Test
     void noWalletListenerBeforeOwnAcceptance() {
         BtcWalletService btcWalletService = mock(BtcWalletService.class);
@@ -143,7 +164,9 @@ class DisputeProtocolStartupTest {
         when(btcWalletService.getAddressEntry("trade-id", AddressEntry.Context.TRADE_PAYOUT))
                 .thenReturn(Optional.of(payoutAddressEntry));
         Transaction depositTx = mock(Transaction.class);
-        when(depositTx.getConfidence()).thenReturn(mock(TransactionConfidence.class));
+        TransactionConfidence confidence = mock(TransactionConfidence.class);
+        when(confidence.getConfidenceType()).thenReturn(TransactionConfidence.ConfidenceType.BUILDING);
+        when(depositTx.getConfidence()).thenReturn(confidence);
         when(trade.getDepositTx()).thenReturn(depositTx);
         when(trade.stateProperty())
                 .thenReturn(new SimpleObjectProperty<>(Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG));
