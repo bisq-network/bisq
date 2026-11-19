@@ -19,7 +19,7 @@ specification says so explicitly instead of describing the implementation as if 
 | [`application/alert-admission.md`](application/alert-admission.md) | Which alert messages a node accepts and how they are signed, including the version format of update alerts. |
 | [`application/graceful-shutdown.md`](application/graceful-shutdown.md) | Graceful application shutdown, persistence completion, the single-instance lock lifetime, controlled process exit, and the JVM shutdown-hook backstop. |
 | [`application/data-directory-backup.md`](application/data-directory-backup.md) | What "Backup now" copies from the data directory, how it treats links and special files, and who can read the backup. |
-| [`application/data-directory-access.md`](application/data-directory-access.md) | Who can read the data directory: the owner-only mode that the node sets at every start. |
+| [`application/data-directory-access.md`](application/data-directory-access.md) | Who can read the data directory: the owner-only mode that the node sets on every directory of it at every start, and why the mode of the data directory alone is not enough. |
 | [`application/key-ring-storage.md`](application/key-ring-storage.md) | Who can read the private keys of the key ring and their rolling backups. |
 
 ### `api/`

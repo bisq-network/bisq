@@ -131,11 +131,14 @@ public class CommonSetup {
     }
 
     // The data directory holds the wallet, the keys, the persisted data and the logs, in files with the default mode of
-    // the process. Owner-only, it keeps all of them from other local users. Every start sets the mode, so that a data
-    // directory of an earlier version gets it too. Called after the log setup, so that a failure is in the log.
+    // the process. Every start makes the data directory and every directory in it owner-only, also those of an earlier
+    // version: the mode of a directory is checked at each lookup which passes it, so a directory inside the data
+    // directory which another user opened while it was open to others lets that user open the files written there
+    // later, until that directory itself is owner-only. Called after the log setup, so that a failure is in the log, and
+    // before Tor starts, which writes in the data directory.
     @VisibleForTesting
     static void restrictAppDataDirToOwner(File appDataDir) {
-        FileUtil.restrictToOwner(appDataDir.toPath(), "rwx------");
+        FileUtil.restrictDirectoryTreeToOwner(appDataDir.toPath());
     }
 
     protected static void setSystemProperties() {

@@ -390,6 +390,48 @@ public class FileUtil {
         }
     }
 
+    /**
+     * Makes the directory and every directory below it accessible to its owner only (rwx------), with the rules of
+     * {@link #restrictToOwner}. A failure is logged, and the other directories still get the mode. Files keep their
+     * modes. A link below the directory is not followed, so directories outside it keep their modes; a directory which
+     * is itself a link is followed.
+     * <p>
+     * As {@link #copyDirectory(File, File)}, the walk reads the attributes of an entry and then uses its path, so a link
+     * which replaces a directory between the two steps would be followed. Call it only while no other process writes
+     * below the directory, for example at the start before Tor runs.
+     */
+    public static void restrictDirectoryTreeToOwner(Path directory) {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            return;
+        }
+        try {
+            java.nio.file.Files.walkFileTree(directory.toRealPath(), new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attributes) {
+                    restrictToOwner(dir, "rwx------");
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException e) {
+                    log.warn("Could not make {} accessible to its owner only: {}", file, e.toString());
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException e) {
+                    if (e != null) {
+                        log.warn("Could not make all directories below {} accessible to their owner only: {}", dir,
+                                e.toString());
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            log.warn("Could not make {} accessible to its owner only: {}", directory, e.toString());
+        }
+    }
+
     // No attribute on a file system without POSIX permissions, such as the one of Windows
     private static FileAttribute<?>[] ownerOnly(String posixPermissions) {
         if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {

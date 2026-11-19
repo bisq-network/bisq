@@ -8,15 +8,23 @@ data and the logs.
 
 ## Rules
 
-- On a file system with POSIX permissions the node sets the mode of the data directory to `0700` at
-  every start, right after the log is set up, so that only its owner can enter it.
-- The files and directories inside keep the modes they are created with, by default those of the
-  process. The mode of the data directory keeps them from other users.
-- If the node cannot set the mode, for example because another user owns the directory, it logs a
-  warning and starts as before. A file system without these permissions, such as the one of Windows,
-  keeps its own rules.
-- The node sets the mode of the directory that `--appDataDir` names, so the data directory must be a
-  directory of its own.
+- On a file system with POSIX permissions the node sets the mode of the data directory and of every
+  directory below it to `0700` at every start, right after the log is set up and before Tor starts,
+  so that only their owner can enter them. This includes the directories of an earlier version.
+- The files keep the modes they are created with, by default those of the process. The modes of the
+  directories keep them from other users.
+- Directories which the node creates while it runs, for example for the backups of the wallets, may
+  get the default mode of the process. They lie inside owner-only directories, and the next start
+  sets their mode.
+- The node does not follow a symbolic link below the data directory. A directory which such a link
+  points to keeps its mode: the user who keeps a part of the data directory elsewhere, for example
+  the wallet directory on another drive, protects it there. If `--appDataDir` itself names a link,
+  the node sets the modes in the directory which it points to.
+- If the node cannot set the mode of a directory, for example because another user owns it, it logs
+  a warning, sets the modes of the other directories and starts as before. A file system without
+  these permissions, such as the one of Windows, keeps its own rules.
+- The node sets the modes of the directory that `--appDataDir` names and of everything below it, so
+  the data directory must be a directory of its own.
 
 The key ring and the backup copy have their own rules:
 [`key-ring-storage.md`](key-ring-storage.md) and
@@ -27,11 +35,31 @@ The key ring and the backup copy have their own rules:
 The node creates its directories and files with the default mode of the process, `0755` and `0644`
 with the usual umask. Only the key ring and the key of the onion service were owner-only. So every
 local user who could enter the data directory could read the wallet files, which are not encrypted
-without a wallet password, the backups of the wallets, the persisted trades and the logs. One mode at
-the top protects all of them, also the files of an earlier version.
+without a wallet password, the backups of the wallets, the persisted trades and the logs.
+
+The mode of a directory is checked at each lookup which passes it, and a new mode does not take back
+a directory which a process has opened already. Another user who opened a directory inside the data
+directory, or made it the working directory, while it was open to others, can open the files which
+the node writes there later for as long as that directory itself stays open: the mode of the data
+directory does not apply to a lookup which starts below it. So the mode of the data directory alone
+does not protect the files below it, and every directory gets the mode, at every start, also the
+directories of an earlier version, which other users could open at any time before. A file is
+opened by a lookup in its directory, so the files need no mode of their own.
+
+## Known gaps
+
+A mode does not take back a file which another user opened, or linked with a hard link where the
+system allows it, while the data directory was open to others, and no mode takes back a copy. A file
+which the node writes in place, such as the log until it rolls over, stays readable that way. The
+node writes the wallet files, their backups and the persisted data as new files, so such a user keeps
+only their content of that time. On a host where other users could enter the data directory of an
+earlier version, they could have copied the wallet: if it has no password, move the funds to a new
+wallet.
 
 ## Compatibility
 
-A data directory of an earlier version gets the mode at the next start. An operator who reads files
-of the data directory as another user, for example the logs, must do so as the owner now, because
-the node sets the mode again at every start.
+A data directory of an earlier version gets the modes at the next start. An operator who reads files
+of the data directory as another user, for example the logs or the JSON files of a full DAO node,
+must do so as the owner now, because the node sets the modes again at every start. On Linux a new
+mode also limits what ACL entries grant other users on a directory, as it sets the ACL mask, so
+access through ACLs does not survive a start either.
