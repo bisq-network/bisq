@@ -2,6 +2,8 @@ package bisq.common.config;
 
 import bisq.network.tor.common.platform.LinuxDistribution;
 
+import bisq.common.file.FileUtil;
+
 import org.bitcoinj.core.NetworkParameters;
 
 import joptsimple.AbstractOptionSpec;
@@ -1244,13 +1246,26 @@ public class Config {
 
     /**
      * Creates {@value APP_DATA_DIR} including any nonexistent parent directories. Does
-     * nothing if the directory already exists.
+     * nothing if the directory already exists. The directory is owner-only from its creation on, so that no other user
+     * can open a directory in it before CommonSetup restricts the data directory, also if the start ends before. The
+     * parents are no part of the data directory and get the default mode.
      * @return the given directory, now guaranteed to exist
      */
     private static File mkAppDataDir(File dir) {
         if (!dir.exists()) {
             try {
-                Files.createDirectories(dir.toPath());
+                Path path = dir.toPath().toAbsolutePath();
+                // Bisq/. names Bisq, and its parent is the parent of Bisq
+                while (path.getFileName() != null && path.getFileName().toString().equals(".")) {
+                    path = path.getParent();
+                }
+                Path parent = path.getParent();
+                if (parent != null) {
+                    Files.createDirectories(parent);
+                }
+                FileUtil.createOwnerOnlyDirectories(path);
+                // For a path ending in .. the line above found the directory, which was created on the way to the parent
+                FileUtil.restrictToOwner(path, "rwx------");
             } catch (IOException ex) {
                 throw new UncheckedIOException(format("Application data directory '%s' could not be created", dir), ex);
             }
@@ -1260,14 +1275,14 @@ public class Config {
 
     /**
      * Creates child directory assuming parent directories already exist. Does nothing if
-     * the directory already exists.
+     * the directory already exists. The directory is owner-only from its creation on, as the data directory.
      * @return the child directory, now guaranteed to exist
      */
     private static File mkdir(File parent, String child) {
         File dir = new File(parent, child);
         if (!dir.exists()) {
             try {
-                Files.createDirectory(dir.toPath());
+                FileUtil.createOwnerOnlyDirectories(dir.toPath());
             } catch (IOException ex) {
                 throw new UncheckedIOException(format("Directory '%s' could not be created", dir), ex);
             }
