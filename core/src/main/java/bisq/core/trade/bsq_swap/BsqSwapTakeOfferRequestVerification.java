@@ -76,7 +76,7 @@ public class BsqSwapTakeOfferRequestVerification {
             // would be settled in BSQ at a price set for another currency.
             checkArgument(offer.isBsqSwapOffer(), "Offer must be a BSQ swap offer");
             if (request instanceof BuyersBsqSwapRequest) {
-                checkArgument(!offer.isBuyOffer(), "Offer must be a sell offer for a BuyersBsqSwapRequest");
+                checkArgument(offer.isSellOffer(), "Offer must be a sell offer for a BuyersBsqSwapRequest");
             } else {
                 checkArgument(request instanceof SellersBsqSwapRequest, "Unexpected request type");
                 checkArgument(offer.isBuyOffer(), "Offer must be a buy offer for a SellersBsqSwapRequest");

@@ -404,7 +404,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         Coin amount = Coin.valueOf(request.getTradeAmount());
         BsqSwapProtocolModel bsqSwapProtocolModel = new BsqSwapProtocolModel(keyRing.getPubKeyRing());
         if (request instanceof BuyersBsqSwapRequest) {
-            checkArgument(!offer.isBuyOffer(),
+            checkArgument(offer.isSellOffer(),
                     "offer is expected to be a sell offer at handleBsqSwapRequest");
             bsqSwapTrade = new BsqSwapSellerAsMakerTrade(
                     offer,

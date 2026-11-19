@@ -205,6 +205,17 @@ class BsqSwapTakeOfferRequestVerificationTest {
     }
 
     @Test
+    void rejectsBuyersRequestForBsqSwapOfferWithoutDirection() {
+        Fixture fixture = new Fixture(NETWORK_MIN, true, null);
+
+        assertFalse(BsqSwapTakeOfferRequestVerification.isValid(fixture.openOfferManager,
+                fixture.feeService,
+                fixture.keyRing,
+                PEER,
+                newBuyersRequest()));
+    }
+
+    @Test
     void rejectsSellersRequestForBsqSwapSellOffer() {
         Fixture fixture = new Fixture(NETWORK_MIN, true, OfferDirection.SELL);
 
