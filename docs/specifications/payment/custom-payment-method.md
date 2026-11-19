@@ -108,12 +108,15 @@ Bisq knows nothing about that.
     - the name of the account is the same name as the name of the offer, and
     - the account data is valid.
 18. If a check of rule 17 fails, the trade step fails. The buyer fails it before any change of its
-    wallet or of the trade, and does not share its own account. The seller does not treat the
-    account of the buyer as validated, so it neither publishes the deposit nor accepts the payment
-    as started, nor pays out. In both cases the deposit is not published: the seller publishes it
-    only after it has validated the account of the buyer (see
+    wallet or of the trade, and does not share its own account; the deposit is then not published,
+    as the seller publishes it only after it has validated the account of the buyer (see
     [`fiat-buyer-payment-account-validation.md`](../trade/fiat-buyer-payment-account-validation.md)).
-    Both trade fees are paid by then and are lost, and the offer of the maker is removed.
+    The seller does not treat the account of the buyer as validated, so it neither publishes the
+    deposit nor accepts the payment as started, nor pays out. The buyer has received the signed
+    deposit before, and its wallet broadcasts it at the next start of the buyer's application (see
+    that specification), so the deposit can still be published, and the trade then needs
+    mediation. Both trade fees are paid by then and are lost, and the offer of the maker is
+    removed.
 19. An error of rule 18 does not contain a text of the peer.
 
 ### Limits
