@@ -24,6 +24,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.nio.file.attribute.UserPrincipal;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -44,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class FileUtilTest {
@@ -137,6 +139,29 @@ public class FileUtilTest {
     @Test
     public void restrictToOwnerOnlyLogsAFailure(@TempDir Path tmp) {
         assertDoesNotThrow(() -> FileUtil.restrictToOwner(tmp.resolve("missing"), "rwx------"));
+    }
+
+    // A test cannot create a directory of another user, so the directories of this user stand for those of another user
+    @Test
+    public void restrictDirectoryTreeToOwnerKeepsTheModesOfADirectoryOfAnotherUser(@TempDir Path tmp)
+            throws IOException {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        UserPrincipal otherUser = tmp.getFileSystem().getUserPrincipalLookupService().lookupPrincipalByName("root");
+        assumeFalse(Files.getOwner(tmp).equals(otherUser));
+        Path root = Files.createDirectories(tmp.resolve("Bisq"));
+        Path inner = Files.createDirectories(root.resolve("db/backup"));
+        List<Path> directories = List.of(inner.getParent(), inner);
+        for (Path directory : directories) {
+            Files.setPosixFilePermissions(directory, PosixFilePermissions.fromString("rwxrwxrwx"));
+        }
+
+        FileUtil.restrictDirectoryTreeToOwner(root, otherUser);
+
+        assertEquals(PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(root));
+        for (Path directory : directories) {
+            assertEquals(PosixFilePermissions.fromString("rwxrwxrwx"), Files.getPosixFilePermissions(directory),
+                    directory.toString());
+        }
     }
 
     @Test
