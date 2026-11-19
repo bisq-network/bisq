@@ -24,7 +24,6 @@ import bisq.core.dao.governance.bond.lockup.LockupReason;
 import bisq.core.dao.governance.proofofburn.ProofOfBurnConsensus;
 import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.voteresult.VoteResultConsensus;
-import bisq.core.dao.node.parser.exceptions.InvalidParsingConditionException;
 import bisq.core.dao.state.model.blockchain.OpReturnType;
 import bisq.core.dao.state.model.blockchain.TxOutputType;
 
@@ -49,8 +48,8 @@ class OpReturnParser {
      *
      * @param tempTxOutput      The temporary transaction output to parse.
      * @return The type of the transaction output, which will be either one of the
-     *                          {@code *_OP_RETURN_OUTPUT} values, or {@code UNDEFINED} in case of
-     *                          unexpected state.
+     *                          {@code *_OP_RETURN_OUTPUT} values, or {@code INVALID_OUTPUT} if the data
+     *                          match none of them.
      */
     static TxOutputType getTxOutputType(TempTxOutput tempTxOutput) {
         boolean nonZeroOutput = tempTxOutput.getValue() != 0;
@@ -121,7 +120,11 @@ class OpReturnParser {
                 else
                     break;
             default:
-                throw new InvalidParsingConditionException("We must have a defined opReturnType as it was checked earlier in the caller.");
+                // Each OP_RETURN type has its case above. A throw here would leave the block half parsed, so a type
+                // without a case makes the output invalid like an unknown type.
+                log.warn("OP_RETURN type {} has no rule. opReturnData={}", optionalOpReturnType.get(),
+                        Utils.HEX.encode(opReturnData));
+                return TxOutputType.INVALID_OUTPUT;
         }
 
         log.info("We expected a compensation request op_return data but it did not " +
