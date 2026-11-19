@@ -152,6 +152,23 @@ class PriceUtilTest {
         assertEquals(0, priceUtil.getBsq90DayAveragePrice().getValue());
     }
 
+    // A few invented statistics at 1 sat per BSQ move the average to about 1 sat. The largest factor must still show
+    // the offers at the market price, so that the user can turn the range off.
+    @Test
+    void theLargestFactorTurnsTheRangeOff() {
+        TradeStatistics3 statistic = new TradeStatistics3("BSQ", 1, Coin.parseCoin("2").getValue(),
+                "BLOCK_CHAINS", System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1), null, null,
+                (TreeMap<String, String>) null);
+        Preferences preferences = preferences();
+        when(preferences.getBsqOfferPriceRangeFactor()).thenReturn(Preferences.MAX_BSQ_OFFER_PRICE_RANGE_FACTOR);
+        PriceUtil priceUtil = new PriceUtil(mock(PriceFeedService.class), tradeStatisticsManager(statistic),
+                preferences);
+
+        Predicate<Offer> isOutsidePriceRange = priceUtil.getOutsideBsqOfferPriceRangePredicate();
+
+        assertFalse(isOutsidePriceRange.test(bsqOffer(1300, BUY)));
+    }
+
     // The predicate reads the factor of the preferences and the direction of the offer, and leaves offers of other
     // currencies alone
     @Test

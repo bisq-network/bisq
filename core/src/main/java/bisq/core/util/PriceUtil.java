@@ -140,10 +140,14 @@ public class PriceUtil {
 
     // BSQ offers with a price worse for the taker than the range around the 90-day average BSQ price which the
     // preferences set. Reads the average and the factor once, so that one filtering of many offers computes the
-    // average once.
+    // average once. The largest factor turns the range off: invented statistics can move the average so far that
+    // no factor below it shows the offers at the market price.
     public Predicate<Offer> getOutsideBsqOfferPriceRangePredicate() {
-        Price averagePrice = getBsq90DayAveragePrice();
         double factor = preferences.getBsqOfferPriceRangeFactor();
+        if (factor >= Preferences.MAX_BSQ_OFFER_PRICE_RANGE_FACTOR) {
+            return offer -> false;
+        }
+        Price averagePrice = getBsq90DayAveragePrice();
         return offer -> offer.getCurrencyCode().equals("BSQ") &&
                 isOutsidePriceRange(offer.getPrice(), averagePrice, factor, offer.getDirection());
     }

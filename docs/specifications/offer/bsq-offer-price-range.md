@@ -21,8 +21,9 @@ range, and the hint shown when the range hides every offer of one of these views
    computes from its trade statistics. It is the average which the DAO dashboard shows as the 90 days
    average BSQ/BTC trade price, with the outlier threshold of the preferences.
 3. The factor is a preference of the user, which the user enters in the DAO options of the preferences. It
-   is a number above 1 and at most 1000. The default is 2. A stored factor outside this range is replaced by
-   the default; this includes the 0 which a data directory of a version without the preference yields.
+   is a number above 1 and at most 1000. The default is 2. The factor 1000 turns the range off: no offer is
+   hidden. A stored factor outside this range is replaced by the default; this includes the 0 which a data
+   directory of a version without the preference yields.
 4. The range never hides:
    - any offer while the node has no reference price, because it holds no BSQ trade statistic of the last
      90 days or the average cannot be computed (rule 5 of
@@ -69,8 +70,10 @@ A moved average moves the range. As only prices worse for the taker are hidden (
 stays visible on one side of the book is better for the taker than every offer which the range hides there.
 An average moved below the market hides the fair offers to sell BSQ and keeps the offers to sell BSQ below
 the market, which are better for the taker. An average moved above the market does the same with the offers
-to buy BSQ. A moved average can therefore empty one side of the book, and the hint of rule 6 then names the
-range, but it cannot leave only offers at prices worse than the market visible. The percentage which the
+to buy BSQ. A moved average can therefore empty one side of the book, but it cannot leave only offers at
+prices worse than the market visible. The offer book of that side then shows the hint of rule 6, and the
+factor 1000 turns the range off: a few statistics at 1 satoshi per BSQ move the average to about 1 satoshi,
+so that no smaller factor shows the offers at the market price. The percentage which the
 offer book shows next to the price of a BSQ offer refers to the average of 30 days of the same statistics,
 and the market price of the main window to the statistics of the last day
 ([`../trade/trade-statistics-market-price.md`](../trade/trade-statistics-market-price.md)), so neither
@@ -95,8 +98,9 @@ the market from emptying the offer book or the chart without explanation.
   reference are equally far from it.
 - Rule 3, default: a factor of 2 keeps offers visible when the market price moved within the 90 days, and
   hides offers at several times or a fraction of the market price.
-- Rule 3, maximum: a factor of 1000 hides practically no offer. It takes the place of a switch to turn the
-  range off.
+- Rule 3, maximum: the factor 1000 takes the place of a switch to turn the range off. It shows all offers
+  instead of the offers within 1000 times the reference price, because invented statistics can move the
+  reference price below a thousandth of the market price (see the trust model).
 - Rule 1, chart: the chart and the offer book show the same BSQ offers, so that the market view does not
   present offers which the offer book hides. The chart has its own display limit: it leaves out of the depth
   chart, but not of the offer lists, buy offers at a third or less of the highest buy price and sell offers at
@@ -124,6 +128,8 @@ data or API changes.
 
 - The offer book and the chart do not show how many offers the range hides, only the hint of rule 6 when it
   hides all of them.
+- The range hides offers of one side of the book only. A moved average can empty one offer list of the chart
+  while the other one shows offers; the chart then shows no hint, the offer book of that side does.
 - Trade statistics which the node receives while the offer book is open count from the next filtering
   (rule 5).
 
