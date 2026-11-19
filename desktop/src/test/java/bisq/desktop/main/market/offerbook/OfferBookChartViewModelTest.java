@@ -227,17 +227,20 @@ public class OfferBookChartViewModelTest {
         assertEquals(4, model.maxPlacesForSellVolume.intValue()); //2213
     }
 
-    // As in the BSQ offer book, BSQ offers of others outside the price range are left out of the chart and the lists
+    // As in the BSQ offer book, BSQ offers of others with a price worse for the taker than the price range are left
+    // out of the chart and the lists: offers to buy BSQ (direction SELL) below it, offers to sell BSQ (direction BUY)
+    // above it.
     @Test
     public void bsqOffersOutsideThePriceRangeAreLeftOut() {
         OfferBook offerBook = mock(OfferBook.class);
         ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        OfferBookListItem ownOffer = bsqItem("own-far-above", 10 * AVERAGE_BSQ_PRICE, OfferDirection.SELL);
-        offerBookListItems.addAll(bsqItem("at-upper-bound", 2 * AVERAGE_BSQ_PRICE, OfferDirection.SELL),
-                bsqItem("above-upper-bound", 2 * AVERAGE_BSQ_PRICE + 1, OfferDirection.SELL),
+        OfferBookListItem ownOffer = bsqItem("own-below-lower-bound", AVERAGE_BSQ_PRICE / 2 - 100,
+                OfferDirection.SELL);
+        offerBookListItems.addAll(bsqItem("at-lower-bound", AVERAGE_BSQ_PRICE / 2, OfferDirection.SELL),
+                bsqItem("below-lower-bound", AVERAGE_BSQ_PRICE / 2 - 1, OfferDirection.SELL),
                 ownOffer,
-                bsqItem("at-lower-bound", AVERAGE_BSQ_PRICE / 2, OfferDirection.BUY),
-                bsqItem("below-lower-bound", AVERAGE_BSQ_PRICE / 2 - 1, OfferDirection.BUY));
+                bsqItem("at-upper-bound", 2 * AVERAGE_BSQ_PRICE, OfferDirection.BUY),
+                bsqItem("above-upper-bound", 2 * AVERAGE_BSQ_PRICE + 1, OfferDirection.BUY));
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
         OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
         when(openOfferManager.isMyOffer(ownOffer.getOffer())).thenReturn(true);
@@ -250,21 +253,21 @@ public class OfferBookChartViewModelTest {
         model.activate();
 
         // For an altcoin, the offers with the direction SELL are in the buy list
-        assertEquals(List.of("own-far-above", "at-upper-bound"), offerIds(model.getTopBuyOfferList()));
-        assertEquals(List.of("at-lower-bound"), offerIds(model.getTopSellOfferList()));
+        assertEquals(List.of("at-lower-bound", "own-below-lower-bound"), offerIds(model.getTopBuyOfferList()));
+        assertEquals(List.of("at-upper-bound"), offerIds(model.getTopSellOfferList()));
         assertEquals(2, model.getBuyData().size());
         assertEquals(1, model.getSellData().size());
 
-        offerBookListItems.add(bsqItem("arrives-below-lower-bound", AVERAGE_BSQ_PRICE / 3, OfferDirection.BUY));
-        assertEquals(List.of("at-lower-bound"), offerIds(model.getTopSellOfferList()));
+        offerBookListItems.add(bsqItem("arrives-above-upper-bound", 3 * AVERAGE_BSQ_PRICE, OfferDirection.BUY));
+        assertEquals(List.of("at-upper-bound"), offerIds(model.getTopSellOfferList()));
         assertFalse(model.allOffersOutsidePriceRange.get());
     }
 
     @Test
     public void allOffersOutsidePriceRangeOnlyWhenTheRangeHidesEveryOffer() {
         ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList(
-                bsqItem("above", 3 * AVERAGE_BSQ_PRICE, OfferDirection.SELL),
-                bsqItem("below", AVERAGE_BSQ_PRICE / 3, OfferDirection.BUY));
+                bsqItem("below", AVERAGE_BSQ_PRICE / 3, OfferDirection.SELL),
+                bsqItem("above", 3 * AVERAGE_BSQ_PRICE, OfferDirection.BUY));
         OfferBookChartViewModel model = activatedBsqModel(offerBookListItems);
 
         assertTrue(model.getTopBuyOfferList().isEmpty());
@@ -281,6 +284,19 @@ public class OfferBookChartViewModelTest {
 
         // Another currency has no price range
         model.onSetTradeCurrency(usd);
+        assertFalse(model.allOffersOutsidePriceRange.get());
+    }
+
+    // A price better for the taker is never outside the range: an offer to buy BSQ above it and an offer to sell BSQ
+    // below it stay in the lists
+    @Test
+    public void bsqOffersBetterForTheTakerThanThePriceRangeAreShown() {
+        OfferBookChartViewModel model = activatedBsqModel(FXCollections.observableArrayList(
+                bsqItem("buys-bsq-above", 3 * AVERAGE_BSQ_PRICE, OfferDirection.SELL),
+                bsqItem("sells-bsq-below", AVERAGE_BSQ_PRICE / 3, OfferDirection.BUY)));
+
+        assertEquals(List.of("buys-bsq-above"), offerIds(model.getTopBuyOfferList()));
+        assertEquals(List.of("sells-bsq-below"), offerIds(model.getTopSellOfferList()));
         assertFalse(model.allOffersOutsidePriceRange.get());
     }
 

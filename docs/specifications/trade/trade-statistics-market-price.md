@@ -18,8 +18,9 @@ of the mobile notifications compare against it. Offers, trades and fees do not u
    does not decide the price. A statistic dated ahead of the node's clock, which validity allows by up to
    one day, is the newest one of its currency until a statistic with a later date arrives.
 2. For BSQ, the price is the volume weighted average price of the BSQ statistics dated in the 24 hours up to
-   and including the newest BSQ statistic: the sum of their BTC amounts divided by the sum of their BSQ
-   volumes. A statistic dated exactly 24 hours before the newest one is not part of the average.
+   and including the newest BSQ statistic, at most the newest 200 of them: the sum of their BTC amounts
+   divided by the sum of their BSQ volumes. A statistic dated exactly 24 hours before the newest one is not
+   part of the average.
 3. For every other currency, the price is the price of its newest statistic.
 4. The price is never 0. If the average of rule 2 cannot be represented as a long (rule 5 of
    `trade-statistics-validity.md`), the price of the newest BSQ statistic is used.
@@ -27,6 +28,11 @@ of the mobile notifications compare against it. Offers, trades and fees do not u
 6. The main window labels a derived BSQ price as an average of recent Bisq trades and names the period in
    its tooltip, and a derived price of another currency as the price of the latest Bisq trade. The DAO
    dashboard names the period below a derived BSQ price.
+7. Deriving the price for a received statistic costs no work which grows with the number of statistics
+   which the node holds. The statistics of one bundle of the network arrive as one task each on the user
+   thread. The node derives the prices of their currencies, updates the price feed, which runs its
+   listeners, and writes the dump of `--dumpStatistics` after the tasks which wait at that time, not once
+   per statistic.
 
 ## Trust model
 
@@ -34,12 +40,16 @@ Trade statistics are unauthenticated (see the trust model of `trade-statistics-v
 publish a valid statistic with any price up to the limit, an amount of up to 2 BTC and the current date. The
 derived price is informational.
 
-The volume weight limits the effect of a statistic to its share of the volume. On a day with 1,665 BSQ
-traded at 1,200 satoshis per BSQ, a trade of 25 BSQ at twice the price moves the average by 1.5%, where it
-doubled the price of the newest trade. A statistic of nearly 2 BTC, about 100 days of that BSQ volume, at
-twice the price sets the average to nearly twice the price until the newest BSQ statistic is dated more than
-24 hours after it, where the price of the newest trade was replaced by the next trade. Dated one day ahead
-of the clock, it stays in the average for about two days.
+The volume weight limits the effect of a statistic to its share of the BSQ volume, but the sender sets
+that share with the price: the BSQ volume of a statistic is its BTC amount divided by its price. On a day
+with 1,665 BSQ traded at 1,200 satoshis per BSQ, a trade of 25 BSQ at twice the price moves the average by
+1.5%, where it doubled the price of the newest trade. A statistic of 0.01 BTC at 1 satoshi per BSQ is
+1,000,000 BSQ and sets the average of that day to about 3 satoshis. A statistic of nearly 2 BTC, about 100
+days of that BSQ volume, at twice the price sets the average to nearly twice the price until the newest BSQ
+statistic is dated more than 24 hours after it, where the price of the newest trade was replaced by the
+next trade. Dated one day ahead of the clock, it stays in the average for about two days. The average of
+rule 2 has no outlier filter, and with its limit 200 invented statistics dated after the real trades of the
+period leave every real trade out of the average, whatever its volume.
 
 A statistic dated ahead moves the end of the period (rule 2) to its date. The trades of the last day which
 are more than 24 hours older than that date then do not count, until a statistic with a later date arrives.
@@ -65,11 +75,26 @@ newest trade was. Neither rule protects the price against invented statistics.
 - Rule 3: other currencies are rarely without a price from the price feed. This specification does not
   change their price.
 - Rule 4: the consumers of the price divide by it.
+- Rule 7 and the limit of rule 2: any peer can publish valid statistics without limit, about 200,000 in one
+  bundle of 10 MB, and a statistic dated before 2021-11-01 is valid with any currency and without a hash
+  check. A search through all statistics of a node (about 425,000 in November 2026) for each received
+  statistic, or an average over all BSQ statistics of the period for each received BSQ statistic, blocked
+  the user thread of every node which received such a bundle for many minutes. An update of the price feed
+  for each statistic ran its listeners as often, for example the pass of the offer book over all offers. No
+  day of the history up to November 2026 had more than 49 BSQ trades, so the limit of 200 does not change
+  the price of a real trading day.
 
 ## Compatibility
 
 No message, persisted data or API change. The derived BSQ price changes from the price of the newest BSQ
 trade to the average, and a price alert for BSQ fires on the average.
+
+## Known gaps
+
+- The trades view of the market (Market, Trades) computes its data again for each received statistic while
+  it is open.
+- The store of the statistics accepts any number of valid statistics of any peer and keeps them (see
+  `trade-statistics-validity.md`).
 
 ## Open decisions
 

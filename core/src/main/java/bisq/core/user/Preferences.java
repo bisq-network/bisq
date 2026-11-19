@@ -177,8 +177,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return Math.min(threshold, MAX_COLD_STORAGE_REMINDER_THRESHOLD);
     }
 
-    // The BSQ offer book hides offers with a price above the 90-day average BSQ price times this factor or below the
-    // average divided by it.
+    // The BSQ offer book hides offers with a price worse for the taker than the 90-day average BSQ price times this
+    // factor or divided by it. The largest factor shows all offers.
     public static final double DEFAULT_BSQ_OFFER_PRICE_RANGE_FACTOR = 2;
     public static final double MAX_BSQ_OFFER_PRICE_RANGE_FACTOR = 1000;
 

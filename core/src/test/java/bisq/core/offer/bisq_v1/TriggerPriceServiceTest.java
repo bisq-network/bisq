@@ -38,6 +38,8 @@ import javafx.collections.FXCollections;
 
 import java.time.Instant;
 
+import java.util.Map;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -76,7 +78,7 @@ class TriggerPriceServiceTest {
     void priceFromTradeStatisticsDoesNotTriggerAnOffer() {
         PriceFeedService priceFeedService = new PriceFeedService(mock(PriceHttpClient.class), mock(FeeService.class),
                 mock(PriceFeedNodeAddressProvider.class), mock(Preferences.class));
-        priceFeedService.setBisqMarketPrice("USD", Price.parse("USD", "1"));
+        priceFeedService.setBisqMarketPrices(Map.of("USD", Price.parse("USD", "1")));
 
         assertFalse(TriggerPriceService.wasTriggered(priceFeedService.getMarketPrice("USD"), openOffer()));
     }

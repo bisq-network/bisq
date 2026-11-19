@@ -275,8 +275,14 @@ public class PriceFeedService {
         return cache.getOrDefault(currencyCode, null);
     }
 
-    public void setBisqMarketPrice(String currencyCode, Price price) {
-        if (applyPriceToCache(currencyCode, price)) {
+    // Notifies the listeners once for all prices. A node can receive many trade statistics at once, and a listener
+    // can be costly, as the pass of the offer book over all offers.
+    public void setBisqMarketPrices(Map<String, Price> priceByCurrencyCode) {
+        boolean applied = false;
+        for (Map.Entry<String, Price> entry : priceByCurrencyCode.entrySet()) {
+            applied |= applyPriceToCache(entry.getKey(), entry.getValue());
+        }
+        if (applied) {
             updateCounter.set(updateCounter.get() + 1);
         }
     }

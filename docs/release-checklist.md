@@ -694,6 +694,23 @@ block. Before the release:
 The rule is described in `specifications/dao/transactions/parsing.md` (rule `op-return-type-zero`) on
 branch `dao-bsq-transaction-specs`, which is not merged yet.
 
+### Rules without an activation height
+
+Some DAO rules apply from the release on, without an activation height. Nodes of an earlier release
+still apply the old rule, so all seed nodes must run the release before the first block at which the
+two rules give different results. A seed node of an earlier release then reports another DAO state
+hash, and every node of the release which compares hashes with it is in conflict (see
+[specifications/dao/seed-node-state-hashes.md](specifications/dao/seed-node-state-hashes.md)); a
+resync of those nodes does not resolve it.
+
+| Rule | Specification | Deadline for the seed nodes |
+|------|---------------|-----------------------------|
+| A proposal without an accept or reject vote is not part of the vote result (v1.10.12) | [specifications/dao/vote-result-validation.md](specifications/dao/vote-result-validation.md) | The first RESULT block after the release: block `978 897` for the cycle which started at `974 227`, unless a vote changes the phase durations |
+
+A seed node which processed the RESULT block `969 537` while running an earlier release recorded the
+proposal without votes. If its DAO state still holds it, the checkpoints at `970 000` and `971 000`,
+shipped since v1.10.10, remove its DAO data at its next start, and it must be restarted once.
+
 ### Activation dates
 
 Some rules activate on a calendar date instead of a block height. Check that the release ships before

@@ -65,9 +65,13 @@ idempotently re-evaluate publication. A stored buyer-account reveal must be proc
 same validation path as a directly delivered reveal. Restart recovery must not depend on the buyer
 resending a reveal that the seller already received.
 
-The buyer receives a fully signed deposit transaction as part of this exchange and can broadcast it
-with a modified client. The seller therefore must also enforce the validation state at settlement;
-delayed seller publication alone is defense in depth, not the complete authorization boundary.
+The buyer receives a fully signed deposit transaction as part of this exchange. A modified client can
+broadcast it at any time. An unmodified client broadcasts it too: the buyer adds it to its wallet as a
+pending transaction when it processes the message, and the wallet broadcasts its pending transactions
+when it connects at the next start of the application. A seller which refuses the buyer's account
+therefore does not keep the deposit from being published (`trade-buyer-pending-deposit-rebroadcast`).
+The seller therefore must also enforce the validation state at settlement; delayed seller
+publication alone is defense in depth, not the complete authorization boundary.
 
 ## Settlement gates
 

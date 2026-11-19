@@ -84,18 +84,47 @@ public class BsqOfferBookViewModelTest {
         preferences = make(a(PreferenceMakers.Preferences));
     }
 
+    // The maker of an offer with the direction BUY sells BSQ, so a price above the range is worse for the taker, who
+    // buys BSQ. A price below the range is better for the taker and shown.
     @Test
-    public void offersOutsideThePriceRangeAreHidden() {
+    public void offersWhereTheTakerBuysBsqAreHiddenAboveTheRange() {
         offerBookListItems.addAll(item("at-average", AVERAGE_PRICE),
                 item("at-upper-bound", 2 * AVERAGE_PRICE),
                 item("above-upper-bound", 2 * AVERAGE_PRICE + 1),
-                item("at-lower-bound", AVERAGE_PRICE / 2),
                 item("below-lower-bound", AVERAGE_PRICE / 2 - 1));
 
         BsqOfferBookViewModel model = activatedModel(bsqStatisticAt(AVERAGE_PRICE));
 
-        assertEquals(List.of("at-average", "at-upper-bound", "at-lower-bound"), shownOfferIds(model));
+        assertEquals(Set.of("at-average", "at-upper-bound", "below-lower-bound"), Set.copyOf(shownOfferIds(model)));
         assertFalse(model.allOffersOutsidePriceRange.get());
+    }
+
+    // The maker of an offer with the direction SELL buys BSQ, so a price below the range is worse for the taker, who
+    // sells BSQ. A price above the range is better for the taker and shown.
+    @Test
+    public void offersWhereTheTakerSellsBsqAreHiddenBelowTheRange() {
+        offerBookListItems.addAll(item("at-average", AVERAGE_PRICE, OfferDirection.SELL),
+                item("at-lower-bound", AVERAGE_PRICE / 2, OfferDirection.SELL),
+                item("below-lower-bound", AVERAGE_PRICE / 2 - 1, OfferDirection.SELL),
+                item("above-upper-bound", 2 * AVERAGE_PRICE + 1, OfferDirection.SELL));
+
+        BsqOfferBookViewModel model = activatedModel(bsqStatisticAt(AVERAGE_PRICE), OfferDirection.SELL);
+
+        assertEquals(Set.of("at-average", "at-lower-bound", "above-upper-bound"), Set.copyOf(shownOfferIds(model)));
+        assertFalse(model.allOffersOutsidePriceRange.get());
+    }
+
+    // One invented statistic at a very low price moves the average far below the market. The fair offers where the
+    // taker sells BSQ are then far above the range, and an offer of the attacker near the moved average must not be
+    // the only one shown.
+    @Test
+    public void anAverageMovedFarBelowTheMarketDoesNotHideFairOffers() {
+        offerBookListItems.addAll(item("fair", 1300, OfferDirection.SELL),
+                item("attacker", 50, OfferDirection.SELL));
+
+        BsqOfferBookViewModel model = activatedModel(bsqStatisticAt(29), OfferDirection.SELL);
+
+        assertEquals(Set.of("fair", "attacker"), Set.copyOf(shownOfferIds(model)));
     }
 
     @Test
@@ -103,12 +132,12 @@ public class BsqOfferBookViewModelTest {
         preferences.setBsqOfferPriceRangeFactor(4);
         offerBookListItems.addAll(item("at-upper-bound", 4 * AVERAGE_PRICE),
                 item("above-upper-bound", 4 * AVERAGE_PRICE + 1),
-                item("at-lower-bound", AVERAGE_PRICE / 4),
-                item("below-lower-bound", AVERAGE_PRICE / 4 - 1));
+                item("at-lower-bound", AVERAGE_PRICE / 4, OfferDirection.SELL),
+                item("below-lower-bound", AVERAGE_PRICE / 4 - 1, OfferDirection.SELL));
 
-        BsqOfferBookViewModel model = activatedModel(bsqStatisticAt(AVERAGE_PRICE));
-
-        assertEquals(List.of("at-upper-bound", "at-lower-bound"), shownOfferIds(model));
+        assertEquals(List.of("at-upper-bound"), shownOfferIds(activatedModel(bsqStatisticAt(AVERAGE_PRICE))));
+        assertEquals(List.of("at-lower-bound"),
+                shownOfferIds(activatedModel(bsqStatisticAt(AVERAGE_PRICE), OfferDirection.SELL)));
     }
 
     // The maker sees their own offers at any price
@@ -139,7 +168,7 @@ public class BsqOfferBookViewModelTest {
 
     @Test
     public void allOffersOutsidePriceRangeOnlyWhenTheRangeHidesEveryOffer() {
-        offerBookListItems.addAll(item("above", 3 * AVERAGE_PRICE), item("below", AVERAGE_PRICE / 3));
+        offerBookListItems.addAll(item("above", 3 * AVERAGE_PRICE), item("far-above", 4 * AVERAGE_PRICE));
 
         BsqOfferBookViewModel model = activatedModel(bsqStatisticAt(AVERAGE_PRICE));
 
@@ -197,13 +226,24 @@ public class BsqOfferBookViewModelTest {
     }
 
     private BsqOfferBookViewModel activatedModel(TradeStatistics3 statistic) {
-        return activatedModel(statistic, mock(User.class), null);
+        return activatedModel(statistic, OfferDirection.BUY);
+    }
+
+    private BsqOfferBookViewModel activatedModel(TradeStatistics3 statistic, OfferDirection direction) {
+        return activatedModel(statistic, mock(User.class), null, direction);
+    }
+
+    private BsqOfferBookViewModel activatedModel(TradeStatistics3 statistic,
+                                                 User user,
+                                                 OfferFilterService offerFilterService) {
+        return activatedModel(statistic, user, offerFilterService, OfferDirection.BUY);
     }
 
     // In the order of the first click on the tab: the tab is selected before the model is activated
     private BsqOfferBookViewModel activatedModel(TradeStatistics3 statistic,
                                                  User user,
-                                                 OfferFilterService offerFilterService) {
+                                                 OfferFilterService offerFilterService,
+                                                 OfferDirection direction) {
         OfferBook offerBook = mock(OfferBook.class);
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
@@ -215,7 +255,7 @@ public class BsqOfferBookViewModelTest {
         BsqOfferBookViewModel model = new BsqOfferBookViewModel(user, openOfferManager, offerBook,
                 preferences, null, null, priceFeedService, null, null, null, null, priceUtil, offerFilterService,
                 coinFormatter, new BsqFormatter(), null, null, daoStateService);
-        model.initWithDirection(OfferDirection.BUY);
+        model.initWithDirection(direction);
         model.onTabSelected(true);
         model.activate();
         return model;

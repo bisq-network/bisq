@@ -42,12 +42,19 @@ the payout, and a second result could follow
 ([`mediation-payout-finality.md`](mediation-payout-finality.md)).
 
 The opener can make the agent create the peer's dispute with a key ring that the opener chose (see
-Not covered). The peer's node refuses such a dispute, so the peer has no case for the trade. If that
-key ring has another signature key, the agent's node ignores the peer's error, because it checks the
-acknowledgement against that key ring. Only the peer's node knows about the refusal, so it tells the
-trader. If the trader then opens a dispute, the agent's node has a third dispute for the trade,
-refuses it as a replay and warns the agent, so the agent learns about the dispute that the opener
-created.
+Not covered). The peer's node refuses such a dispute if it can read it, so the peer has no case for
+the trade. If that key ring has another signature key, the agent's node ignores the peer's error,
+because it checks the acknowledgement against that key ring. Only the peer's node knows about the
+refusal, so it tells the trader. If the trader then opens a dispute, the agent's node has a third
+dispute for the trade, refuses it as a replay and warns the agent, so the agent learns about the
+dispute that the opener created.
+
+The agent encrypts the message about the peer's dispute to the key ring that the opener sent for the
+peer. If that key ring has another encryption key, the peer's node cannot decrypt the message: it logs
+the failure of a direct message, and it takes a mailbox message for one of another node. The agent's node
+sees the message as arrived, or as stored in the mailbox when the peer is offline. The peer's node then
+neither refuses the dispute nor tells the trader, and the agent learns about the substituted key ring only
+if the trader opens a dispute of its own (`dispute-peer-keyring-substitution-silent`).
 
 The traders sign the contract data, but not the key rings and the multisig keys in the contract. So
 the opener can send the agent a contract that differs from the trade in these fields, and the agent
