@@ -142,7 +142,18 @@ apitest/docker/run-e2e-tests.sh --skip-build --skip-docker-build  # fastest iter
 apitest/docker/run-e2e-tests.sh --keep-up                    # leave stack up
 apitest/docker/run-e2e-tests.sh --tests "bisq.apitest.dao.ProposalPhaseTest"
 RUN_POLICY_E2E_TESTS=false apitest/docker/run-e2e-tests.sh   # skip deny-list policy phases
+RUN_SHARED_STACK_TESTS=false apitest/docker/run-e2e-tests.sh # fresh-stack classes only
 ```
+
+Mixed versions (pass the release ref; a local tag can point elsewhere):
+
+```bash
+apitest/docker/run-e2e-tests-compat.sh <release-ref>                     # bob (taker) on the release
+RELEASE_PEER=alice apitest/docker/run-e2e-tests-compat.sh <release-ref>  # alice (maker) on the release
+```
+
+With `RELEASE_PEER=alice` only the trade classes of `compat-alice-tests.txt` run, as
+the other tests check current behaviour on alice.
 
 ## Diagnostics
 
