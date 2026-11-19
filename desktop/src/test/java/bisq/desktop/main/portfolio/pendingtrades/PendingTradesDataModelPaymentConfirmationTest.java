@@ -110,6 +110,37 @@ class PendingTradesDataModelPaymentConfirmationTest {
         verify(protocol).onPaymentStarted(resultHandler, errorMessageHandler);
     }
 
+    @Test
+    void retriesAPaymentWithoutRewindingTheTrade() {
+        BuyerAsTakerTrade trade = selectBuyerTrade(false);
+        when(trade.getTradePhase()).thenReturn(Trade.Phase.FIAT_SENT);
+        BuyerProtocol protocol = mock(BuyerProtocol.class);
+        when(tradeManager.getTradeProtocol(trade)).thenReturn(protocol);
+        ResultHandler resultHandler = () -> {
+        };
+        ErrorMessageHandler errorMessageHandler = message -> {
+        };
+
+        dataModel.onPaymentStarted(trade, resultHandler, errorMessageHandler);
+
+        verify(protocol).retryPaymentStarted(resultHandler, errorMessageHandler);
+        verify(trade, never()).setState(any());
+    }
+
+    @Test
+    void refusesARetryAfterPayoutPublication() {
+        BuyerAsTakerTrade trade = selectBuyerTrade(false);
+        when(trade.getTradePhase()).thenReturn(Trade.Phase.PAYOUT_PUBLISHED);
+        AtomicReference<String> errorMessage = new AtomicReference<>();
+
+        dataModel.onPaymentStarted(trade, () -> {
+        }, errorMessage::set);
+
+        assertEquals("The trade no longer permits confirming payment started.", errorMessage.get());
+        verify(tradeManager, never()).getTradeProtocol(any());
+        verify(trade, never()).setState(any());
+    }
+
     // The selection can change while the confirmation dialog is open, so the confirmation acts only on the trade for
     // which the dialog was opened.
     @Test
@@ -122,6 +153,7 @@ class PendingTradesDataModelPaymentConfirmationTest {
         }, errorMessage::set);
 
         assertEquals(SELECTION_CHANGED, errorMessage.get());
+        verify(confirmedTrade, never()).setState(any());
         verify(tradeManager, never()).getTradeProtocol(any());
     }
 
@@ -196,6 +228,8 @@ class PendingTradesDataModelPaymentConfirmationTest {
     private BuyerAsTakerTrade selectBuyerTrade(boolean hasFailed) {
         BuyerAsTakerTrade trade = mock(BuyerAsTakerTrade.class);
         when(trade.hasFailed()).thenReturn(hasFailed);
+        when(trade.confirmPermitted()).thenReturn(true);
+        when(trade.getTradePhase()).thenReturn(Trade.Phase.DEPOSIT_CONFIRMED);
         select(trade);
         return trade;
     }

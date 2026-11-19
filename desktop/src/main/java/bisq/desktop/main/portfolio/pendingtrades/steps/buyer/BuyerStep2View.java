@@ -707,12 +707,6 @@ public class BuyerStep2View extends TradeStepView {
         busyAnimation.play();
         statusLabel.setText(Res.get("shared.sendingConfirmation"));
 
-        //TODO seems this was a hack to enable repeated confirm???
-        if (trade.isFiatSent()) {
-            trade.setState(Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
-            model.dataModel.getTradeManager().requestPersistence();
-        }
-
         model.dataModel.onPaymentStarted(trade, () -> {
         }, errorMessage -> {
             busyAnimation.stop();

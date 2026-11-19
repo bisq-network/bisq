@@ -222,7 +222,18 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             errorMessageHandler.handleErrorMessage("Cannot confirm payment started for a failed trade.");
             return;
         }
-        ((BuyerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentStarted(resultHandler, errorMessageHandler);
+        Trade.Phase phase = trade.getTradePhase();
+        if (!trade.confirmPermitted() || (phase != Trade.Phase.DEPOSIT_CONFIRMED && phase != Trade.Phase.FIAT_SENT)) {
+            errorMessageHandler.handleErrorMessage("The trade no longer permits confirming payment started.");
+            return;
+        }
+
+        BuyerProtocol protocol = (BuyerProtocol) tradeManager.getTradeProtocol(trade);
+        if (phase == Trade.Phase.FIAT_SENT) {
+            protocol.retryPaymentStarted(resultHandler, errorMessageHandler);
+        } else {
+            protocol.onPaymentStarted(resultHandler, errorMessageHandler);
+        }
     }
 
     public void onFiatPaymentReceived(Trade expectedTrade, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
