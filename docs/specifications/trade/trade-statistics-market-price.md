@@ -38,9 +38,11 @@ Trade statistics are unauthenticated (see the trust model of `trade-statistics-v
 publish a valid statistic with any price up to the limit, an amount of up to 2 BTC and the current date. The
 derived price is informational.
 
-The volume weight limits the effect of a statistic to its share of the volume. On a day with 1,665 BSQ
-traded at 1,200 satoshis per BSQ, a trade of 25 BSQ at twice the price moves the average by 1.5%, where it
-doubled the price of the newest trade. A statistic of nearly 2 BTC, about 100 days of that BSQ volume, at
+The volume weight limits the effect of a statistic to its share of the BSQ volume, but the sender sets
+that share with the price: the BSQ volume of a statistic is its BTC amount divided by its price. On a day
+with 1,665 BSQ traded at 1,200 satoshis per BSQ, a trade of 25 BSQ at twice the price moves the average by
+1.5%, where it doubled the price of the newest trade. A statistic of 0.01 BTC at 1 satoshi per BSQ is
+1,000,000 BSQ and sets the average of that day to about 3 satoshis. A statistic of nearly 2 BTC, about 100 days of that BSQ volume, at
 twice the price sets the average to nearly twice the price until the newest BSQ statistic is dated more than
 24 hours after it, where the price of the newest trade was replaced by the next trade. Dated one day ahead
 of the clock, it stays in the average for about two days.
