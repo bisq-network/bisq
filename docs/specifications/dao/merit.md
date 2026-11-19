@@ -163,7 +163,7 @@ it establishes is whether the weakness was exploited while it was open.
 
 ### 7.1 Audit of the bundled mainnet DAO state
 
-Audited over the shipped `DaoStateStore_BTC_MAINNET`, whose chain height is `971 800`. Claims were
+Audited over the shipped `DaoStateStore_BTC_MAINNET`, whose chain height is `976 481`. Claims were
 validated with the rules of §2, with the blind vote height taken from the vote reveal transaction
 which spent the blind vote stake output, which is in the same cycle but slightly later and therefore
 applies the "not younger than the blind vote" rule slightly permissively. The result is thus an upper
@@ -171,35 +171,36 @@ bound on the set of counted claims, which is what an audit for the *absence* of 
 
 | Measure | Value |
 |---|---|
-| Cycles, of which with votes | 86, 84 |
-| Decrypted blind votes | 891 |
-| Compensation issuances | 1 570 |
-| Merit claims | 8 168 |
-| Merit claims passing validation | 8 168 |
+| Cycles, of which with votes | 87, 85 |
+| Decrypted blind votes | 899 |
+| Compensation issuances | 1 588 |
+| Merit claims | 8 257 |
+| Merit claims passing validation | 8 257 |
 | Most blind votes in one cycle | 14 |
-| Issuances claimed again in a later cycle | 723 |
+| Issuances claimed again in a later cycle | 732 |
 | **Issuances claimed by several blind votes of one cycle** | **0** |
 | Same, without validating the claims at all | 0 |
 
 No issuance was ever claimed by more than one blind vote of the same cycle, so the weakness was not
 exploited up to that height, and no honest voter happened to trigger it either. The last two rows
-matter together: 723 issuances *are* claimed again in later cycles, which is legitimate and is what
+matter together: 732 issuances *are* claimed again in later cycles, which is legitimate and is what
 the per-cycle grouping has to tolerate, so the zero is a real result rather than an artefact of a
-grouping which never compares anything. That every one of the 8 168 claims also passes validation
+grouping which never compares anything. That every one of the 8 257 claims also passes validation
 says separately that no forged, mismatched or unknown-issuance claim exists in that history.
 
 Merit-ciphertext decryptability is audited separately with the complete bundled block and blind-vote
-stores. The reproducible command and its 951 revealed-payload result are specified in
+stores. The reproducible command and its 959 revealed-payload result are specified in
 [`vote-result-validation.md`](vote-result-validation.md#historical-compatibility-audit).
 
 ### 7.2 Remaining obligations
 
-- **The bundled resource ends at `971 800`.** It includes heights `963 121` through `963 349`
+- **The bundled resource ends at `976 481`.** It includes heights `963 121` through `963 349`
   immediately before mainnet activation, which lie in the proposal phase of the cycle that started at
   height `960 187` and therefore contain no result phase. It also includes that cycle's RESULT phase
   (heights `964 857` to `964 866`), the first cycle evaluated with the cycle-wide uniqueness rule, and
-  the RESULT phase of the following cycle (heights `969 537` to `969 546`). The audit above therefore
-  covers every mainnet cycle evaluated before activation and the first two cycles evaluated after it.
+  the RESULT phases of the following two cycles (heights `969 537` to `969 546` and `974 217` to
+  `974 226`). The audit above therefore covers every mainnet cycle evaluated before activation and the
+  first three cycles evaluated after it.
 - **Continue the audit until activation.** An activation height which lies safely after release also
   lies in the future at release time, so those cycles cannot be audited in advance. On a network whose
   activation height has not passed, monitor or repeat the audit after each result phase between

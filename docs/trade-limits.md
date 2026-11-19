@@ -41,7 +41,7 @@ If the trader is selling BTC, signing state does not reduce the trade limit.
 | Name | Current value | Meaning |
 | --- | ---: | --- |
 | DAO `MAX_TRADE_LIMIT` default | `2 BTC` | DAO parameter used as the base for payment-method limits. |
-| DAO `MAX_TRADE_LIMIT` on mainnet | `0.25 BTC` | Voted value, active since block 950827 (DAO state at block 971800). One vote can at most halve or double it. |
+| DAO `MAX_TRADE_LIMIT` on mainnet | `0.25 BTC` | Voted value, active since block 950827 (DAO state at block 976481). One vote can at most halve or double it. |
 | Hard network cap | `0.500 BTC` | `TradeLimits.MAX_TRADE_AMOUNT`; clamps the DAO value and rejects larger trades. |
 | Default local user-defined limit | `0.1 BTC` | Initial `Preferences.INITIAL_TRADE_LIMIT`. |
 | Current small-trade limit | `0.002 BTC` | Limit for unsigned or newly peer-signed chargeback-risk BTC buyers. |

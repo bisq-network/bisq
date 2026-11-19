@@ -97,7 +97,7 @@ commitment validation without retroactively making every UI/admission rule a con
 Independently activated proposal-type rules, including bonded-role term validation, continue to use
 their own specified activation semantics.
 
-The bundled mainnet resources through height `971 800` contain 2,047 append-only proposal payloads.
+The bundled mainnet resources through height `976 481` contain 2,068 append-only proposal payloads.
 None fails the common name, link, transaction-ID, or extra-data validation, and no two payloads use
 the same proposal transaction ID. This audit supports historical compatibility of the admission
 hardening but does not replace the activation gate or cover later blocks. The common-field and
