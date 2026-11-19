@@ -208,9 +208,9 @@ class BroadcasterTest {
         broadcaster.broadcast(first, null);
         broadcaster.broadcast(second, null);
         broadcaster.broadcast(third, null);
-        broadcaster.flush();
-        // Runs the sends, which come before the timeouts
-        for (int i = 0; i < 2; i++) {
+        // Runs the send of the early bundle, then the timer of the interval, which hands the third request to a new
+        // BroadcastHandler, then its send. The sends and the interval come before the timeouts.
+        for (int i = 0; i < 3; i++) {
             ManualTimer.runNext();
         }
 
