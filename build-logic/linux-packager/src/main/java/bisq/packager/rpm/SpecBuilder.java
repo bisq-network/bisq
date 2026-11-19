@@ -18,7 +18,7 @@ public class SpecBuilder {
 
     public String build() throws IOException {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Name: bisq\n");
+        stringBuilder.append("Name: bisq-reproducible\n");
         stringBuilder.append("Version: ").append(metadata.appVersion()).append('\n');
         stringBuilder.append("Release: 1%{?dist}\n");
         stringBuilder.append("Vendor: Bisq\n");

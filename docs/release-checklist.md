@@ -18,14 +18,14 @@ release date. Some checks in that section also need a synced mainnet node.
 
 ## Step 1: Update the version number
 
-Ten values in eight files hold the version. Set `oldVersion` and `newVersion` in
+Eleven values in nine files hold the version. Set `oldVersion` and `newVersion` in
 `desktop/package/macosx/replace_version_number.sh` by hand first, then run that script. It updates
 most of the other files.
 
 | # | File | Line | Value |
 |---|------|------|-------|
 | 1 | `common/src/main/java/bisq/common/app/Version.java` | 39 | `VERSION` |
-| 2 | `build-logic/packaging/src/main/kotlin/bisq/gradle/packaging/PackagingPlugin.kt` | 22 | `APP_VERSION` |
+| 2 | `build-logic/packaging/src/main/kotlin/bisq/gradle/packaging/PackagingPlugin.kt` | 23 | `APP_VERSION` |
 | 3 | `desktop/package/macosx/Info.plist` | 8 | `CFBundleVersion` |
 | 4 | `desktop/package/macosx/Info.plist` | 11 | `CFBundleShortVersionString` |
 | 5 | `desktop/package/macosx/finalize.sh` | 6 | `version=` |
@@ -34,11 +34,12 @@ most of the other files.
 | 8 | `desktop/package/macosx/replace_version_number.sh` | 5 | `oldVersion=` |
 | 9 | `desktop/package/macosx/replace_version_number.sh` | 6 | `newVersion=` |
 | 10 | `desktop/src/main/resources/version.txt` | 1 | The version |
+| 11 | `reproducible-build/rpm/Dockerfile` | 3 | `ARG TAG_NAME=`, the release tag `v<version>` |
 
 The version must have exactly three parts that are separated by a dot. `Version.getSubVersion`
 rejects any other form.
 
-The task `verifyGithubReleaseReadiness` checks only entries 1, 2 and 5. Check the other seven by
+The task `verifyGithubReleaseReadiness` checks only entries 1, 2 and 5. Check the other eight by
 hand, for example with `grep -rn "<old version>"`.
 
 The version number on the website is changed in a separate repository, in `_config.yml` of
@@ -535,6 +536,7 @@ Document: [in-app-update-download.md](in-app-update-download.md)
 | `desktop/package/macosx/Info.plist` | Yes | `replace_version_number.sh` |
 | `desktop/package/macosx/{finalize,copy_dbs,insert_snapshot_version,replace_version_number}.sh` | Yes | By hand or `replace_version_number.sh` |
 | `desktop/src/main/resources/version.txt` | Yes | `replace_version_number.sh` |
+| `reproducible-build/rpm/Dockerfile` (`TAG_NAME` default) | Yes | `replace_version_number.sh` |
 | `p2p/src/main/resources/DaoStateStore_BTC_MAINNET` | Yes | `copy_dbs.sh` |
 | `p2p/src/main/resources/BsqBlocks_BTC_MAINNET/` | Yes | `copy_dbs.sh` |
 | `p2p/src/main/resources/SignedWitnessStore_BTC_MAINNET` | Yes | `copy_dbs.sh` |
