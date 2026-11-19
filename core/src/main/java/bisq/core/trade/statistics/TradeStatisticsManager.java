@@ -32,6 +32,7 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
+import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.file.JsonFileManager;
 import bisq.common.util.RangeUtils;
@@ -41,6 +42,7 @@ import com.google.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Range;
 
 import javafx.collections.FXCollections;
@@ -72,6 +74,10 @@ public class TradeStatisticsManager {
     // from trade to trade, so it is the volume weighted average price of the BSQ trades in this period up to the
     // newest one. With about 10 BSQ trades per day it covers several trades and follows the market within a day.
     public static final long BSQ_MARKET_PRICE_PERIOD = TimeUnit.DAYS.toMillis(1);
+    // Any peer can publish statistics without limit, so the average reads only the newest BSQ statistics of the period.
+    // No day of the history up to 2026 had more than 49 BSQ trades.
+    @VisibleForTesting
+    static final int MAX_BSQ_TRADES_OF_MARKET_PRICE = 200;
 
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
@@ -80,6 +86,10 @@ public class TradeStatisticsManager {
     private final boolean dumpStatistics;
     private final NavigableSet<TradeStatistics3> navigableTradeStatisticsSet = new TreeSet<>();
     private final ObservableSet<TradeStatistics3> observableTradeStatisticsSet = FXCollections.observableSet(navigableTradeStatisticsSet);
+    // Kept up to date as statistics arrive, so that a received statistic costs no search through all statistics
+    private final Map<String, TradeStatistics3> newestTradeStatisticsByCurrency = new HashMap<>();
+    private final NavigableSet<TradeStatistics3> bsqTradeStatisticsSet = new TreeSet<>();
+    private boolean bsqMarketPriceUpdatePending;
     private JsonFileManager jsonFileManager;
 
     @Inject
@@ -112,14 +122,13 @@ public class TradeStatisticsManager {
                 if (!tradeStatistics.isValid()) {
                     return;
                 }
-                observableTradeStatisticsSet.add(tradeStatistics);
                 // A statistic can arrive after newer ones of its currency, for example when a trader republishes it
-                String currencyCode = tradeStatistics.getCurrency();
-                TradeStatistics3 newest = navigableTradeStatisticsSet.descendingSet().stream()
-                        .filter(e -> e.getCurrency().equals(currencyCode))
-                        .findFirst()
-                        .orElse(tradeStatistics);
-                priceFeedService.setBisqMarketPrice(currencyCode, getBisqMarketPrice(newest));
+                TradeStatistics3 newest = add(tradeStatistics);
+                if (newest.getCurrency().equals("BSQ")) {
+                    requestBsqMarketPriceUpdate();
+                } else {
+                    priceFeedService.setBisqMarketPrice(newest.getCurrency(), newest.getTradePrice());
+                }
                 maybeDumpStatistics();
             }
         });
@@ -128,18 +137,37 @@ public class TradeStatisticsManager {
                 .filter(e -> e instanceof TradeStatistics3)
                 .map(e -> (TradeStatistics3) e)
                 .filter(TradeStatistics3::isValid)
-                .forEach(observableTradeStatisticsSet::add);
+                .forEach(this::add);
 
-        // Seed the market price per currency. The set is date-sorted, so iterating
-        // newest-first makes the first entry seen per currency its latest; computeIfAbsent then
-        // calls getBisqMarketPrice() only for that row, not every element (putIfAbsent would eval all).
         Map<String, Price> marketPriceByCurrencyCode = new HashMap<>();
-        for (TradeStatistics3 tradeStatistics : navigableTradeStatisticsSet.descendingSet()) {
-            marketPriceByCurrencyCode.computeIfAbsent(tradeStatistics.getCurrency(),
-                    currencyCode -> getBisqMarketPrice(tradeStatistics));
-        }
+        newestTradeStatisticsByCurrency.forEach((currencyCode, newest) ->
+                marketPriceByCurrencyCode.put(currencyCode, getBisqMarketPrice(newest)));
         priceFeedService.applyInitialBisqMarketPrice(marketPriceByCurrencyCode);
         maybeDumpStatistics();
+    }
+
+    // Returns the newest statistic of the currency of the added one
+    private TradeStatistics3 add(TradeStatistics3 tradeStatistics) {
+        observableTradeStatisticsSet.add(tradeStatistics);
+        String currencyCode = tradeStatistics.getCurrency();
+        if (currencyCode.equals("BSQ")) {
+            bsqTradeStatisticsSet.add(tradeStatistics);
+        }
+        return newestTradeStatisticsByCurrency.merge(currencyCode, tradeStatistics,
+                (newest, added) -> added.compareTo(newest) > 0 ? added : newest);
+    }
+
+    // The statistics of a bundle arrive as one task each on the user thread. The update runs after them, so that it
+    // reads the BSQ statistics of the period once, not once per statistic.
+    private void requestBsqMarketPriceUpdate() {
+        if (bsqMarketPriceUpdatePending) {
+            return;
+        }
+        bsqMarketPriceUpdatePending = true;
+        UserThread.execute(() -> {
+            bsqMarketPriceUpdatePending = false;
+            priceFeedService.setBisqMarketPrice("BSQ", getBisqMarketPrice(newestTradeStatisticsByCurrency.get("BSQ")));
+        });
     }
 
     // The market price of a currency for which the price feed has no price, from the newest statistic of the currency
@@ -149,11 +177,11 @@ public class TradeStatisticsManager {
         }
 
         long newestDate = newest.getDateAsLong();
-        List<TradeStatistics3> bsqTradeStatistics = RangeUtils.subSet(navigableTradeStatisticsSet)
+        List<TradeStatistics3> bsqTradeStatistics = RangeUtils.subSet(bsqTradeStatisticsSet)
                 .withKey(TradeStatistics3::getDateAsLong)
                 .overRange(Range.openClosed(newestDate - BSQ_MARKET_PRICE_PERIOD, newestDate))
-                .stream()
-                .filter(tradeStatistics -> tradeStatistics.getCurrency().equals("BSQ"))
+                .descendingSet().stream()
+                .limit(MAX_BSQ_TRADES_OF_MARKET_PRICE)
                 .collect(Collectors.toList());
         long averagePrice = AveragePriceUtil.getBTCAverage(bsqTradeStatistics);
         // 0 stands for no average. Valid statistics do not give it, and the market price must not be 0.

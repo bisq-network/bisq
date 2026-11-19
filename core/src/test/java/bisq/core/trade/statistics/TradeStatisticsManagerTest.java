@@ -32,17 +32,26 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
+import bisq.common.UserThread;
+
 import org.bitcoinj.core.Coin;
+
+import com.google.common.primitives.Ints;
+import com.google.common.util.concurrent.MoreExecutors;
+
+import java.time.Duration;
 
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterEach;
@@ -52,6 +61,8 @@ import org.mockito.ArgumentCaptor;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTimeout;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -62,16 +73,94 @@ import static org.mockito.Mockito.when;
 
 public class TradeStatisticsManagerTest {
     private Locale previousLocale;
+    private Executor previousUserThreadExecutor;
 
     @BeforeEach
     public void setup() {
         previousLocale = GlobalSettings.getLocale();
         GlobalSettings.setLocale(Locale.US);
+        // Other tests replace the executor of the user thread; the tests here expect it to run a task at once
+        previousUserThreadExecutor = UserThread.getExecutor();
+        UserThread.setExecutor(MoreExecutors.directExecutor());
     }
 
     @AfterEach
     public void tearDown() {
         GlobalSettings.setLocale(previousLocale);
+        UserThread.setExecutor(previousUserThreadExecutor);
+    }
+
+    // Any peer can send statistics without limit, about 200,000 in one bundle, and a statistic dated before 2021-11-01
+    // is valid with any currency. A received statistic must not cost a search through all statistics: here that took
+    // 2,000 searches through 100,000 statistics.
+    @Test
+    public void receivedOldStatisticsOfACurrencyWithoutNewerOnesDoNotSearchAllStatistics() {
+        long now = System.currentTimeMillis();
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapOfAllData = new HashMap<>();
+        for (int i = 0; i < 100_000; i++) {
+            TradeStatistics3 stored = new TradeStatistics3("USD", Price.parse("USD", "100").getValue(),
+                    Coin.parseCoin("0.01").getValue(), "SEPA", now - TimeUnit.MINUTES.toMillis(i), null, null, null,
+                    hash(i));
+            mapOfAllData.put(new P2PDataStorage.ByteArray(stored.getHash()), stored);
+        }
+        P2PDataStorage p2PDataStorage = mock(P2PDataStorage.class);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        manager(p2PDataStorage, priceFeedService, mapOfAllData).onAllServicesInitialized();
+        AppendOnlyDataStoreListener listener = appendOnlyDataStoreListener(p2PDataStorage);
+        List<TradeStatistics3> received = new ArrayList<>();
+        for (int i = 0; i < 2_000; i++) {
+            received.add(new TradeStatistics3("XYZ", 1 + i, 1, "X", 1 + i, null, null, null, hash(200_000 + i)));
+        }
+        assertTrue(received.stream().allMatch(TradeStatistics3::isValid));
+
+        assertTimeout(Duration.ofMillis(500), () -> received.forEach(listener::onAdded));
+
+        TradeStatistics3 newest = received.get(received.size() - 1);
+        verify(priceFeedService, times(received.size())).setBisqMarketPrice(eq("XYZ"), any());
+        verify(priceFeedService, times(1)).setBisqMarketPrice("XYZ", newest.getTradePrice());
+    }
+
+    // The statistics of one bundle arrive as one task each on the user thread. Each update of the BSQ price reads the
+    // BSQ statistics of a day, so one per statistic costs time in the square of their number.
+    @Test
+    public void bsqStatisticsReceivedTogetherUpdateTheBsqPriceOnceAfterThem() {
+        long now = System.currentTimeMillis();
+        List<Runnable> userThreadTasks = new ArrayList<>();
+        UserThread.setExecutor(userThreadTasks::add);
+        P2PDataStorage p2PDataStorage = mock(P2PDataStorage.class);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        manager(p2PDataStorage, priceFeedService, new HashMap<>()).onAllServicesInitialized();
+        AppendOnlyDataStoreListener listener = appendOnlyDataStoreListener(p2PDataStorage);
+
+        listener.onAdded(bsqStatistics(1000, 100, now - TimeUnit.HOURS.toMillis(3)));
+        listener.onAdded(bsqStatistics(2000, 300, now - TimeUnit.HOURS.toMillis(2)));
+        listener.onAdded(bsqStatistics(1000, 100, now - TimeUnit.HOURS.toMillis(1)));
+        verify(priceFeedService, never()).setBisqMarketPrice(any(), any());
+        new ArrayList<>(userThreadTasks).forEach(Runnable::run);
+
+        // 800,000 sats for 500 BSQ
+        verify(priceFeedService, times(1)).setBisqMarketPrice("BSQ", Price.valueOf("BSQ", 1600));
+        verify(priceFeedService, times(1)).setBisqMarketPrice(eq("BSQ"), any());
+    }
+
+    // Statistics are unlimited, so the BSQ price reads only the newest BSQ trades of the day. No day of the history had
+    // more than 49.
+    @Test
+    public void bsqPriceAveragesOnlyTheNewestBsqTradesOfTheDay() {
+        long now = System.currentTimeMillis();
+        List<TradeStatistics3> tradeStatistics = new ArrayList<>();
+        for (int i = 0; i < 50; i++) {
+            tradeStatistics.add(bsqStatistics(5000, 1, now - TimeUnit.HOURS.toMillis(20) + i));
+        }
+        for (int i = 0; i < TradeStatisticsManager.MAX_BSQ_TRADES_OF_MARKET_PRICE; i++) {
+            tradeStatistics.add(bsqStatistics(1000, 1, now - TimeUnit.HOURS.toMillis(10) + i));
+        }
+
+        assertEquals(1000, seededPrices(tradeStatistics.toArray(new TradeStatistics3[0])).get("BSQ").getValue());
+    }
+
+    private static byte[] hash(int i) {
+        return Arrays.copyOf(Ints.toByteArray(i), 20);
     }
 
     @Test
