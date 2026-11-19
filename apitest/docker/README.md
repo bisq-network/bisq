@@ -130,6 +130,7 @@ Passed to every Bisq daemon as CLI args (in `entrypoint.sh`):
 | `Dockerfile.bisq` | Base for all four Bisq roles; bakes install-dists + javafx-linux jars + dao-setup app dirs |
 | `bitcoind-entrypoint.sh` | seeds `/data/.bitcoin` + writes `bitcoin.conf` + blocknotify hook |
 | `entrypoint.sh` | Bisq daemon/seed launcher; seeds `${APP_DATA_DIR}/${APP_NAME}` |
+| `fee-stub.sh` | Fee data for the daemons (5 sat/vbyte, no market prices), served on `127.0.0.1:8080` in each daemon container; peers of different versions otherwise keep different default fee rates |
 | `dao-compose.yml` | 5-service stack with healthchecks |
 | `run-e2e-tests.sh` | Orchestrator: build → up → wait → test → down |
 

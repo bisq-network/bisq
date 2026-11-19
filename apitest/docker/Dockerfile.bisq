@@ -25,7 +25,8 @@ RUN set -eux; \
     done
 
 COPY apitest/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+COPY apitest/docker/fee-stub.sh /usr/local/bin/fee-stub.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/fee-stub.sh
 
 WORKDIR /bisq
 

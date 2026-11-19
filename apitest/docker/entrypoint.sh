@@ -85,9 +85,15 @@ fi
 CONFIG_FILE="${APP_DATA_DIR}/${APP_NAME}/bisq.properties"
 grep -qs '^apiHost=' "${CONFIG_FILE}" || echo 'apiHost=0.0.0.0' >> "${CONFIG_FILE}"
 
+# Fee data as on mainnet, see fee-stub.sh. Bisq sends clearnet HTTP only to a loopback
+# address, so each daemon container serves it itself.
+FEE_STUB_PORT=8080
+ncat --listen --keep-open 127.0.0.1 "${FEE_STUB_PORT}" --sh-exec /usr/local/bin/fee-stub.sh &
+
 DAEMON_ARGS=(
   --apiPort="${API_PORT}"
   --apiPassword="${API_PASSWORD}"
+  --providers="http://127.0.0.1:${FEE_STUB_PORT}/"
 )
 # Each daemon parses chain itself — bypasses lite-node DAO state propagation
 # from seednode. Requires RPC creds to bitcoind.
