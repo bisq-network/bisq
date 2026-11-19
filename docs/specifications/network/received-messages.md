@@ -183,12 +183,9 @@ A node keeps its responses below the limit of 10 MB:
   bundle.
 - A peer which sends elements of bundles that fail the checks of a single message is not penalized
   for them. The node parses such elements with their bundle, serializes each again for the check of
-  its size, and drops it. The parse is bounded by the size limit of a bundle and by the limits of
-  messages per second and per 10 seconds, which count a bundle as one message; the parse memory
-  budget (PR #276, `p2p-parse-memory-concurrent`) also bounds the memory of the parses at the same
-  time. The allowance of the elements of bundles (PR #270, `p2p-bundle-throttle-granularity`) runs
-  after the parse, so it does not bound the parse, but it limits the elements which are checked and
-  serialized again to 1000 within 10 seconds for each connection.
+  its size, and drops it. The 10 MB frame limit bounds the size of each bundle. The message-rate
+  limits count each bundle once, regardless of how many elements it contains. Each connection
+  parses on its own thread without a shared memory budget.
 - A relay of an earlier version still loses the connection when it passes such a message on alone,
   not in a bundle, which it does when it has no other broadcast message for the peer within 2
   seconds. A single message of another network violates `WRONG_NETWORK_ID`, which closes the
