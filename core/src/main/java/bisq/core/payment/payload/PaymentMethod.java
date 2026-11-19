@@ -79,7 +79,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     // Bisq does not know a custom payment method, so its trade limit is that of the highest risk category and at
     // most this value. Unlike the default trade limits, it is not adjusted to the DAO param.
     @VisibleForTesting
-    static final Coin CUSTOM_MAX_TRADE_LIMIT = Coin.parseCoin("0.05");
+    static final Coin CUSTOM_MAX_TRADE_LIMIT = Coin.parseCoin("0.01");
 
     public static final String UPHOLD_ID = "UPHOLD";
     public static final String MONEY_BEAM_ID = "MONEY_BEAM";
