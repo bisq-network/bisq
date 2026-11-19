@@ -39,7 +39,8 @@ public class IgnoredMailboxService implements PersistedDataHost {
     @Inject
     public IgnoredMailboxService(PersistenceManager<IgnoredMailboxMap> persistenceManager) {
         this.persistenceManager = persistenceManager;
-        this.persistenceManager.initialize(ignoredMailboxMap, PersistenceManager.Source.PRIVATE_LOW_PRIO);
+        // The earlier IgnoredMailboxMap file contains sender-chosen UIDs, which can also look like payload hashes.
+        this.persistenceManager.initialize(ignoredMailboxMap, "IgnoredMailboxPayloadHashes", PersistenceManager.Source.PRIVATE_LOW_PRIO);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -61,8 +62,7 @@ public class IgnoredMailboxService implements PersistedDataHost {
     }
 
     // The key is the hash of the mailbox payload, not the sender-chosen uid, so that a decoy entry with a copied uid
-    // cannot make us skip a genuine pending message. Entries persisted by earlier versions used the uid as key; they
-    // no longer match and expire by the TTL above.
+    // cannot make us skip a genuine pending message.
     public boolean isIgnored(String hashOfPayloadAsHex) {
         return ignoredMailboxMap.containsKey(hashOfPayloadAsHex);
     }

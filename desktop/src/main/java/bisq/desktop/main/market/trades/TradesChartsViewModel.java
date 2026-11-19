@@ -357,8 +357,9 @@ class TradesChartsViewModel extends ActivatableViewModel {
             }
 
             boolean showAllEntry = isShowAllEntry(code);
-            // The selector of the payment methods is hidden for other currencies, so its filter must not stay
-            paymentMethodGroupProperty.set(PaymentMethodGroup.FIAT_AND_STABLECOINS);
+            if (showAllEntry || !code.equals(getCurrencyCode())) {
+                paymentMethodGroupProperty.set(PaymentMethodGroup.FIAT_AND_STABLECOINS);
+            }
             showAllTradeCurrenciesProperty.set(showAllEntry);
             if (showAllEntry) {
                 priceFeedService.setCurrencyCode(GlobalSettings.getDefaultTradeCurrency().getCode());

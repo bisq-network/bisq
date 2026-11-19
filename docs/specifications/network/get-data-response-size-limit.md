@@ -77,7 +77,8 @@ truncated response. Only a response which no requester of this version reads is 
   if witnesses were applied before. A size limit that counts all items, as the inventory of Bisq 2
   has, and size limits for the fields of a signed witness would remove the cause.
 - The storage has no size limit of its own for an item. A single message above 200 kB is dropped,
-  but an element of a bundle of messages and an entry of a `GetDataResponse` are not checked.
+  and the same limit applies to the serialized message when it arrives in a bundle. An entry of a
+  `GetDataResponse` has no such per-item check.
   Several entries which are large but below the limit of a response each use up most of one
   response.
 - The number of requests of a requester is limited, to 30 for a start. Enough items in front of the

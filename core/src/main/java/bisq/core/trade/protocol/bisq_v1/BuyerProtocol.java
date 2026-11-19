@@ -177,8 +177,18 @@ public abstract class BuyerProtocol extends DisputeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        sendPaymentStarted(Trade.Phase.DEPOSIT_CONFIRMED, resultHandler, errorMessageHandler);
+    }
+
+    public void retryPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        sendPaymentStarted(Trade.Phase.FIAT_SENT, resultHandler, errorMessageHandler);
+    }
+
+    private void sendPaymentStarted(Trade.Phase expectedPhase,
+                                    ResultHandler resultHandler,
+                                    ErrorMessageHandler errorMessageHandler) {
         BuyerEvent event = BuyerEvent.PAYMENT_SENT;
-        expect(phase(Trade.Phase.DEPOSIT_CONFIRMED)
+        expect(phase(expectedPhase)
                 .with(event)
                 .preCondition(trade.confirmPermitted()))
                 .setup(tasks(ApplyFilter.class,
@@ -196,8 +206,13 @@ public abstract class BuyerProtocol extends DisputeProtocol {
                                     handleTaskRunnerFault(event, errorMessage);
                                 })))
                 .run(() -> {
-                    trade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
-                    processModel.getTradeManager().requestPersistence();
+                    // A retry keeps the state. From BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG the next start resends
+                    // the message also if a task before the send fails, which it would not do from
+                    // BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED.
+                    if (expectedPhase == Trade.Phase.DEPOSIT_CONFIRMED) {
+                        trade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
+                        processModel.getTradeManager().requestPersistence();
+                    }
                 })
                 .executeTasks();
     }

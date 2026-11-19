@@ -37,10 +37,9 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -99,23 +98,18 @@ class GetBlocksRequestHandler {
     public void onGetBlocksRequest(GetBlocksRequest getBlocksRequest, Connection connection) {
         long ts = System.currentTimeMillis();
         // We limit number of blocks to 3000 which is about 3 weeks, and the size of the response (ResponseSizeLimit)
-        List<RawBlock> rawBlocks = daoStateService.getBlocksFromBlockHeightStream(getBlocksRequest.getFromBlockHeight(), 3000)
+        Stream<SignedRawBlock> signedBlocks = daoStateService.getBlocksFromBlockHeightStream(getBlocksRequest.getFromBlockHeight(), 3000)
                 .map(RawBlock::fromBlock)
-                .collect(Collectors.toCollection(LinkedList::new));
-        long ts1 = System.currentTimeMillis();
-        List<SignedRawBlock> signedRawBlocks = ResponseSizeLimit.leadingElementsWithin(rawBlocks.stream()
-                        .map(rawBlock -> daoBlockSigningService.sign(rawBlock, networkNode.getNodeAddress()))
-                        .collect(Collectors.toList()),
+                .map(rawBlock -> daoBlockSigningService.sign(rawBlock, networkNode.getNodeAddress()));
+        List<SignedRawBlock> signedRawBlocks = ResponseSizeLimit.leadingElementsWithin(signedBlocks::iterator,
                 signedRawBlock -> signedRawBlock.toProtoMessage().getSerializedSize(),
                 ResponseSizeLimit.MAX_BLOCKS_SIZE);
         GetBlocksResponse getBlocksResponse = GetBlocksResponse.forSignedBlocks(signedRawBlocks, getBlocksRequest.getNonce());
-        log.info("Signing {} blocks took {} ms", signedRawBlocks.size(), System.currentTimeMillis() - ts1);
-
         log.info("Received GetBlocksRequest from {} for blocks from height {}. " +
                         "Building GetBlocksResponse with {} blocks took {} ms.",
                 connection.getPeersNodeAddressOptional(),
                 getBlocksRequest.getFromBlockHeight(),
-                rawBlocks.size(),
+                signedRawBlocks.size(),
                 System.currentTimeMillis() - ts);
 
         if (timeoutTimer != null) {

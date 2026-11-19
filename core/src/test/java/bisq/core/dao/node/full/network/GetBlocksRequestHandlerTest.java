@@ -17,6 +17,7 @@
 
 package bisq.core.dao.node.full.network;
 
+import bisq.core.dao.node.ResponseSizeLimit;
 import bisq.core.dao.node.full.DaoBlockSigningService;
 import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.messages.DaoBlockSignature;
@@ -48,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -88,5 +90,31 @@ class GetBlocksRequestHandlerTest {
         assertTrue(response.getBlocks().isEmpty());
         assertEquals(List.of(signedRawBlock), response.getSignedRawBlocks());
         assertEquals(42, response.getRequestNonce());
+    }
+
+    @Test
+    void stopsSigningAfterTheFirstBlockThatDoesNotFit(@Mock NetworkNode networkNode,
+                                                     @Mock DaoStateService daoStateService,
+                                                     @Mock DaoBlockSigningService signingService,
+                                                     @Mock GetBlocksRequestHandler.Listener listener,
+                                                     @Mock Connection connection,
+                                                     @Mock SignedRawBlock signedBlock,
+                                                     @Mock protobuf.SignedRawBlock serialized) {
+        Block block = new Block(100, 1234, "block-hash", "previous-block-hash");
+        when(daoStateService.getBlocksFromBlockHeightStream(100, 3000)).thenReturn(Stream.of(block, block, block));
+        when(networkNode.getNodeAddress()).thenReturn(SIGNER_NODE_ADDRESS);
+        when(signingService.sign(any(RawBlock.class), eq(SIGNER_NODE_ADDRESS))).thenReturn(signedBlock);
+        when(signedBlock.toProtoMessage()).thenReturn(serialized);
+        when(serialized.getSerializedSize()).thenReturn(ResponseSizeLimit.MAX_BLOCKS_SIZE);
+        when(networkNode.sendMessage(eq(connection), any(NetworkEnvelope.class))).thenReturn(SettableFuture.create());
+
+        GetBlocksRequestHandler handler = new GetBlocksRequestHandler(networkNode, daoStateService, signingService, listener);
+        handler.onGetBlocksRequest(new GetBlocksRequest(100, 42, SIGNER_NODE_ADDRESS), connection);
+        handler.stop();
+
+        verify(signingService, times(2)).sign(any(RawBlock.class), eq(SIGNER_NODE_ADDRESS));
+        ArgumentCaptor<NetworkEnvelope> sent = ArgumentCaptor.forClass(NetworkEnvelope.class);
+        verify(networkNode).sendMessage(eq(connection), sent.capture());
+        assertEquals(List.of(signedBlock), ((GetBlocksResponse) sent.getValue()).getSignedRawBlocks());
     }
 }

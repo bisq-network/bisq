@@ -203,6 +203,7 @@ public class TradeInfo implements Payload {
                                          String role,
                                          boolean isMyOffer,
                                          String closingStatus) {
+        boolean hideSellerDetails = trade.hasMismatchedSellerPaymentRail();
         ContractInfo contractInfo;
         if (trade.getContract() != null) {
             Contract contract = trade.getContract();
@@ -213,8 +214,10 @@ public class TradeInfo implements Payload {
                     contract.isBuyerMakerAndSellerTaker(),
                     contract.getMakerAccountId(),
                     contract.getTakerAccountId(),
-                    toPaymentAccountPayloadInfo(contract.getMakerPaymentAccountPayload()),
-                    toPaymentAccountPayloadInfo(contract.getTakerPaymentAccountPayload()),
+                    toPaymentAccountPayloadInfo(hideSellerDetails && !contract.isBuyerMakerAndSellerTaker() ?
+                            null : contract.getMakerPaymentAccountPayload()),
+                    toPaymentAccountPayloadInfo(hideSellerDetails && contract.isBuyerMakerAndSellerTaker() ?
+                            null : contract.getTakerPaymentAccountPayload()),
                     contract.getMakerPayoutAddressString(),
                     contract.getTakerPayoutAddressString(),
                     contract.getLockTime());
@@ -248,7 +251,7 @@ public class TradeInfo implements Payload {
                 .withIsPaymentReceivedMessageSent(trade.isFiatReceived())
                 .withIsPayoutPublished(trade.isPayoutPublished())
                 .withIsCompleted(trade.isWithdrawn())
-                .withContractAsJson(trade.getContractAsJson())
+                .withContractAsJson(hideSellerDetails ? "" : trade.getContractAsJson())
                 .withContract(contractInfo)
                 .withClosingStatus(closingStatus)
                 .withAutoConfTxId(trade.getCounterCurrencyTxId() == null ? "" : trade.getCounterCurrencyTxId())

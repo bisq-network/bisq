@@ -210,6 +210,13 @@ class CoreTradesService {
                                 trade.getDepositTxId()));
             }
 
+            // The protocol accepts the confirmation only once and resends the message itself. Later calls would
+            // otherwise look successful while nothing was sent, and they would replace the proof of an XMR payment.
+            if (trade.isFiatSent()) {
+                throw new FailedPreconditionException(
+                        format("payment started was already confirmed for trade '%s'", trade.getId()));
+            }
+
             // Without the seller's payment account payload the buyer has no details to pay
             // to, so a payment started message would tell the seller a payment happened that
             // cannot have happened. The desktop client disables its confirm button on the
@@ -220,6 +227,10 @@ class CoreTradesService {
                         format("cannot send a payment started message for trade '%s'%n"
                                         + "until the seller's payment account details have been received",
                                 trade.getId()));
+            }
+
+            if (trade.hasMismatchedSellerPaymentRail()) {
+                throw new FailedPreconditionException("Seller payment account details do not match the payment rail of the offer.");
             }
 
             // The protocol carries this as a FluentProtocol precondition, which returns

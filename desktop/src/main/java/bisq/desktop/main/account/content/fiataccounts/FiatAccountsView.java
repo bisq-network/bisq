@@ -885,8 +885,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
     @Override
     protected void removeSelectAccountForm() {
-        FormBuilder.removeRowsFromGridPane(root, 2, gridRow);
-        gridRow = 1;
+        removeAccountRows();
         addAccountButton.setDisable(false);
         paymentAccountsListView.getSelectionModel().clearSelection();
     }
@@ -894,6 +893,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
     private void removeAccountRows() {
         FormBuilder.removeRowsFromGridPane(root, 2, gridRow);
+        paymentMethodForm = null;
         gridRow = 1;
     }
 

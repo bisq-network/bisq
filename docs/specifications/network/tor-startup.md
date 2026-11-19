@@ -69,8 +69,9 @@ or without brackets; Tor writes the host of a bootstrap warning without them. To
 pluggable transport (`Managed proxy "...": ...`), where lyrebird names the host of a webtunnel bridge, the URL and
 front of a meek bridge, and hosts in errors, so these lines lose their URLs and host names. The versions of Tor and
 loopback addresses, which name no relay or bridge, stay. The logs of the node in the zip lose the relay or bridge of a
-bootstrap warning (`HOSTID`, `HOSTADDR`), which the Tor library logs with the event. The files on disk keep
-everything; only the zip is redacted.
+bootstrap warning (`HOSTID`, `HOSTADDR`), which the Tor library logs with the event. The zip omits the excerpt of
+`tor.log` quoted in a node startup exception because it can begin in the middle of a bridge identity. The original
+files on disk keep the full diagnostics.
 
 The Tor directory has the parts `bin/` (the installed bundle), `data/` (the data directory of Tor) and `sandy/` (the
 sandbox program and its status record, see "Sandbox"). The torrc, the logs, `external_tor.config`, the record
@@ -166,7 +167,12 @@ which Tor uses, and a user who relies on it would not notice that it is missing.
 separated by commas, each a key, whitespace and a value. An empty part, for example after a comma which follows the
 last entry, contains no entry and is skipped. Any other part which is no entry stops the start of Tor. The message
 names the position of the part, not its text, which may contain a password. A file of `--torrcFile` which the node
-cannot read as UTF-8 text when it starts Tor stops the start as well.
+cannot read as UTF-8 text when it starts Tor stops the start as well. In the file, as in a torrc of Tor, a space or a
+tab separates the key from the value. Lines which start with `#`, lines of at most five characters and lines without
+whitespace hold no entry and are skipped, as netlayer did. Earlier versions also skipped a line with a tab as the only
+separator and started Tor without that entry. Only ASCII whitespace separates the key from the value. A line whose key
+and value are separated by another character, for example a no-break space from a copied web page, holds no entry
+either, and Tor starts without it.
 
 An entry which makes Tor start a program or load a library, `ClientTransportPlugin`, `ServerTransportPlugin`,
 `AccelName` or `AccelDir` in any case of the name and as an abbreviation which Tor accepts, is accepted only if the

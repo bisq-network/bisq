@@ -58,7 +58,13 @@ method of the account data it commits to, so its data passes the check.
 
 - The check compares the payment method which the data names. It does not check that the kind of
   the data is the one of that payment method, so data of another kind which names the payment
-  method of the contract passes the check.
+  method of the contract passes the check. Only if the offer or the account data is of a
+  stablecoin payment method, the BTC buyer also refuses account data of the BTC seller unless it
+  is stablecoin account data of the rail of the offer, as for rule 5. Such data which a trade
+  stored before this check is not shown in the trade steps, the trade details or the API, and the
+  payment cannot be started with it (see
+  [`stablecoin-payment-methods.md`](../payment/stablecoin-payment-methods.md), rule 11). The
+  contract window, which the support tab opens for a dispute, shows it with the whole contract.
 - A validation which a version without this check has stored as successful is not repeated. A
   trade which was open during the update keeps that result.
 - A contract which is received with a dispute can hold revealed account data. A trader checks that

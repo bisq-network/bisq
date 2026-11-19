@@ -32,7 +32,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * The torrc entries which the user adds with --torrcFile and --torrcOptions. An entry of --torrcOptions overrides an
- * entry of the file with the same key. Parses like netlayer's Torrc did.
+ * entry of the file with the same key. Parses like netlayer's Torrc did, except that a tab in a line of the file also
+ * separates the key from the value.
  * <p>
  * The node writes bisq.properties itself, and whoever can change a config file in the data directory could otherwise
  * make the next start of Tor run code with the rights of the user, also with the sandbox off. So the Tor library gets
@@ -78,15 +79,16 @@ record TorrcOverrides(LinkedHashMap<String, String> entries, Set<String> keysFro
         }
     }
 
+    // As in a torrc of Tor, a tab separates the key from the value as well as a space. netlayer took only a space, so
+    // it dropped an entry such as ExcludeNodes with a tab, and Tor started without the restriction.
     private static LinkedHashMap<String, String> parseTorrcFile(List<String> lines) {
         LinkedHashMap<String, String> entries = new LinkedHashMap<>();
         lines.stream()
                 .map(String::trim)
-                .filter(line -> line.length() > 5 && !line.startsWith("#") && line.contains(" "))
-                .forEach(line -> {
-                    int delimiter = line.indexOf(' ');
-                    putEntry(entries, line.substring(0, delimiter), line.substring(delimiter));
-                });
+                .filter(line -> line.length() > 5 && !line.startsWith("#"))
+                .map(line -> line.split("\\s", 2))
+                .filter(keyAndValue -> keyAndValue.length == 2)
+                .forEach(keyAndValue -> putEntry(entries, keyAndValue[0], keyAndValue[1]));
         return entries;
     }
 
