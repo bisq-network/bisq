@@ -351,6 +351,14 @@ public class TradeStatisticsManagerTest {
                 System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1))).getValue());
     }
 
+    // The sender sets the BSQ volume of a statistic with its price. 0.01 BTC at 1 sat per BSQ are 1,000,000 BSQ, about
+    // 600 days of the BSQ volume of such a day: 2,998,000 sats for 1,001,665 BSQ.
+    @Test
+    public void bsqTradeOfAHundredthOfABtcAtOneSatPerBsqDominatesTheBsqPrice() {
+        assertEquals(3, bsqPriceOfATypicalDayAnd(bsqStatistics(1, 1_000_000,
+                System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1))).getValue());
+    }
+
     // Any peer can publish a valid statistic of up to 2 BTC, which is about 100 days of the BSQ volume of such a day. At
     // twice the price it sets the average to nearly twice the price, until the newest BSQ trade is dated more than one
     // day after it. With a date one day ahead, that is about two days.
