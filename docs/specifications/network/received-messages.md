@@ -44,7 +44,11 @@ large responses keep.
 ## Bundles of messages
 
 A `BundleOfEnvelopes` carries several messages, its elements. Since v1.8.0 only `Broadcaster`
-bundles messages: it sends the broadcast messages of 2 seconds to a peer in one bundle.
+bundles messages: it sends the broadcast messages of 2 seconds to a peer in one bundle. It sends them
+earlier if the bundle with the next message would be larger than 10 MB, because a peer of this version
+closes the connection at such a message (see below). Before, a relay which received more than 10 MB of
+broadcast messages within 2 seconds, for example the stored entries of a getdata response which a node
+broadcasts again after its start, put them all into one bundle.
 
 - An element of a known type which cannot be parsed violates `INVALID_DATA_TYPE` and is not passed
   to the handlers, as a single message which cannot be parsed. The other elements are passed to the

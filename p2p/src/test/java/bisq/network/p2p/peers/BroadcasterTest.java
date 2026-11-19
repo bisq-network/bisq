@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.peers;
 
+import bisq.network.p2p.BundleOfEnvelopes;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.storage.messages.BroadcastMessage;
@@ -72,7 +73,7 @@ class BroadcasterTest {
         NetworkNode networkNode = mock(NetworkNode.class);
         PeerManager peerManager = mock(PeerManager.class);
         Connection connection = mock(Connection.class);
-        BroadcastMessage message = mock(BroadcastMessage.class);
+        BroadcastMessage message = message();
         var executor = new AtomicReference<ListeningExecutorService>();
         var completionCount = new AtomicInteger();
 
@@ -105,8 +106,8 @@ class BroadcasterTest {
         NetworkNode networkNode = mock(NetworkNode.class);
         PeerManager peerManager = mock(PeerManager.class);
         Connection connection = mock(Connection.class);
-        BroadcastMessage earlierMessage = mock(BroadcastMessage.class);
-        BroadcastMessage removalMessage = mock(BroadcastMessage.class);
+        BroadcastMessage earlierMessage = message();
+        BroadcastMessage removalMessage = message();
         var completionCount = new AtomicInteger();
         SettableFuture<Connection> earlierSend = SettableFuture.create();
         SettableFuture<Connection> removalSend = SettableFuture.create();
@@ -143,7 +144,7 @@ class BroadcasterTest {
         NetworkNode networkNode = mock(NetworkNode.class);
         PeerManager peerManager = mock(PeerManager.class);
         Connection connection = mock(Connection.class);
-        BroadcastMessage message = mock(BroadcastMessage.class);
+        BroadcastMessage message = message();
         var completionCount = new AtomicInteger();
 
         when(networkNode.getConfirmedConnections()).thenReturn(Set.of(connection));
@@ -166,7 +167,7 @@ class BroadcasterTest {
     void ignoresBroadcastRequestsAfterShutdownCompleted() {
         NetworkNode networkNode = mock(NetworkNode.class);
         PeerManager peerManager = mock(PeerManager.class);
-        BroadcastMessage message = mock(BroadcastMessage.class);
+        BroadcastMessage message = message();
         var completionCount = new AtomicInteger();
         when(networkNode.getConfirmedConnections()).thenReturn(Set.of());
 
@@ -181,6 +182,60 @@ class BroadcasterTest {
         verify(networkNode, never()).sendMessage(any(Connection.class),
                 any(BroadcastMessage.class),
                 any(ListeningExecutorService.class));
+    }
+
+    // A peer closes the connection at a message above the largest message size, and relays and seed nodes bundle
+    // what they received within the broadcast interval
+    @Test
+    void requestsWhichDoNotFitIntoTheLargestMessageAreSentInSeveralBundles() {
+        NetworkNode networkNode = mock(NetworkNode.class);
+        Connection connection = mock(Connection.class);
+        when(networkNode.getConfirmedConnections()).thenReturn(Set.of(connection));
+        when(connection.getPeersNodeAddressOptional()).thenReturn(Optional.empty());
+        when(connection.testCapability(any())).thenReturn(true);
+        List<BroadcastMessage> sentMessages = new ArrayList<>();
+        when(networkNode.sendMessage(same(connection), any(BroadcastMessage.class), any(ListeningExecutorService.class)))
+                .thenAnswer(invocation -> {
+                    sentMessages.add(invocation.getArgument(1));
+                    return SettableFuture.create();
+                });
+        int sizeOfEach = 4 * 1024 * 1024;
+        BroadcastMessage first = message(sizeOfEach);
+        BroadcastMessage second = message(sizeOfEach);
+        BroadcastMessage third = message(sizeOfEach);
+
+        Broadcaster broadcaster = new Broadcaster(networkNode, mock(PeerManager.class), 1);
+        broadcaster.broadcast(first, null);
+        broadcaster.broadcast(second, null);
+        broadcaster.broadcast(third, null);
+        broadcaster.flush();
+        // Runs the sends, which come before the timeouts
+        for (int i = 0; i < 2; i++) {
+            ManualTimer.runNext();
+        }
+
+        assertEquals(2, sentMessages.size());
+        for (BroadcastMessage sentMessage : sentMessages) {
+            assertTrue(sentMessage.toProtoNetworkEnvelope().getSerializedSize() <= Connection.getMaxPermittedMessageSize());
+        }
+        assertTrue(sentMessages.contains(third));
+        BundleOfEnvelopes bundle = (BundleOfEnvelopes) sentMessages.stream()
+                .filter(sentMessage -> sentMessage != third)
+                .findFirst()
+                .orElseThrow();
+        assertEquals(List.of(first, second), bundle.getEnvelopes());
+    }
+
+    private static BroadcastMessage message() {
+        return message(1);
+    }
+
+    private static BroadcastMessage message(int serializedSize) {
+        BroadcastMessage message = mock(BroadcastMessage.class);
+        when(message.toProtoNetworkEnvelope()).thenReturn(protobuf.NetworkEnvelope.newBuilder()
+                .setAckMessage(protobuf.AckMessage.newBuilder().setErrorMessage("x".repeat(serializedSize)))
+                .build());
+        return message;
     }
 
     public static class ManualTimer implements Timer {
