@@ -69,8 +69,9 @@ or without brackets; Tor writes the host of a bootstrap warning without them. To
 pluggable transport (`Managed proxy "...": ...`), where lyrebird names the host of a webtunnel bridge, the URL and
 front of a meek bridge, and hosts in errors, so these lines lose their URLs and host names. The versions of Tor and
 loopback addresses, which name no relay or bridge, stay. The logs of the node in the zip lose the relay or bridge of a
-bootstrap warning (`HOSTID`, `HOSTADDR`), which the Tor library logs with the event. The files on disk keep
-everything; only the zip is redacted.
+bootstrap warning (`HOSTID`, `HOSTADDR`), which the Tor library logs with the event. The zip omits the excerpt of
+`tor.log` quoted in a node startup exception because it can begin in the middle of a bridge identity. The original
+files on disk keep the full diagnostics.
 
 The Tor directory has the parts `bin/` (the installed bundle), `data/` (the data directory of Tor) and `sandy/` (the
 sandbox program and its status record, see "Sandbox"). The torrc, the logs, `external_tor.config`, the record
