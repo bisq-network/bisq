@@ -48,8 +48,8 @@ public enum OpReturnType implements ImmutableDaoStateModel {
         this.type = type;
     }
 
-    // UNDEFINED is the fallback for unknown enum values, not a type of OP_RETURN data. The parser has no rule for it,
-    // so the type byte 0x00 must not map to it.
+    // UNDEFINED is a placeholder of the enum, not a type of OP_RETURN data. The parser has no rule for it, so the type
+    // byte 0x00 must not map to it.
     public static Optional<OpReturnType> getOpReturnType(byte type) {
         return Arrays.stream(OpReturnType.values())
                 .filter(opReturnType -> opReturnType != UNDEFINED)

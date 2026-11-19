@@ -122,7 +122,7 @@ class OpReturnParser {
             default:
                 // Each OP_RETURN type has its case above. A throw here would leave the block half parsed, so a type
                 // without a case makes the output invalid like an unknown type.
-                log.warn("OP_RETURN type {} has no rule. opReturnData={}", optionalOpReturnType.get(),
+                log.error("OP_RETURN type {} has no rule. opReturnData={}", optionalOpReturnType.get(),
                         Utils.HEX.encode(opReturnData));
                 return TxOutputType.INVALID_OUTPUT;
         }
