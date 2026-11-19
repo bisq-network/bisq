@@ -17,9 +17,13 @@
 
 package bisq.core.trade.statistics;
 
+import bisq.core.monetary.Price;
+import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.stablecoin.StableCoinPaymentRail;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
+import bisq.core.util.JsonUtil;
 
 import bisq.network.p2p.BundleOfEnvelopes;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
@@ -29,6 +33,7 @@ import bisq.network.p2p.storage.payload.InvalidPersistableNetworkPayloadExceptio
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.app.Version;
+import bisq.common.crypto.Hash;
 import bisq.common.proto.ProtobufferException;
 import bisq.common.util.ExtraDataMapValidator;
 
@@ -38,6 +43,8 @@ import com.google.protobuf.ByteString;
 import org.bitcoinj.core.Coin;
 
 import java.time.Clock;
+
+import java.nio.charset.StandardCharsets;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -56,10 +63,13 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TradeStatistics3Test {
     private static final long POST_STRICT_HASH_CHECK_DATE = 1_700_000_000_000L;
@@ -451,6 +461,155 @@ public class TradeStatistics3Test {
         assertTrue(tradeStatistics.isValid());
         assertEquals(PaymentMethod.CUSTOM_ID, tradeStatistics.getPaymentMethodId());
         assertEquals("57", tradeStatistics.toProtoTradeStatistics3().getPaymentMethod());
+    }
+
+    // A statistic which this node creates stores the position of every payment method of the mapper. A node of an
+    // earlier version keeps a position which it does not know as it is, so it computes the same hash.
+    @Test
+    public void createdStatisticStoresThePositionOfEveryPaymentMethodOfTheMapper() {
+        for (TradeStatistics3.PaymentMethodMapper paymentMethod : TradeStatistics3.PaymentMethodMapper.values()) {
+            TradeStatistics3 tradeStatistics = created(paymentMethod.name());
+            protobuf.TradeStatistics3 proto = tradeStatistics.toProtoTradeStatistics3();
+
+            assertEquals(String.valueOf(paymentMethod.ordinal()), proto.getPaymentMethod());
+            assertEquals(paymentMethod.name(), tradeStatistics.getPaymentMethodId());
+            assertEquals(tradeStatistics, TradeStatistics3.fromProto(proto));
+            assertEquals(proto, spelledOut(proto.getPaymentMethod()));
+        }
+    }
+
+    // BSQ_SWAP is not in the mapper, so a payment method of the mapper shows that a BSQ swap statistic is created as
+    // the others
+    @Test
+    public void createdBsqSwapStatisticStoresThePositionOfAPaymentMethodOfTheMapper() {
+        Offer offer = mock(Offer.class);
+        when(offer.getCurrencyCode()).thenReturn("BSQ");
+        when(offer.getPaymentMethod()).thenReturn(PaymentMethod.getPaymentMethod(PaymentMethod.CUSTOM_ID));
+        BsqSwapTrade bsqSwapTrade = mock(BsqSwapTrade.class);
+        when(bsqSwapTrade.getOffer()).thenReturn(offer);
+        when(bsqSwapTrade.getPrice()).thenReturn(Price.valueOf("BSQ", 5_000));
+        when(bsqSwapTrade.getAmountAsLong()).thenReturn(Coin.parseCoin("0.1").value);
+        when(bsqSwapTrade.getTakeOfferDate()).thenReturn(POST_STRICT_HASH_CHECK_DATE);
+
+        TradeStatistics3 tradeStatistics = TradeStatistics3.from(bsqSwapTrade);
+
+        assertEquals(String.valueOf(TradeStatistics3.PaymentMethodMapper.CUSTOM.ordinal()),
+                tradeStatistics.toProtoTradeStatistics3().getPaymentMethod());
+    }
+
+    // A payment method which no version has in its mapper, as MERCADO_PAGO or BSQ_SWAP, is kept as it is by all
+    // versions
+    @Test
+    public void statisticWithAPaymentMethodOutsideOfTheMapperIsKeptAsItIs() {
+        for (String paymentMethod : List.of(PaymentMethod.MERCADO_PAGO_ID, PaymentMethod.BSQ_SWAP_ID)) {
+            protobuf.TradeStatistics3 proto = created(paymentMethod).toProtoTradeStatistics3();
+
+            assertEquals(spelledOut(paymentMethod), proto);
+            assertEquals(paymentMethod, TradeStatistics3.fromProto(proto).getPaymentMethodId());
+        }
+    }
+
+    // The check of a received statistic replaces the names up to SBP, which is the end of the mapper of v1.10.4 to
+    // v1.10.11 with its 57 entries. An entry inserted before SBP would move that bound.
+    @Test
+    public void sbpIsTheLastPaymentMethodOfTheMapperOfEarlierVersions() {
+        assertEquals(56, TradeStatistics3.PaymentMethodMapper.SBP.ordinal());
+        assertEquals(TradeStatistics3.PaymentMethodMapper.CUSTOM.ordinal(),
+                TradeStatistics3.PaymentMethodMapper.SBP.ordinal() + 1);
+    }
+
+    // Nodes since v1.10.4 check the hash of a received statistic with only the names up to SBP replaced by their
+    // positions. v1.10.11 accepts a name appended in this release spelled out with its hash over the name, so this
+    // version accepts it and relays it unchanged.
+    @Test
+    public void receivedStatisticWithAPaymentMethodAppendedAfterSbpSpelledOutIsAccepted() {
+        for (TradeStatistics3.PaymentMethodMapper paymentMethod : TradeStatistics3.PaymentMethodMapper.values()) {
+            if (paymentMethod.ordinal() <= TradeStatistics3.PaymentMethodMapper.SBP.ordinal()) {
+                continue;
+            }
+            protobuf.TradeStatistics3 proto = spelledOut(paymentMethod.name());
+
+            TradeStatistics3 tradeStatistics = TradeStatistics3.fromProto(proto);
+
+            assertEquals(paymentMethod.name(), tradeStatistics.getPaymentMethodId());
+            assertEquals(proto, tradeStatistics.toProtoTradeStatistics3());
+        }
+    }
+
+    // Nodes since v1.10.4 reject a name up to SBP spelled out with its hash over the name, while they parse it, and
+    // count that as a rule violation of the relay. This version must not accept and relay it.
+    @Test
+    public void receivedStatisticWithAPaymentMethodUpToSbpSpelledOutIsCheckedAsByEarlierVersions() {
+        for (TradeStatistics3.PaymentMethodMapper paymentMethod : TradeStatistics3.PaymentMethodMapper.values()) {
+            if (paymentMethod.ordinal() > TradeStatistics3.PaymentMethodMapper.SBP.ordinal()) {
+                continue;
+            }
+            assertThrows(InvalidPersistableNetworkPayloadException.class,
+                    () -> TradeStatistics3.fromProto(spelledOut(paymentMethod.name())),
+                    paymentMethod.name());
+
+            protobuf.TradeStatistics3 withHashOverThePosition = created(paymentMethod.name()).toProtoTradeStatistics3()
+                    .toBuilder()
+                    .setPaymentMethod(paymentMethod.name())
+                    .build();
+            assertEquals(String.valueOf(paymentMethod.ordinal()),
+                    TradeStatistics3.fromProto(withHashOverThePosition).toProtoTradeStatistics3().getPaymentMethod());
+        }
+    }
+
+    // A node of v1.10.11 relays statistics with names appended in this release spelled out, alone or in a bundle. A
+    // statistic which fails to parse would count as a rule violation of the relay.
+    @Test
+    public void relayedStatisticsWithPaymentMethodsAppendedAfterSbpSpelledOutParse() throws Exception {
+        CoreNetworkProtoResolver resolver = new CoreNetworkProtoResolver(Clock.systemUTC());
+        List<protobuf.NetworkEnvelope> envelopes = List.of(
+                addPersistableNetworkPayloadEnvelope(spelledOut(PaymentMethod.CUSTOM_ID)),
+                addPersistableNetworkPayloadEnvelope(spelledOut(StableCoinPaymentRail.USDT_TRC20.name())));
+
+        for (protobuf.NetworkEnvelope envelope : envelopes) {
+            assertTrue(resolver.fromProto(envelope) instanceof AddPersistableNetworkPayloadMessage);
+        }
+        BundleOfEnvelopes bundle = BundleOfEnvelopes.fromProto(
+                protobuf.BundleOfEnvelopes.newBuilder().addAllEnvelopes(envelopes).build(),
+                resolver,
+                Version.getP2PMessageVersion());
+        assertEquals(2, bundle.getEnvelopes().size());
+        assertEquals(0, bundle.getNumUnparsableEnvelopes());
+    }
+
+    private static TradeStatistics3 created(String paymentMethod) {
+        return new TradeStatistics3("USD",
+                50_000_000,
+                Coin.parseCoin("0.25").value,
+                paymentMethod,
+                POST_STRICT_HASH_CHECK_DATE,
+                null,
+                null,
+                (TreeMap<String, String>) null);
+    }
+
+    // The statistic as a node creates it for a payment method which is not in its mapper, with the payment method as
+    // given and the hash over it: v1.10.11 for a payment method appended in this release
+    private static protobuf.TradeStatistics3 spelledOut(String paymentMethod) {
+        String paymentMethodOutsideOfTheMapper = "NOT_IN_THE_MAPPER";
+        TradeStatistics3 template = created(paymentMethodOutsideOfTheMapper);
+        String json = JsonUtil.objectToJson(template);
+        String jsonWithPaymentMethod = json.replace("\"" + paymentMethodOutsideOfTheMapper + "\"",
+                "\"" + paymentMethod + "\"");
+        assertNotEquals(json, jsonWithPaymentMethod);
+        byte[] hash = Hash.getSha256Ripemd160hash(jsonWithPaymentMethod.getBytes(StandardCharsets.UTF_8));
+        return template.toProtoTradeStatistics3().toBuilder()
+                .setPaymentMethod(paymentMethod)
+                .setHash(ByteString.copyFrom(hash))
+                .build();
+    }
+
+    private static protobuf.NetworkEnvelope addPersistableNetworkPayloadEnvelope(protobuf.TradeStatistics3 tradeStatistics) {
+        return protobuf.NetworkEnvelope.newBuilder()
+                .setMessageVersion(Version.getP2PMessageVersion())
+                .setAddPersistableNetworkPayloadMessage(protobuf.AddPersistableNetworkPayloadMessage.newBuilder()
+                        .setPayload(toPersistableNetworkPayload(tradeStatistics)))
+                .build();
     }
 
     private static TradeStatistics3 tradeStatistics(String currency) {

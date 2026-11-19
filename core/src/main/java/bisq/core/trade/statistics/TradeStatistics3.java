@@ -149,7 +149,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         return new TradeStatistics3(offer.getCurrencyCode(),
                 bsqSwapTrade.getPrice().getValue(),
                 bsqSwapTrade.getAmountAsLong(),
-                offer.getPaymentMethod().getId(),
+                toStoredPaymentMethod(offer.getPaymentMethod().getId()),
                 bsqSwapTrade.getTakeOfferDate(),
                 null,
                 null,
@@ -160,7 +160,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     // This enum must not change the order as we use the ordinal for storage to reduce data size.
     // The payment method string can be quite long and would consume 15% more space.
     // When we get a new payment method we can add it to the enum at the end. Old users would add it as string if not
-    // recognized.
+    // recognized. A new entry changes only the statistics which this node creates, see toReceivedPaymentMethod.
     @VisibleForTesting
     enum PaymentMethodMapper {
         OK_PAY,
@@ -297,12 +297,37 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         this(currency,
                 price,
                 amount,
-                paymentMethod,
+                toStoredPaymentMethod(paymentMethod),
                 date,
                 mediator,
                 refundAgent,
                 extraDataMap,
                 null);
+    }
+
+    // A statistic which this node creates stores the position of a payment method which this node knows
+    private static String toStoredPaymentMethod(String paymentMethodId) {
+        try {
+            return String.valueOf(PaymentMethodMapper.valueOf(paymentMethodId).ordinal());
+        } catch (IllegalArgumentException e) {
+            return paymentMethodId;
+        }
+    }
+
+    // Nodes since v1.10.4 check the hash of a received statistic over its payment method with the names up to SBP
+    // replaced by their positions, and count a statistic which fails the check as a rule violation of the peer which
+    // relayed it. A received statistic is checked the same way, so that nodes of all these versions accept and relay
+    // the same statistics: a name appended later is kept as received, a name up to SBP spelled out fails on all of
+    // them. This must not grow with later appends to the mapper.
+    private static String toReceivedPaymentMethod(String paymentMethod) {
+        try {
+            PaymentMethodMapper mapped = PaymentMethodMapper.valueOf(paymentMethod);
+            return mapped.ordinal() <= PaymentMethodMapper.SBP.ordinal() ?
+                    String.valueOf(mapped.ordinal()) :
+                    paymentMethod;
+        } catch (IllegalArgumentException e) {
+            return paymentMethod;
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -322,13 +347,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         this.currency = currency;
         this.price = price;
         this.amount = amount;
-        String tempPaymentMethod;
-        try {
-            tempPaymentMethod = String.valueOf(PaymentMethodMapper.valueOf(paymentMethod).ordinal());
-        } catch (IllegalArgumentException e) {
-            tempPaymentMethod = paymentMethod;
-        }
-        this.paymentMethod = tempPaymentMethod;
+        this.paymentMethod = toReceivedPaymentMethod(paymentMethod);
         this.date = date;
         this.mediator = mediator;
         this.refundAgent = refundAgent;
