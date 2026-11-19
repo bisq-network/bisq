@@ -16,6 +16,12 @@ defines which of these blocks a lite node uses and relays.
   block. A lite node uses and relays the message only if the signed block is present, its signature
   is valid and the unsigned copy matches it. The node relays the message unchanged.
 - A lite node neither uses nor relays a broadcast message without a signed block.
+- A lite node uses and relays the broadcast message of a block only once. It ignores a broadcast
+  message of a block which is 1,024 or more blocks behind its local DAO tip. Historical sync obtains
+  those blocks through the request and response protocol.
+- To recognize a repeated broadcast message, a lite node remembers the blocks of the accepted
+  messages until they are 1,024 or more blocks behind its local DAO tip. So it remembers every
+  message which it would still accept. A reset clears that history.
 - A full node answers each request for blocks with signed blocks only, whatever capabilities the
   requester announces. A lite node ignores a response that contains unsigned blocks but no signed
   block.
@@ -37,6 +43,14 @@ a peer cannot change the DAO state of lite nodes, for example BSQ balances or th
 fees and of delayed payouts. Lite nodes of releases before 1.10.4 use the unsigned copy without any
 check. If updated nodes relayed messages without a signed block, they would pass blocks of any peer
 to these nodes.
+
+A signed block stays valid, so any peer can send the broadcast message of an old block again. Without
+the height limit and the history of accepted messages every node would use and relay it again. The
+history covers the same heights as the limit. With a history of a fixed number of messages a peer
+could push a message out of the history which the node still accepts, and the message would circulate
+again. The history grows only with blocks that a trusted block provider signed. A node at the tip
+remembers about 1,024 blocks. A node which is behind also remembers the blocks above its tip whose
+messages it accepted.
 
 ## Compatibility
 
