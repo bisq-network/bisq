@@ -41,6 +41,17 @@ public class OpReturnParserTest {
             (byte) 0x16, Map.entry(22, TxOutputType.ASSET_LISTING_FEE_OP_RETURN_OUTPUT),
             (byte) 0x17, Map.entry(22, TxOutputType.PROOF_OF_BURN_OP_RETURN_OUTPUT));
 
+    // A new OP_RETURN type needs an entry here, so that everyTypeByteAndLengthGivesAnOutputType fails while the parser
+    // has no rule for it and makes its output invalid
+    @Test
+    public void theTableHasEveryOpReturnType() {
+        for (OpReturnType opReturnType : OpReturnType.values()) {
+            if (opReturnType != OpReturnType.UNDEFINED) {
+                assertTrue(TYPES.containsKey(opReturnType.getType()), opReturnType.name());
+            }
+        }
+    }
+
     @Test
     public void theTypeByteZeroIsNoOpReturnType() {
         // 0x00 is the byte of OpReturnType.UNDEFINED, the fallback for unknown enum values
