@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.File;
 
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -89,6 +90,30 @@ class TradeStatistics3StorageServiceTest {
         assertFalse(statistic.isValid());
         assertTrue(stores.put(new ByteArray(statistic.getHash()), statistic));
         verify(persistence).requestPersistence();
+    }
+
+    // The message of such a statistic parses, as nodes up to v1.10.11 relay it. The store is where it stops.
+    @Test
+    @SuppressWarnings("unchecked")
+    void statisticAboveTheSizeLimitIsNotStored() {
+        PersistenceManager<TradeStatistics3Store> persistence = mock(PersistenceManager.class);
+        TradeStatistics3StorageService service = new TradeStatistics3StorageService(directory, persistence) {
+            {
+                store = new TradeStatistics3Store();
+                allHistoricalPayloads = ImmutableMap.of();
+            }
+        };
+        AppendOnlyDataStoreService stores = new AppendOnlyDataStoreService();
+        stores.addService(service);
+        TreeMap<String, String> extraData = new TreeMap<>(
+                Map.of("referralId", "x".repeat(TradeStatistics3.MAX_SERIALIZED_BYTES)));
+        TradeStatistics3 oversized = new TradeStatistics3("USD", 50_000_000, 25_000_000, "SEPA",
+                System.currentTimeMillis(), null, null, extraData);
+        assertTrue(oversized.isValidForStorage());
+
+        assertFalse(stores.put(new ByteArray(oversized.getHash()), oversized));
+        assertFalse(stores.containsKey(oversized, new ByteArray(oversized.getHash())));
+        verify(persistence, never()).requestPersistence();
     }
 
     @Test

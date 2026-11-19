@@ -3,8 +3,9 @@
 ## Scope
 
 This specification defines which trade statistics a BISQ 1 node uses, how sums and average prices
-computed from them handle extreme values, and which market prices can deactivate an open offer
-through its trigger price.
+computed from them handle extreme values, which market prices can deactivate an open offer
+through its trigger price, and how a statistic stores its payment method and which received
+statistics a node accepts by their hash.
 
 ## Rules
 
@@ -34,13 +35,26 @@ through its trigger price.
    around. An average is computed from sums as floating point numbers. A total which is
    shown or compared, such as the volume in the charts or the traded amount of an altcoin, is the
    largest long if the sum exceeds the long range.
+7. A statistic stores its payment method as the position of the payment method in the payment
+   method list of the trade statistics (`PaymentMethodMapper`), or as its ID if it is not in the
+   list. A node stores the position of every payment method of its list in a statistic which it
+   creates. The hash of a statistic is computed over the stored value.
+8. A node checks the hash of a received statistic dated after 2021-11-01 over its payment method as
+   received, with only the names of the first 57 entries of the list (up to `SBP`) replaced by their
+   positions. It keeps every other value as received, also the name of an entry appended later, and
+   stores and relays the statistic so. A statistic which fails the check is rejected while it is
+   parsed.
+9. The replacement of rule 8 stays at the first 57 entries. An entry appended to the list changes
+   only the statistics which a node creates.
 
 ## Storage and relay
 
 The serialized trade statistic may occupy at most 256 bytes, including optional metadata. A node
-checks this limit before hashing an incoming record and when reading a store. Each store holds at
-most 100,000 distinct records. The writable store and each versioned archive have separate limits.
-The largest record and archive shipped through v1.10.12 contain 76 bytes and 75,912 records
+checks this limit when it admits a statistic to its store and when it reads a store, where it skips
+a larger record before it hashes it. A received statistic above the limit is parsed like any other,
+and then neither stored nor relayed. It is no rule violation of the peer which sent it. Each store
+holds at most 100,000 distinct records. The writable store and each versioned archive have separate
+limits. The largest record and archive shipped through v1.10.12 contain 76 bytes and 75,912 records
 respectively.
 
 A new statistic must pass the validity rules before admission, for both broadcasts and initial
@@ -77,6 +91,13 @@ volumes, are therefore informational. They must not change an offer, a trade, a 
   a currency, and its statistics must reach the nodes of that version through nodes of this version
   as well. A node which updates then already holds the statistics of the new currency. Nodes of
   earlier versions stored and relayed every statistic.
+- Storage and relay, size: nodes up to v1.10.11 have no size limit, and the hash of a statistic does
+  not cover its extra data, its mediator and its refund agent. They accept and relay a statistic
+  with a valid hash above the limit. If this version rejected it while it is parsed, that would
+  count as a rule violation of the honest relay, as for rule 8, and any peer could make nodes of
+  this version close their connections to relays of v1.10.11
+  (`tradestats-size-limit-version-split`). So the limit applies where a statistic is stored. The cost
+  of a received statistic stays bounded by the size limit of its message.
 - Rule 4: a price derived from trade statistics is for display only. The state of an offer depends
   only on the price feed.
 - Rule 5: the validity rules bound single values (rule 2), not every combination of them. A view
@@ -87,11 +108,27 @@ volumes, are therefore informational. They must not change an offer, a trade, a 
   highest price of its statistics (the volume of a statistic is rounded), so with the price limit of
   rule 2 within the long range. A total which saturates stays at least as large as each of its
   parts.
+- Rules 7 to 9: the position saves space in every statistic. Nodes since v1.10.4 check the hash of
+  a received statistic with the names up to `SBP` replaced, the end of their list. A statistic which
+  fails the check while it is parsed counts as a rule violation of the peer which relayed it, and at
+  the second one the node closes the connection and removes the relay from its persisted peers. The
+  receiver cannot tell an honest relay from the creator, so nodes of all versions must accept and
+  relay the same statistics. With all names of its list replaced, this version rejected a name
+  appended in this release spelled out with its hash over the name, which v1.10.11 accepts and
+  relays because it does not know the name, so any peer could make nodes of this version close their
+  connections to relays of v1.10.11 (`trade-statistics-payment-method-name-version-split`). With every
+  value kept as received, it would accept and relay a name up to `SBP` spelled out with its hash over
+  the name, which the nodes since v1.10.4 reject: the same split in the other direction. A payment
+  method which is not in the list yet, such as `MERCADO_PAGO` or `BSQ_SWAP`, can so be appended
+  later without rejecting the statistics which carry its name.
 
 ## Compatibility
 
-The wire format, persisted format and hash calculation stay compatible with earlier versions. All
-statistics in the bundled stores pass the date, price and volume checks. A node whose
+The wire format, persisted format and hash calculation stay compatible with earlier versions. A node
+creates the same statistics with the same hashes as before (rule 7), and it checks the hash of a
+received statistic as nodes of v1.10.4 to v1.10.11 do (rule 8). It parses every received statistic
+which these nodes parse; the limits of the store apply after that. All statistics in the bundled
+stores pass the date, price and volume checks. A node whose
 clock is more than one day behind does not use new statistics until its clock is corrected and it
 is restarted. While no recent price from the price feed is available, for example right after
 startup or during an outage of the price feed, no offer is deactivated by its trigger price.
@@ -117,3 +154,16 @@ altcoins which are not delisted can be chosen for a new payment account and in t
 Valid but invented statistics can therefore keep a delisted altcoin listed on every node which
 receives them. They cannot delist an altcoin, because statistics are never removed and the traded
 amount never wraps around (rule 6).
+
+A statistic with the name of an entry appended after `SBP` spelled out and the statistic with the
+position of that entry have different hashes. A peer can so publish a second copy of a statistic,
+as it can publish invented statistics (see Trust model).
+
+If a payment method which statistics carry by its name, such as `MERCADO_PAGO`, is appended to the
+list later, a node of that version creates the statistic of an earlier trade with the position. A
+seller republishes the statistics of its trades which it does not find at the start, and it does not
+find the one with the name by the hash over the position, so that trade then has two statistics.
+
+Nodes before v1.10.4 do not check the hash of a received statistic, so they relay statistics which
+later versions reject while they parse them, and a node counts each as a rule violation of the relay
+(not changed).
