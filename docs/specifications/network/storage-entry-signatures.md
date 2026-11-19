@@ -16,6 +16,12 @@ verification before.
 
 ## Rules
 
+- A node verifies a signature only with a DSA public key which includes its parameters, whose
+  encoding occupies at most 600 bytes and whose modulus has at most 2,048 bits. With any other key
+  the verification does not run and the entry is rejected. This holds for every DSA signature that a
+  node verifies, also outside of storage entries, for example of a trade message.
+- A node does not apply these bounds when it reads a key, from a message or from its stored data. It
+  reads every key which earlier versions read.
 - A node verifies the signature of an entry before it stores the entry, applies the removal or applies
   the refresh, and after the checks that need no signature, such as the check of the sequence number.
 - A node remembers each signature that failed its verification, as the hash of the three values that
@@ -40,6 +46,17 @@ verification before.
   not signed, copies of one entry with an invalid signature that differ only in their creation date
   are different messages. Each copy cost one verification, and nothing was stored that would have
   stopped the next one.
+- The cost of the verification of a DSA signature grows with the square of the size of the modulus,
+  and the JDK does not bound the modulus. All keys which a node creates have 1,024 bits and an
+  encoding of at most 444 bytes. The size of the encoding alone does not bound the modulus, because
+  a key can pair a large modulus with a small generator and a small public value.
+- The bounds apply at the verification and not where a key is read, because nodes up to v1.10.11
+  accept a key of any size which the JDK reads. Such a key can be the owner key of an entry which
+  honest nodes of these versions store and relay, and it can be the key of a peer in a trade or in a
+  dispute which a node has stored. A node closes the connection to a peer whose message it cannot
+  read, and it treats a stored file which it cannot read as corrupted and starts without its
+  content. With the bounds at the verification the entry is dropped like any entry with an invalid
+  signature, and the stored trades and disputes stay readable.
 - A verification gives the same result for the same public key, signed hash and signature. So the
   remembered result is the result that a new verification would give, and remembering it cannot
   reject an entry that a verification would accept.
@@ -84,5 +101,6 @@ verification before.
 
 ## Compatibility
 
-No message and no persisted data change. A node rejects the same entries as before; only repeated
-invalid entries cost less.
+No message and no persisted data change. A node rejects the same entries as before, and in addition
+those which are signed with a key outside the bounds for a verification. Nodes up to v1.10.11 accept
+such entries. No unmodified node creates such a key. Repeated invalid entries cost less.
