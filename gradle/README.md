@@ -221,6 +221,10 @@ same value in `docs/release-checklist.md`. `verifyReleaseEnvironment` compares i
 Gradle version that runs the build and fails if they differ. The release builder image needs
 no change, because its Dockerfile runs `./gradlew`.
 
+`gradle.properties` also sets the internal retry properties `org.gradle.internal.repository.max.tentatives`
+and `org.gradle.internal.repository.initial.backoff`. Gradle ignores a property it no longer reads, so
+check in the new version that the dependency resolution still reads both.
+
 Five files are then ready to be committed, plus `gradle.properties` and the checklist.
 
 ### 5. Trust the Develocity plugin of the new Gradle version
