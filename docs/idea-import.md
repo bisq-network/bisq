@@ -1,13 +1,13 @@
 # Importing Bisq into IntelliJ IDEA
 
-Most Bisq contributors use IDEA for development. The following instructions have been tested on IDEA 2021.3.
+Most Bisq contributors use IDEA for development. Bisq is built with Java 21, so use a version of IDEA which supports it.
 
 1. Follow instructions in [build.md](build.md) to clone and build Bisq at the command line
 1. Open IDEA
 1. If you are inside a loaded Project, go to `File -> Settings -> Build, Execution, Deployment -> Compiler -> Annotation Processors`, else go to `Customize -> All settings... -> Build, Execution, Deployment -> Compiler -> Annotation Processors`, and check the `Enable annotation processing` to enable processing of Lombok annotations (Lombok plugin installed by default since v2020.3)
 1. Go to `File -> New -> Project from Existing Sources...` (or `Projects -> Open` from welcome screen) and select the main Bisq folder to automatically load the related Gradle project
-1. If you did not yet setup JDK11 in IntelliJ, go to `File -> Project Structure -> Project` and set `SDK` to your JDK11 folder
-1. Select JDK11 for Gradle as well: go to `File -> Settings -> Build, Execution, Deployment -> Build Tools -> Gradle` and select the JDK11 location in `Gradle JVM` field
+1. If you did not yet set up Amazon Corretto 21 in IntelliJ (see [build.md](build.md) for the minimum version), go to `File -> Project Structure -> Project` and set `SDK` to its folder
+1. Select the same JDK for Gradle as well: go to `File -> Settings -> Build, Execution, Deployment -> Build Tools -> Gradle` and select its location in the `Gradle JVM` field
 1. Run `Build -> Build Project`, the process should complete correctly
 1. Go to `Run > Edit Configurations... -> Plus (+) icon on the top left -> Application` and fill the requested fields as shown below, where `CLI arguments` should be taken from those listed in [dev-setup.md](dev-setup.md) (_Alice_ instance in the example):
 
