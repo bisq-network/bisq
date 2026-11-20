@@ -175,6 +175,9 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             rows++;
         if (isF2F)
             rows++;
+        boolean isCustomPaymentMethod = offer.getPaymentMethod().isCustom();
+        if (isCustomPaymentMethod)
+            rows++;
 
         boolean showXmrAutoConf = offer.isXmr() && offer.getDirection() == OfferDirection.SELL;
         if (showXmrAutoConf) {
@@ -305,6 +308,10 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         if (isF2F) {
             addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("payment.f2f.city"), offer.getF2FCity());
+        }
+        if (isCustomPaymentMethod) {
+            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("payment.custom.name"),
+                    offer.getCustomPaymentMethodName());
         }
         if (showExtraInfo) {
             TextArea textArea = addConfirmationLabelTextArea(gridPane, ++rowIndex, Res.get("payment.shared.extraInfo"), "", 0).second;

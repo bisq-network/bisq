@@ -62,11 +62,15 @@ public abstract class SetupPayoutTxListener extends TradeTask {
                         walletService.getAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT).orElse(null),
                         "Payout address entry must exist. tradeId=%s",
                         id).getAddress();
-                Transaction depositTx = checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
-
-                // check if the payout already happened (ensuring it was > deposit block height, see GH #5725)
-                TransactionConfidence confidence = walletService.getConfidenceForAddressFromBlockHeight(address,
-                        depositTx.getConfidence().getAppearedAtChainHeight());
+                // During a wallet rescan the trade can still be in its persisted, confirmed phase while the
+                // wallet has not reached the deposit block. Watch for the payout as the scan advances.
+                Transaction depositTx = trade.getDepositTx();
+                TransactionConfidence confidence = null;
+                if (depositTx != null &&
+                        depositTx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
+                    confidence = walletService.getConfidenceForAddressFromBlockHeight(address,
+                            depositTx.getConfidence().getAppearedAtChainHeight());
+                }
                 if (!isInNetwork(confidence) || !applyConfidence(confidence)) {
                     confidenceListener = new AddressConfidenceListener(address) {
                         @Override

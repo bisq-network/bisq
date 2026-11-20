@@ -158,6 +158,14 @@ public abstract class BuyerProtocol extends DisputeProtocol {
                         .using(new TradeTaskRunner(trade,
                                 () -> {
                                     stopTimeout();
+                                    // A non-fatal timeout earlier in the protocol sets an error message, which is not
+                                    // cleared and keeps blocking the payment started step (BuyerStep2View, the API).
+                                    // The deposit and delayed payout tx are now processed and verified, so the trade is
+                                    // healthy and a stale error must not stop the buyer from confirming payment started.
+                                    if (trade.hasFailed()) {
+                                        trade.setErrorMessage(null);
+                                        processModel.getTradeManager().requestPersistence();
+                                    }
                                     handleTaskRunnerSuccess(message);
                                 },
                                 errorMessage -> handleTaskRunnerFault(message, errorMessage))))
@@ -169,8 +177,18 @@ public abstract class BuyerProtocol extends DisputeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        sendPaymentStarted(Trade.Phase.DEPOSIT_CONFIRMED, resultHandler, errorMessageHandler);
+    }
+
+    public void retryPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        sendPaymentStarted(Trade.Phase.FIAT_SENT, resultHandler, errorMessageHandler);
+    }
+
+    private void sendPaymentStarted(Trade.Phase expectedPhase,
+                                    ResultHandler resultHandler,
+                                    ErrorMessageHandler errorMessageHandler) {
         BuyerEvent event = BuyerEvent.PAYMENT_SENT;
-        expect(phase(Trade.Phase.DEPOSIT_CONFIRMED)
+        expect(phase(expectedPhase)
                 .with(event)
                 .preCondition(trade.confirmPermitted()))
                 .setup(tasks(ApplyFilter.class,
@@ -188,8 +206,13 @@ public abstract class BuyerProtocol extends DisputeProtocol {
                                     handleTaskRunnerFault(event, errorMessage);
                                 })))
                 .run(() -> {
-                    trade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
-                    processModel.getTradeManager().requestPersistence();
+                    // A retry keeps the state. From BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG the next start resends
+                    // the message also if a task before the send fails, which it would not do from
+                    // BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED.
+                    if (expectedPhase == Trade.Phase.DEPOSIT_CONFIRMED) {
+                        trade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
+                        processModel.getTradeManager().requestPersistence();
+                    }
                 })
                 .executeTasks();
     }

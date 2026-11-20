@@ -98,6 +98,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -148,6 +149,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             handleOffersWithInvalidPriceTimer;
     @Setter
     private Consumer<String> chainNotSyncedHandler;
+    // Set by the TradeManager, which ignores a take offer request for an offer while the handshake of an earlier
+    // request for it is pending. The argument is the offer ID.
+    @Setter
+    private Predicate<String> takeOfferHandshakePending = offerId -> false;
     @Getter
     private final ObservableList<Tuple2<OpenOffer, String>> invalidOffers = FXCollections.observableArrayList();
     @Getter
@@ -959,6 +964,11 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     AvailabilityCheckResult checkAvailabilityForAvailableOpenOffer(OpenOffer openOffer,
                                                                    OfferAvailabilityRequest request,
                                                                    NodeAddress peer) {
+        // A take offer request would be ignored, so we answer as for a reserved offer
+        if (takeOfferHandshakePending.test(openOffer.getId())) {
+            return new AvailabilityCheckResult(AvailabilityResult.OFFER_TAKEN, null, null);
+        }
+
         Offer offer = openOffer.getOffer();
         if (preferences.getIgnoreTradersList().stream().anyMatch(fullAddress -> fullAddress.equals(peer.getFullAddress()))) {
             return new AvailabilityCheckResult(AvailabilityResult.USER_IGNORED, null, null);

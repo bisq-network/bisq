@@ -93,7 +93,7 @@ public class SellerAsMakerProtocol extends SellerProtocol implements MakerProtoc
                                     errorMessageHandler.handleErrorMessage(errorMessage);
                                     handleTaskRunnerFault(message, errorMessage);
                                 }))
-                        .withTimeout(120))
+                        .withTimeout(TAKE_OFFER_HANDSHAKE_TIMEOUT_SEC))
                 .executeTasks();
     }
 

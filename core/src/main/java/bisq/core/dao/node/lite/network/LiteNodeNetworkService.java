@@ -23,6 +23,7 @@ import bisq.core.dao.node.lite.DaoBlockSignatureVerifier;
 import bisq.core.dao.node.messages.GetBlocksResponse;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
 import bisq.core.dao.node.messages.SignedRawBlock;
+import bisq.core.dao.state.DaoStateService;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.CloseConnectionReason;
@@ -41,6 +42,8 @@ import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import javax.inject.Inject;
 
 import java.util.Collection;
@@ -51,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
@@ -67,6 +71,9 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     private static final long RETRY_DELAY_SEC = 10;
     private static final long CLEANUP_TIMER = 120;
     private static final int MAX_RETRY = 12;
+    // We use and relay the announcement of a block which is less than that many blocks behind our chain height.
+    // About a week of blocks at the usual Bitcoin block interval.
+    static final int MAX_RECENT_BLOCKS = 1024;
 
     private int retryCounter = 0;
     private int lastRequestedBlockHeight;
@@ -100,6 +107,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     private final Broadcaster broadcaster;
     private final Collection<NodeAddress> seedNodeAddresses;
     private final DaoBlockSignatureVerifier daoBlockSignatureVerifier;
+    private final DaoStateService daoStateService;
 
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
@@ -107,7 +115,9 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     private final Map<Tuple2<NodeAddress, Integer>, RequestBlocksHandler> requestBlocksHandlerMap = new HashMap<>();
     private Timer retryTimer;
     private boolean stopped;
-    private final Set<String> receivedBlocks = new HashSet<>();
+    // The accepted announcements by block height. We forget an announcement only when its height has left the
+    // window of MAX_RECENT_BLOCKS, so we know every announcement which we would still accept.
+    private final TreeMap<Integer, Set<String>> receivedBlockUidsByHeight = new TreeMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -119,13 +129,15 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                                   PeerManager peerManager,
                                   Broadcaster broadcaster,
                                   SeedNodeRepository seedNodesRepository,
-                                  DaoBlockSignatureVerifier daoBlockSignatureVerifier) {
+                                  DaoBlockSignatureVerifier daoBlockSignatureVerifier,
+                                  DaoStateService daoStateService) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.broadcaster = broadcaster;
         // seedNodeAddresses can be empty (in case there is only 1 seed node, the seed node starting up has no other seed nodes)
         this.seedNodeAddresses = new HashSet<>(seedNodesRepository.getSeedNodeAddresses());
         this.daoBlockSignatureVerifier = daoBlockSignatureVerifier;
+        this.daoStateService = daoStateService;
     }
 
 
@@ -171,7 +183,13 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                 });
     }
 
+    @VisibleForTesting
+    int getNumReceivedBlocks() {
+        return receivedBlockUidsByHeight.values().stream().mapToInt(Set::size).sum();
+    }
+
     public void reset() {
+        receivedBlockUidsByHeight.clear();
         lastRequestedBlockHeight = 0;
         lastReceivedBlockHeight = 0;
         retryCounter = 0;
@@ -239,38 +257,52 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         if (networkEnvelope instanceof NewBlockBroadcastMessage newBlockBroadcastMessage) {
             RawBlock unSignedRawBlock = newBlockBroadcastMessage.getBlock();
             SignedRawBlock signedRawBlock = newBlockBroadcastMessage.getSignedRawBlock();
-            String hashUnsignedBlock = unSignedRawBlock.getHash();
-            String contentHashUnsignedBlock = Utilities.bytesAsHexString(DaoBlockSignatureHash.getHash(unSignedRawBlock));
-            String blockUid = "unsigned:" + contentHashUnsignedBlock;
             NodeAddress senderNodeAddress = connection.getPeersNodeAddressOptional().orElse(null);
-            if (signedRawBlock != null) {
-                String contentHashSignedBlock = Utilities.bytesAsHexString(DaoBlockSignatureHash.getHash(signedRawBlock.getBlock()));
-                if (!signedRawBlock.getBlock().getHash().equals(hashUnsignedBlock) ||
-                        !contentHashSignedBlock.equals(contentHashUnsignedBlock)) {
-                    log.warn("We received a newBlockBroadcastMessage with a different hashes for the unsigned and the " +
-                            "signed block. We ignore that as invalid. newBlockBroadcastMessage={}", newBlockBroadcastMessage);
-                    return;
-                }
-
-                blockUid = "signed:" + contentHashSignedBlock;
+            if (signedRawBlock == null) {
+                log.warn("We received a NewBlockBroadcastMessage without a signed block. We neither use nor relay it. " +
+                        "senderNodeAddress={}, blockHeight={}", senderNodeAddress, unSignedRawBlock.getHeight());
+                return;
             }
 
-            if (receivedBlocks.contains(blockUid)) {
+            // Once we have forgotten an announcement, old signed blocks must not circulate again.
+            // Missing historical blocks are served by GetBlocksResponse.
+            int chainHeight = daoStateService.getChainHeight();
+            int blockHeight = signedRawBlock.getBlock().getHeight();
+            if ((long) chainHeight - blockHeight >= MAX_RECENT_BLOCKS) {
+                log.debug("We ignore a NewBlockBroadcastMessage for a block which is {} or more blocks behind our " +
+                                "chain height. senderNodeAddress={}, blockHeight={}, chainHeight={}",
+                        MAX_RECENT_BLOCKS, senderNodeAddress, blockHeight, chainHeight);
+                return;
+            }
+
+            // We relay the message as received, including its unsigned copy of the block. Releases before 1.10.4 use
+            // that copy without any check, so we relay only a copy that matches the signed block.
+            // Compatibility with v1.10.11 and earlier: these releases need the copy, and we require it as well. To let
+            // full nodes leave it out later, check it here only if the message carries one.
+            String contentHashUnsignedBlock = Utilities.bytesAsHexString(DaoBlockSignatureHash.getHash(unSignedRawBlock));
+            String blockUid = Utilities.bytesAsHexString(DaoBlockSignatureHash.getHash(signedRawBlock.getBlock()));
+            if (!signedRawBlock.getBlock().getHash().equals(unSignedRawBlock.getHash()) ||
+                    !blockUid.equals(contentHashUnsignedBlock)) {
+                log.warn("We received a newBlockBroadcastMessage with a different hashes for the unsigned and the " +
+                        "signed block. We ignore that as invalid. newBlockBroadcastMessage={}", newBlockBroadcastMessage);
+                return;
+            }
+
+            if (receivedBlockUidsByHeight.getOrDefault(blockHeight, Set.of()).contains(blockUid)) {
                 log.debug("We had that message already and do not further broadcast it. blockUid={}", blockUid);
                 return;
             }
 
-            if (signedRawBlock != null) {
-                // Skipping signature verification is handled by daoBlockSignatureVerifier.isValid.
-                if (!daoBlockSignatureVerifier.isValid(signedRawBlock)) {
-                    log.warn("We received a newBlockBroadcastMessage with an invalid signature. " +
-                            "newBlockBroadcastMessage={}", newBlockBroadcastMessage);
-                    return;
-                }
+            // Skipping signature verification is handled by daoBlockSignatureVerifier.isValid.
+            if (!daoBlockSignatureVerifier.isValid(signedRawBlock)) {
+                log.warn("We received a newBlockBroadcastMessage with an invalid signature. " +
+                        "newBlockBroadcastMessage={}", newBlockBroadcastMessage);
+                return;
             }
 
             log.info("We received a NewBlockBroadcastMessage from peer {}. blockUid={}", senderNodeAddress, blockUid);
-            receivedBlocks.add(blockUid);
+            receivedBlockUidsByHeight.headMap(chainHeight - MAX_RECENT_BLOCKS, true).clear();
+            receivedBlockUidsByHeight.computeIfAbsent(blockHeight, height -> new HashSet<>()).add(blockUid);
             broadcaster.broadcast(newBlockBroadcastMessage, senderNodeAddress);
             listeners.forEach(listener -> listener.onNewBlockReceived(newBlockBroadcastMessage, senderNodeAddress));
         }

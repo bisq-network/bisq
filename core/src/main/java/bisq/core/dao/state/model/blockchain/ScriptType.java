@@ -21,21 +21,30 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.common.encoding.canonical.CanonicalEnum;
 
 import bisq.common.proto.ProtoUtil;
+import bisq.common.util.Hex;
+
+import org.bitcoinj.script.ScriptOpCodes;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import lombok.AllArgsConstructor;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 
 
 import bisq.wallets.bitcoind.rpc.responses.BitcoindScriptPubKey;
 
+@Slf4j
 @ToString
 @Immutable
 @AllArgsConstructor
@@ -62,22 +71,54 @@ public enum ScriptType implements ImmutableDaoStateModel, CanonicalEnum {
         return name;
     }
 
+    // A type of a newer Bitcoin Core version can occur in every block, so we log each unknown type only once
+    private static final Set<String> REPORTED_UNKNOWN_TYPES = ConcurrentHashMap.newKeySet();
+
     @JsonCreator
     public static ScriptType fromScriptPubKey(BitcoindScriptPubKey scriptPubKey) {
         String name = scriptPubKey.getType();
         // Old Bitcoin Core nodes return "witness_unknown" for P2A output scripts and the DAO doesn't use any
         // P2A outputs.
-        if (name.equals("anchor")) {
+        if ("anchor".equals(name)) {
             return WITNESS_UNKNOWN;
         }
 
         for (ScriptType scriptType : ScriptType.values()) {
-            if (name.equals(scriptType.getName())) {
+            // UNDEFINED is no type of Bitcoin Core and has no protobuf value
+            if (scriptType != UNDEFINED && scriptType.getName().equals(name)) {
                 return scriptType;
             }
         }
-        throw new IllegalArgumentException("Expected the argument to be a valid 'bitcoind' script type, "
-                + "but was invalid/unsupported instead. Received scriptType=" + name);
+
+        // Bitcoin Core adds types for new scripts, so an unknown type must not stop the parsing of the block. A
+        // Bitcoin Core version which does not know the script reports a witness program of version 1 to 16 as
+        // "witness_unknown" and any other script as "nonstandard". We use the same type, so that full nodes with
+        // different Bitcoin Core versions agree on it. See docs/specifications/dao/bitcoind-script-types.md.
+        ScriptType scriptType = isWitnessProgramAboveVersionZero(scriptPubKey.getHex()) ? WITNESS_UNKNOWN : NONSTANDARD;
+        if (REPORTED_UNKNOWN_TYPES.add(String.valueOf(name))) {
+            log.warn("Bitcoin Core reports the unknown script type {}. We use {} for it.", name, scriptType);
+        }
+        return scriptType;
+    }
+
+    // As CScript::IsWitnessProgram of Bitcoin Core: a version opcode followed by one push of 2 to 40 bytes which ends
+    // the script.
+    private static boolean isWitnessProgramAboveVersionZero(@Nullable String hex) {
+        if (hex == null) {
+            return false;
+        }
+        byte[] script;
+        try {
+            script = Hex.decode(hex);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+        if (script.length < 4 || script.length > 42) {
+            return false;
+        }
+        int versionOpcode = script[0] & 0xff;
+        boolean isVersionAboveZero = versionOpcode >= ScriptOpCodes.OP_1 && versionOpcode <= ScriptOpCodes.OP_16;
+        return isVersionAboveZero && (script[1] & 0xff) + 2 == script.length;
     }
 
 

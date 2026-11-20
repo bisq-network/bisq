@@ -108,10 +108,20 @@ public class BsqOfferBookViewModel extends OfferBookViewModel {
             // BUY Altcoin is actually SELL Bitcoin
             boolean directionResult = offer.getDirection() == direction;
             boolean currencyResult = offer.getCurrencyCode().equals(BSQ.getCode());
-            boolean paymentMethodResult = showAllPaymentMethods ||
-                    offer.getPaymentMethod().equals(selectedPaymentMethod);
+            boolean paymentMethodResult = isMatchingSelectedPaymentMethod(offer);
             boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
             return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
+        };
+    }
+
+    // Offers of others with a price far from the average BSQ price of 90 days are hidden. Without an average, as on a
+    // node without BSQ trade statistics, all offers are shown.
+    @Override
+    Predicate<OfferBookListItem> getPriceRangePredicate() {
+        Predicate<Offer> isOutsidePriceRange = priceUtil.getOutsideBsqOfferPriceRangePredicate();
+        return offerBookListItem -> {
+            Offer offer = offerBookListItem.getOffer();
+            return !isOutsidePriceRange.test(offer) || isMyOffer(offer);
         };
     }
 

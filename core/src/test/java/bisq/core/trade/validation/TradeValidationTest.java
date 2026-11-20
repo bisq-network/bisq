@@ -17,6 +17,8 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
@@ -29,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import static bisq.core.trade.validation.ValidationTestUtils.pubKeyRing;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class TradeValidationTest {
 
@@ -145,6 +148,88 @@ class TradeValidationTest {
                 () -> TradeValidation.checkHashFromContract(new byte[0], new byte[]{1}, "testHash"));
         assertThrows(IllegalArgumentException.class,
                 () -> TradeValidation.checkHashFromContract(new byte[]{1}, new byte[0], "testHash"));
+    }
+
+    /* --------------------------------------------------------------------- */
+    // Payment method from contract
+    /* --------------------------------------------------------------------- */
+
+    @Test
+    void checkPaymentMethodFromContractAcceptsPayloadOfPeersPaymentMethod() {
+        PubKeyRing myPubKeyRing = pubKeyRing(Sig.generateKeyPair());
+        PaymentAccountPayload paymentAccountPayload = paymentAccountPayload("SEPA_INSTANT");
+
+        assertSame(paymentAccountPayload, TradeValidation.checkPaymentMethodFromContract(paymentAccountPayload,
+                contractWithPeersPaymentMethodId(myPubKeyRing, "SEPA_INSTANT"),
+                myPubKeyRing));
+    }
+
+    @Test
+    void checkPaymentMethodFromContractRejectsPayloadOfAnotherPaymentMethod() {
+        PubKeyRing myPubKeyRing = pubKeyRing(Sig.generateKeyPair());
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkPaymentMethodFromContract(paymentAccountPayload("REVOLUT"),
+                        contractWithPeersPaymentMethodId(myPubKeyRing, "SEPA"),
+                        myPubKeyRing));
+
+        assertEquals("peersPaymentMethodId mismatch. current=REVOLUT, expected=SEPA", exception.getMessage());
+    }
+
+    // The payment method of the peer for another key ring is not the one to compare with
+    @Test
+    void checkPaymentMethodFromContractUsesThePaymentMethodForMyPubKeyRing() {
+        PubKeyRing myPubKeyRing = pubKeyRing(Sig.generateKeyPair());
+        PubKeyRing peersPubKeyRing = pubKeyRing(Sig.generateKeyPair());
+        Contract contract = contractWithPeersPaymentMethodId(myPubKeyRing, "SEPA_INSTANT");
+        when(contract.getPeersPaymentMethodId(peersPubKeyRing)).thenReturn("SEPA");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkPaymentMethodFromContract(paymentAccountPayload("SEPA"),
+                        contract,
+                        myPubKeyRing));
+    }
+
+    @Test
+    void checkPaymentMethodFromContractRejectsMissingPaymentMethodIds() {
+        PubKeyRing myPubKeyRing = pubKeyRing(Sig.generateKeyPair());
+        Contract contract = contractWithPeersPaymentMethodId(myPubKeyRing, "SEPA");
+
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.checkPaymentMethodFromContract(null, contract, myPubKeyRing));
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.checkPaymentMethodFromContract(paymentAccountPayload("SEPA"),
+                        null,
+                        myPubKeyRing));
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.checkPaymentMethodFromContract(paymentAccountPayload(null),
+                        contract,
+                        myPubKeyRing));
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkPaymentMethodFromContract(paymentAccountPayload(" "),
+                        contract,
+                        myPubKeyRing));
+        // A contract which gives no payment method of the peer must not pass a payload without one either
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.checkPaymentMethodFromContract(paymentAccountPayload("SEPA"),
+                        mock(Contract.class),
+                        myPubKeyRing));
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.checkPaymentMethodFromContract(paymentAccountPayload(null),
+                        mock(Contract.class),
+                        myPubKeyRing));
+    }
+
+    private static PaymentAccountPayload paymentAccountPayload(String paymentMethodId) {
+        PaymentAccountPayload paymentAccountPayload = mock(PaymentAccountPayload.class);
+        when(paymentAccountPayload.getPaymentMethodId()).thenReturn(paymentMethodId);
+        return paymentAccountPayload;
+    }
+
+    private static Contract contractWithPeersPaymentMethodId(PubKeyRing myPubKeyRing, String peersPaymentMethodId) {
+        Contract contract = mock(Contract.class);
+        when(contract.getPeersPaymentMethodId(myPubKeyRing)).thenReturn(peersPaymentMethodId);
+        return contract;
     }
 
     /* --------------------------------------------------------------------- */

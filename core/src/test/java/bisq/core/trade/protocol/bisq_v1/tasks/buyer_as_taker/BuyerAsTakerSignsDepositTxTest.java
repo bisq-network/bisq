@@ -19,13 +19,16 @@ package bisq.core.trade.protocol.bisq_v1.tasks.buyer_as_taker;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.wallet.Restrictions;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.script.Script;
 
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +36,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class BuyerAsTakerSignsDepositTxTest {
@@ -108,6 +112,57 @@ public class BuyerAsTakerSignsDepositTxTest {
                         OFFER_AMOUNT,
                         TRADE_AMOUNT,
                         sellerInputs(125_000)));
+    }
+
+    @Test
+    void preparedDepositTxFromSellerAsMakerRejectsDustMakerChange() {
+        long dustChange = Restrictions.getMinNonDustOutput().value - 1;
+        Transaction makersDepositTx = txWithOutputs(140_000, dustChange);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> BuyerAsTakerSignsDepositTx.verifyPreparedDepositTxFromSellerAsMaker(
+                        makersDepositTx,
+                        SELLER_SECURITY_DEPOSIT,
+                        OFFER_MIN_AMOUNT,
+                        OFFER_AMOUNT,
+                        TRADE_AMOUNT,
+                        sellerInputs(120_000 + dustChange)));
+
+        assertEquals("Maker's preparedDepositTx change output must not be dust. value=" +
+                        Coin.valueOf(dustChange).toFriendlyString() +
+                        ", minNonDustOutput=" + Restrictions.getMinNonDustOutput().toFriendlyString(),
+                exception.getMessage());
+    }
+
+    @Test
+    void preparedDepositTxFromSellerAsMakerAcceptsMakerChangeAtDustLimit() {
+        long change = Restrictions.getMinNonDustOutput().value;
+        Transaction makersDepositTx = txWithOutputs(140_000, change);
+
+        assertDoesNotThrow(() -> BuyerAsTakerSignsDepositTx.verifyPreparedDepositTxFromSellerAsMaker(
+                makersDepositTx,
+                SELLER_SECURITY_DEPOSIT,
+                OFFER_MIN_AMOUNT,
+                OFFER_AMOUNT,
+                TRADE_AMOUNT,
+                sellerInputs(120_000 + change)));
+    }
+
+    @Test
+    void preparedDepositTxFromSellerAsMakerRejectsNonP2wpkhMakerChange() {
+        Transaction makersDepositTx = txWithOutputs(140_000);
+        makersDepositTx.addOutput(Coin.valueOf(5_000), Address.fromKey(PARAMS, new ECKey(), Script.ScriptType.P2PKH));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> BuyerAsTakerSignsDepositTx.verifyPreparedDepositTxFromSellerAsMaker(
+                        makersDepositTx,
+                        SELLER_SECURITY_DEPOSIT,
+                        OFFER_MIN_AMOUNT,
+                        OFFER_AMOUNT,
+                        TRADE_AMOUNT,
+                        sellerInputs(125_000)));
+
+        assertEquals("Maker's preparedDepositTx change output must be P2WPKH", exception.getMessage());
     }
 
     @Test

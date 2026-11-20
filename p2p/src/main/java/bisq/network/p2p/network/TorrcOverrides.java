@@ -23,19 +23,17 @@ import java.nio.file.Files;
 import java.io.File;
 import java.io.IOException;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-import lombok.extern.slf4j.Slf4j;
-
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * The torrc entries which the user adds with --torrcFile and --torrcOptions. An entry of --torrcOptions overrides an
- * entry of the file with the same key. Parses like netlayer's Torrc did.
+ * entry of the file with the same key. Parses like netlayer's Torrc did, except that a tab in a line of the file also
+ * separates the key from the value.
  * <p>
  * The node writes bisq.properties itself, and whoever can change a config file in the data directory could otherwise
  * make the next start of Tor run code with the rights of the user, also with the sandbox off. So the Tor library gets
@@ -47,22 +45,16 @@ import static com.google.common.base.Preconditions.checkArgument;
  *                           torrc file which a config file names. An entry of the options of the command line replaces
  *                           the entry of such a file with the same key, and so it comes from the command line.
  */
-@Slf4j
 record TorrcOverrides(LinkedHashMap<String, String> entries, Set<String> keysFromConfigFile) {
     static TorrcOverrides parse(TorrcSettings torrcSettings) {
         LinkedHashMap<String, String> entries = new LinkedHashMap<>();
         Set<String> keysFromConfigFile = new HashSet<>();
         File torrcFile = torrcSettings.torrcFile();
         if (torrcFile != null) {
-            try {
-                LinkedHashMap<String, String> fileEntries =
-                        parseTorrcFile(Files.readAllLines(torrcFile.toPath(), StandardCharsets.UTF_8));
-                entries.putAll(fileEntries);
-                if (!torrcSettings.torrcFileSetOnCommandLine()) {
-                    keysFromConfigFile.addAll(fileEntries.keySet());
-                }
-            } catch (IOException e) {
-                log.error("custom torrc file not found ('{}'). Proceeding with defaults.", torrcFile);
+            LinkedHashMap<String, String> fileEntries = parseTorrcFile(readTorrcFile(torrcFile));
+            entries.putAll(fileEntries);
+            if (!torrcSettings.torrcFileSetOnCommandLine()) {
+                keysFromConfigFile.addAll(fileEntries.keySet());
             }
         }
         LinkedHashMap<String, String> optionEntries = parseTorrcOptions(torrcSettings.torrcOptions());
@@ -75,31 +67,47 @@ record TorrcOverrides(LinkedHashMap<String, String> entries, Set<String> keysFro
         return new TorrcOverrides(entries, Set.copyOf(keysFromConfigFile));
     }
 
+    // Config checks that the file can be read when Bisq starts, but the file can change until Tor starts, and a file
+    // which is not UTF-8 text fails only here. The exception has no cause, because the failed start shows the message
+    // of the root cause, which would only say for example "Input length = 1".
+    private static List<String> readTorrcFile(File torrcFile) {
+        try {
+            return Files.readAllLines(torrcFile.toPath(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Bisq cannot read the torrc file " + torrcFile + " as UTF-8 text (" +
+                    e + "). Bisq starts Tor only with all entries of the file.");
+        }
+    }
+
+    // As in a torrc of Tor, a tab separates the key from the value as well as a space. netlayer took only a space, so
+    // it dropped an entry such as ExcludeNodes with a tab, and Tor started without the restriction.
     private static LinkedHashMap<String, String> parseTorrcFile(List<String> lines) {
         LinkedHashMap<String, String> entries = new LinkedHashMap<>();
         lines.stream()
                 .map(String::trim)
-                .filter(line -> line.length() > 5 && !line.startsWith("#") && line.contains(" "))
-                .forEach(line -> {
-                    int delimiter = line.indexOf(' ');
-                    putEntry(entries, line.substring(0, delimiter), line.substring(delimiter));
-                });
+                .filter(line -> line.length() > 5 && !line.startsWith("#"))
+                .map(line -> line.split("\\s", 2))
+                .filter(keyAndValue -> keyAndValue.length == 2)
+                .forEach(keyAndValue -> putEntry(entries, keyAndValue[0], keyAndValue[1]));
         return entries;
     }
 
+    // Tor starts only with all entries of the user: an entry such as ExcludeNodes restricts the relays which Tor uses,
+    // and a user who relies on it would not notice that it is missing. The message does not show the part, which may
+    // contain a password.
     private static LinkedHashMap<String, String> parseTorrcOptions(String torrcOptions) {
         LinkedHashMap<String, String> entries = new LinkedHashMap<>();
-        if (!"".equals(torrcOptions)) {
-            Arrays.asList(torrcOptions.split(",")).forEach(line -> {
-                line = line.trim();
-                if (line.matches("^[^\\s]+\\s.+")) {
-                    String[] tmp = line.split("\\s", 2);
-                    putEntry(entries, tmp[0], tmp[1]);
-                } else {
-                    log.error("custom torrc override parse error ('{}'). Proceeding without custom overrides.", line);
-                    entries.clear();
-                }
-            });
+        String[] parts = torrcOptions.split(",");
+        for (int i = 0; i < parts.length; i++) {
+            String line = parts[i].trim();
+            // An empty part, for example after a comma which follows the last entry, contains no entry
+            if (line.isEmpty()) {
+                continue;
+            }
+            String[] keyAndValue = line.split("\\s", 2);
+            checkArgument(keyAndValue.length == 2, "Part %s of --torrcOptions is no torrc entry of a key, whitespace " +
+                    "and a value. Bisq starts Tor only with all entries.", i + 1);
+            putEntry(entries, keyAndValue[0], keyAndValue[1]);
         }
         return entries;
     }

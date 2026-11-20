@@ -89,7 +89,9 @@ public final class DisputeResultMessage extends DisputeMessage implements Sender
 
     public static DisputeResultMessage fromProto(protobuf.DisputeResultMessage proto, int messageVersion) {
         checkArgument(proto.hasDisputeResult(), "DisputeResult must be set");
-        return new DisputeResultMessage(DisputeResult.fromProto(proto.getDisputeResult()),
+        DisputeResult disputeResult = DisputeResult.fromProto(proto.getDisputeResult());
+        checkArgument(disputeResult.getChatMessage() != null, "ChatMessage of DisputeResult must be set");
+        return new DisputeResultMessage(disputeResult,
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion,
@@ -106,13 +108,6 @@ public final class DisputeResultMessage extends DisputeMessage implements Sender
     @Nullable
     public PublicKey getSenderSignaturePubKey() {
         return senderSignaturePubKey;
-    }
-
-    @Override
-    public boolean isSenderSignaturePubKeyRequired() {
-        // DisputeResultMessage has no reliable trade date before domain handling.
-        // The domain handlers authenticate the sender against the expected dispute agent key.
-        return false;
     }
 
     @Override

@@ -1,0 +1,92 @@
+# Dispute opened by the peer
+
+## Scope
+
+When a trader opens a mediation or a refund request, the agent creates a dispute for the other
+trader from the contract that the opener sent, and sends it to that trader in a
+PeerOpenedDisputeMessage. This specification defines which of these disputes a trader's node
+accepts.
+
+## Rules
+
+- A closed offer alone cannot be reopened as a trade. The node resolves a peer-opened dispute only
+  against a pending, closed or failed Bisq v1 trade.
+- The node accepts the dispute only if it is addressed to this trader: the trader key ring of the
+  dispute is the node's own key ring, and the trader ID is the hash code of that key ring, as for
+  the disputes that the node opens itself.
+- The node accepts a new mediation dispute only while the trade has no mediation result and is not
+  in arbitration, that is in dispute state NO_DISPUTE, MEDIATION_REQUESTED or
+  MEDIATION_STARTED_BY_PEER. A dispute that the node already has is a copy and is handled as before.
+- The node accepts the dispute only if it is about the node's trade: its contract matches the
+  contract of the trade except for the optional payment account payloads, its deposit tx ID and its
+  delayed payout tx ID are those of the trade, and it has the serialized deposit tx. Payment account
+  hash commitments, trader and agent keys, and all other contract fields must match. If the account
+  payloads differ, every payload present in the incoming contract must match its committed hash.
+  This applies to a copy as well.
+- The node checks these rules before it moves a closed or failed trade back to the open trades. A
+  closed or failed trade loaded at startup is not initialized at that point, so the checks use only
+  the data such a trade has: its contract, its deposit tx from the wallet and its delayed payout tx
+  from the stored bytes.
+- A refused dispute is not stored and does not change the trade. The node acknowledges the message
+  and its first chat message with an error.
+- If the node refuses a dispute of an open trade because it is not addressed to this trader, and the
+  node has no dispute of this type for the trade, the node tells the trader that it refused a case
+  that the peer opened, so that the trader can open one.
+
+## Rationale
+
+The trader ID is the key of a dispute in the node's list. A dispute with another trader ID would be
+stored next to the trader's own dispute and would set the dispute state of the trade again. The
+opener chooses the contract that the agent copies, so without the first rule the opener could make
+the agent create such a dispute. After a mediation result, the state MEDIATION_STARTED_BY_PEER would
+take the trade out of MEDIATION_CLOSED, where the trader accepts the result and the node publishes
+the payout, and a second result could follow
+([`mediation-payout-finality.md`](mediation-payout-finality.md)).
+
+The opener can make the agent create the peer's dispute with a key ring that the opener chose (see
+Not covered). The peer's node refuses such a dispute if it can read it, so the peer has no case for
+the trade. If that key ring has another signature key, the agent's node ignores the peer's error,
+because it checks the acknowledgement against that key ring. Only the peer's node knows about the
+refusal, so it tells the trader. If the trader then opens a dispute, the agent's node has a third
+dispute for the trade, refuses it as a replay and warns the agent, so the agent learns about the
+dispute that the opener created.
+
+The agent encrypts the message about the peer's dispute to the key ring that the opener sent for the
+peer. If that key ring has another encryption key, the peer's node cannot decrypt the message: it logs
+the failure of a direct message, and it takes a mailbox message for one of another node. The agent's node
+sees the message as arrived, or as stored in the mailbox when the peer is offline. The peer's node then
+neither refuses the dispute nor tells the trader, and the agent learns about the substituted key ring only
+if the trader opens a dispute of its own (`dispute-peer-keyring-substitution-silent`).
+
+The traders sign the contract data, but not the key rings and the multisig keys in the contract. So
+the opener can send the agent a contract that differs from the trade in these fields, and the agent
+would decide a case about another contract while the peer's node stores the dispute as its own. The
+node compares the contract commitments and the transaction IDs with its trade. The dispute is
+addressed to the trader in this case, so the agent's node gets the error.
+
+Payment account payloads are revealed after the contract is agreed. A buyer can already have both
+payloads while the seller still waits for ShareBuyerPaymentAccountMessage, including after a crypto
+deposit has been published. Closed trades can also have their sensitive account data cleared. These
+differences do not identify a different trade and must not prevent mediation. Comparing the hash
+commitments and checking a revealed payload against its hash preserves the account binding without
+requiring both traders to have received or retained the same optional data. Validation does not
+restore cleared data or alter the local trade's contract.
+
+## Compatibility
+
+No message and no persisted data change. Agents of earlier versions create the dispute for the
+other trader from the same key ring and the contract that the opener sent. Both traders hold the
+same commitments of a trade, even while an account reveal is in transit, so the dispute of an honest
+opener passes the rules.
+
+## Not covered
+
+Other content checks of the dispute, for example of the donation address or of the node addresses
+in the contract: the node logs them and stores the dispute, so that a validation problem does not
+block the dispute. A refund request that the peer opens after a mediation result is allowed.
+
+The key rings of the traders are not part of the contract data that the traders sign, so the agent
+cannot check the key ring that the opener sends for the peer. With a key ring whose signature key the
+opener holds, the opener can also write to the agent as the peer. Binding the key rings to the signed
+contract data would remove this, but it changes the trade protocol and needs a decision of the
+maintainers.

@@ -178,6 +178,27 @@ public class ConfigTests {
     }
 
     @Test
+    public void onlyTheCommandLineOptionOfTheTorSandboxOverridesTheConfigFile() throws IOException {
+        // The popup of an unusable sandbox writes the option into the config file
+        File configFile = File.createTempFile("bisq", "properties");
+        try (PrintWriter writer = new PrintWriter(configFile)) {
+            writer.println(new ConfigFileOption(USE_TOR_SANDBOX, "false"));
+        }
+        Config fromConfigFile = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()));
+        assertFalse(fromConfigFile.useTorSandbox);
+        assertFalse(fromConfigFile.useTorSandboxSetOnCommandLine);
+
+        Config fromCommandLine = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()),
+                opt(USE_TOR_SANDBOX, "true"));
+        assertTrue(fromCommandLine.useTorSandbox);
+        assertTrue(fromCommandLine.useTorSandboxSetOnCommandLine);
+
+        Config defaults = new Config();
+        assertTrue(defaults.useTorSandbox);
+        assertFalse(defaults.useTorSandboxSetOnCommandLine);
+    }
+
+    @Test
     public void onWhonixTheTorControlOptionsOfTheWhonixGuideAreIgnored() {
         // On a Whonix-Workstation the Tor library uses the Tor of the Whonix-Gateway and never starts its own Tor.
         File configFile = new File("bisq.properties");
@@ -416,6 +437,18 @@ public class ConfigTests {
         } finally {
             new Config();
         }
+    }
+
+    @Test
+    public void whenApiHostOptionIsUnset_thenApiHostIsTheLoopbackAddress() {
+        Config config = new Config();
+        assertThat(config.apiHost, equalTo("127.0.0.1"));
+    }
+
+    @Test
+    public void whenApiHostOptionIsSet_thenApiHostPropertyReflectsItsValue() {
+        Config config = configWithOpts(opt(API_HOST, "0.0.0.0"));
+        assertThat(config.apiHost, equalTo("0.0.0.0"));
     }
 
     @Test

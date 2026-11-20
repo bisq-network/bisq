@@ -47,6 +47,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -158,6 +159,10 @@ public class NotificationCenter {
                     tradePhaseSubscriptionsMap.put(tradeId, tradePhaseSubscription);
                 }
         );
+
+        observeRefusedPeerDisputes(mediationManager.getTradeIdsOfRefusedPeerDisputes(),
+                Res.get("shared.mediationCase"));
+        observeRefusedPeerDisputes(refundManager.getTradeIdsOfRefusedPeerDisputes(), Res.get("shared.dispute"));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -294,4 +299,37 @@ public class NotificationCenter {
         }
     }
 
+    // Our node refused a case that the peer opened, as it was not addressed to us, and we have no case for the trade.
+    // The agent might not see the refusal, so only the trader can act.
+    private void observeRefusedPeerDisputes(ObservableList<String> tradeIds, String caseName) {
+        tradeIds.forEach(tradeId -> onPeerDisputeRefused(tradeId, caseName));
+        tradeIds.addListener((ListChangeListener<String>) change -> {
+            while (change.next()) {
+                if (change.wasAdded()) {
+                    change.getAddedSubList().forEach(tradeId -> onPeerDisputeRefused(tradeId, caseName));
+                }
+            }
+        });
+    }
+
+    private void onPeerDisputeRefused(String tradeId, String caseName) {
+        tradeManager.getTradeById(tradeId).ifPresent(trade -> {
+            Notification notification = new Notification().tradeHeadLine(trade.getShortId())
+                    .message(Res.get("notification.trade.peerDisputeRefused", caseName));
+            if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(PendingTradesView.class)) {
+                notification.actionButtonTextWithGoTo("navigation.portfolio.pending")
+                        .onAction(() -> {
+                            navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
+                            if (selectItemByTradeIdConsumer != null) {
+                                UserThread.runAfter(() -> selectItemByTradeIdConsumer.accept(tradeId), 1);
+                            }
+                        });
+            } else if (selectedTradeId != null && !tradeId.equals(selectedTradeId) &&
+                    selectItemByTradeIdConsumer != null) {
+                notification.actionButtonText(Res.get("notification.trade.selectTrade"))
+                        .onAction(() -> selectItemByTradeIdConsumer.accept(tradeId));
+            }
+            notification.show();
+        });
+    }
 }

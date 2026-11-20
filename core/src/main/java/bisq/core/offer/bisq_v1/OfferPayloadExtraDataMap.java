@@ -154,6 +154,10 @@ public class OfferPayloadExtraDataMap {
         public static final String RESERVED_1 = "reserved1";
         public static final String RESERVED_2 = "reserved2";
         public static final String RESERVED_3 = "reserved3";
+
+        // The name of the custom payment method of the offer. Clients since v1.10.4 refuse an offer with a key
+        // they do not know, so it uses the first reserved key.
+        public static final String CUSTOM_PAYMENT_METHOD_NAME = RESERVED_0;
     }
 
     public static class Values {

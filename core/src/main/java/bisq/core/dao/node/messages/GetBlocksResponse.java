@@ -44,10 +44,6 @@ public final class GetBlocksResponse extends NetworkEnvelope implements DirectMe
     private final List<SignedRawBlock> signedRawBlocks;
     private final int requestNonce;
 
-    public static GetBlocksResponse forUnsignedBlocks(List<RawBlock> blocks, int requestNonce) {
-        return new GetBlocksResponse(blocks, List.of(), requestNonce, Version.getP2PMessageVersion());
-    }
-
     public static GetBlocksResponse forSignedBlocks(List<SignedRawBlock> signedRawBlocks, int requestNonce) {
         return new GetBlocksResponse(List.of(), signedRawBlocks, requestNonce, Version.getP2PMessageVersion());
     }

@@ -99,17 +99,22 @@ public class AveragePriceUtil {
                 .collect(Collectors.toList());
     }
 
-    private static long getBTCAverage(List<TradeStatistics3> list) {
-        long accumulatedVolume = 0;
-        long accumulatedAmount = 0;
+    // The volume weighted average price of BSQ statistics: their BTC amounts divided by their BSQ volumes. 0 if there
+    // is no average.
+    public static long getBTCAverage(List<TradeStatistics3> list) {
+        // Floating point sums, so that they cannot wrap
+        double accumulatedVolume = 0;
+        double accumulatedAmount = 0;
 
         for (TradeStatistics3 item : list) {
             accumulatedVolume += item.getTradeVolume().getValue();
             accumulatedAmount += item.getTradeAmount().getValue(); // Amount of BTC traded
         }
         long averagePrice;
-        double accumulatedAmountAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedAmount, Altcoin.SMALLEST_UNIT_EXPONENT);
-        averagePrice = accumulatedVolume > 0 ? MathUtils.roundDoubleToLong(accumulatedAmountAsDouble / (double) accumulatedVolume) : 0;
+        double accumulatedAmountScaledUp = MathUtils.scaleUpByPowerOf10(accumulatedAmount, Altcoin.SMALLEST_UNIT_EXPONENT);
+        averagePrice = accumulatedVolume > 0 ?
+                MathUtils.roundDoubleToLongOrZero(accumulatedAmountScaledUp / accumulatedVolume) :
+                0;
 
         return averagePrice;
     }
@@ -146,7 +151,7 @@ public class AveragePriceUtil {
                 .sum();
         var averageAsDouble = bsqTraded > 0 ? usdTraded / bsqTraded : 0d;
         var averageScaledUp = MathUtils.scaleUpByPowerOf10(averageAsDouble, Fiat.SMALLEST_UNIT_EXPONENT);
-        averagePrice = bsqTraded > 0 ? MathUtils.roundDoubleToLong(averageScaledUp) : 0;
+        averagePrice = bsqTraded > 0 ? MathUtils.roundDoubleToLongOrZero(averageScaledUp) : 0;
 
         return averagePrice;
     }

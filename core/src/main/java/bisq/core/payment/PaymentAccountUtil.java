@@ -112,6 +112,10 @@ public class PaymentAccountUtil {
 
     @SuppressWarnings("deprecation")
     public static List<TradeCurrency> getTradeCurrencies(PaymentMethod paymentMethod) {
+        if (paymentMethod.isStableCoin()) {
+            return StableCoinAccount.getSupportedCurrencies(paymentMethod);
+        }
+
         switch (paymentMethod.getId()) {
             case ADVANCED_CASH_ID:
                 return AdvancedCashAccount.SUPPORTED_CURRENCIES;
@@ -219,6 +223,8 @@ public class PaymentAccountUtil {
                 return MercadoPagoAccount.SUPPORTED_CURRENCIES();
             case SBP_ID:
                 return SbpAccount.SUPPORTED_CURRENCIES;
+            case CUSTOM_ID:
+                return CustomPaymentMethodAccount.SUPPORTED_CURRENCIES;
             default:
                 return Collections.emptyList();
         }

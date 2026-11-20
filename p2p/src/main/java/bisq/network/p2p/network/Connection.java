@@ -27,6 +27,7 @@ import bisq.network.p2p.peers.keepalive.messages.KeepAliveMessage;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.messages.AddDataMessage;
 import bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
+import bisq.network.p2p.storage.messages.BroadcastMessage;
 import bisq.network.p2p.storage.messages.RemoveDataMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
@@ -143,6 +144,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
     // set in init
     private ProtoOutputStream protoOutputStream;
+    // Set in init before the input handler starts, which reads them on its own thread. Actions before
+    // ExecutorService.execute happen-before the task, so it sees them although they are not final.
+    private InputStream protoInputStream;
+    private NetworkEnvelopeReader networkEnvelopeReader;
 
     // mutable data, set from other threads but not changed internally.
     @Getter
@@ -159,9 +164,12 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     // the shutDown being called.
     private final CopyOnWriteArraySet<WeakReference<SupportedCapabilitiesListener>> capabilitiesListeners = new CopyOnWriteArraySet<>();
 
+    // Set by the thread which reports the violation, for example the user thread, and read by the read thread
     @Getter
-    private RuleViolation ruleViolation;
+    private volatile RuleViolation ruleViolation;
     private final ConcurrentHashMap<RuleViolation, Integer> ruleViolations = new ConcurrentHashMap<>();
+    // For the log of the elements of bundles which we drop without a rule violation
+    private long lastInvalidBundleElementLogTimeStamp;
 
     private final Capabilities capabilities = new Capabilities();
 
@@ -203,13 +211,15 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             // It will not return until that header has been read.
             protoOutputStream = new ProtoOutputStream(socket.getOutputStream(), statistic);
             protoInputStream = socket.getInputStream();
+            networkEnvelopeReader = new NetworkEnvelopeReader(protoInputStream, MAX_PERMITTED_MESSAGE_SIZE);
             // The dialed address is bound before the input handler starts, so that a sender address stated
             // by the peer cannot replace it.
             if (peersNodeAddress != null)
                 setPeersNodeAddress(peersNodeAddress);
 
-            // We create a thread for handling inputStream data
-            executorService.submit(this);
+            // We create a thread for handling inputStream data. With execute, an error which run passes on reaches
+            // the uncaught exception handler, while submit would keep it in a Future that nobody reads.
+            executorService.execute(this);
 
             if (peersNodeAddress != null && banFilter != null && banFilter.isPeerBanned(peersNodeAddress)) {
                 log.warn("We created an outbound connection with a banned peer");
@@ -404,17 +414,39 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     }
 
     private void onBundleOfEnvelopes(BundleOfEnvelopes bundleOfEnvelopes, Connection connection) {
+        // Each element which cannot be parsed violates the rule of a single message which cannot be parsed. If that
+        // closes the connection, no element of the bundle is delivered.
+        int numUnparsableEnvelopes = bundleOfEnvelopes.getNumUnparsableEnvelopes();
+        if (numUnparsableEnvelopes > 0) {
+            log.warn("We received {} elements of a BundleOfEnvelopes which cannot be parsed", numUnparsableEnvelopes);
+            for (int i = 0; i < numUnparsableEnvelopes; i++) {
+                if (reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE)) {
+                    return;
+                }
+            }
+        }
+
         Map<P2PDataStorage.ByteArray, Set<NetworkEnvelope>> itemsByHash = new HashMap<>();
         Set<NetworkEnvelope> envelopesToProcess = new HashSet<>();
         List<NetworkEnvelope> networkEnvelopes = bundleOfEnvelopes.getEnvelopes();
         for (NetworkEnvelope networkEnvelope : networkEnvelopes) {
-            // If SendersNodeAddressAwareEnvelope we do some verifications and apply if successful, otherwise we return false.
-            if (networkEnvelope instanceof SendersNodeAddressAwareEnvelope) {
-                boolean isValid = processSendersNodeAddressAwareEnvelope((SendersNodeAddressAwareEnvelope) networkEnvelope);
-                if (!isValid) {
-                    log.warn("Received an invalid {} at processing BundleOfEnvelopes", networkEnvelope.getClass().getSimpleName());
-                    continue;
+            // Only broadcast messages are bundled (Broadcaster). Another message type, or a bundle in the bundle, would
+            // skip the handling which only a single message gets, for example the one of a CloseConnectionMessage or of
+            // a sender address; no broadcast message has a sender address. No relay passes such an element on, so it
+            // violates a rule. If the violation closes the connection, no element of the bundle is delivered.
+            if (!(networkEnvelope instanceof BroadcastMessage) || networkEnvelope instanceof BundleOfEnvelopes) {
+                log.warn("We received a {} in a BundleOfEnvelopes, which may only hold broadcast messages",
+                        networkEnvelope.getClass().getSimpleName());
+                if (reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE)) {
+                    return;
                 }
+                continue;
+            }
+
+            String reasonToDrop = getReasonToDropBundleElement(networkEnvelope);
+            if (reasonToDrop != null) {
+                logDroppedBundleElement(networkEnvelope, reasonToDrop);
+                continue;
             }
 
             if (networkEnvelope instanceof AddPersistableNetworkPayloadMessage) {
@@ -437,6 +469,50 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         }
         envelopesToProcess.forEach(envelope -> UserThread.execute(() ->
                 messageListeners.forEach(listener -> listener.onMessage(envelope, connection))));
+    }
+
+    // An element of a bundle passes the checks of a single message: the hash size of its payload, the size limit of
+    // its type and the network. A relay of an earlier version stores and relays elements without them: payloads of
+    // any size, a SignedWitness which this version rejects as malformed, and some messages with the message version
+    // which it received. We cannot tell the relay from the peer which created the element, so we drop it without a
+    // rule violation. Returns null if the element passes the checks.
+    @Nullable
+    private static String getReasonToDropBundleElement(NetworkEnvelope element) {
+        if (element instanceof AddPersistableNetworkPayloadMessage &&
+                !((AddPersistableNetworkPayloadMessage) element).getPersistableNetworkPayload().verifyHashSize()) {
+            return "wrong hash size or malformed payload";
+        }
+
+        // The serialized form of the element as we handle and relay it. Bytes which the parse drops, like unknown
+        // fields, are counted in the size of the bundle.
+        protobuf.NetworkEnvelope proto = element.toProtoNetworkEnvelope();
+        int size = proto.getSerializedSize();
+        if (exceedsPermittedSize(element, size)) {
+            return "above the size limit of its type, size=" + size;
+        }
+
+        if (proto.getMessageVersion() != Version.getP2PMessageVersion()) {
+            return "of another network, message version=" + proto.getMessageVersion();
+        }
+
+        return null;
+    }
+
+    // At most once per 10 seconds for each connection, as any peer can send such elements without a rule violation
+    private void logDroppedBundleElement(NetworkEnvelope element, String reason) {
+        long now = System.currentTimeMillis();
+        if (now - lastInvalidBundleElementLogTimeStamp >= TimeUnit.SECONDS.toMillis(10)) {
+            lastInvalidBundleElementLogTimeStamp = now;
+            log.warn("We drop a {} of a BundleOfEnvelopes without a rule violation: {}. peer={}, uid={}",
+                    element.getClass().getSimpleName(), reason,
+                    peersNodeAddressOptional.map(NodeAddress::getFullAddress).orElse("unknown"), uid);
+        }
+    }
+
+    private static boolean exceedsPermittedSize(NetworkEnvelope networkEnvelope, int size) {
+        return networkEnvelope instanceof ExtendedDataSizePermission ?
+                size > MAX_PERMITTED_MESSAGE_SIZE :
+                size > PERMITTED_MESSAGE_SIZE;
     }
 
 
@@ -618,21 +694,24 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             log.warn("We close connection as we received too many corrupt requests. " +
                     "ruleViolations={} " +
                     "connection with address{} and uid {}", ruleViolations, peersNodeAddressProperty, uid);
-            this.ruleViolation = ruleViolation;
-            if (ruleViolation == RuleViolation.PEER_BANNED) {
-                log.debug("We close connection due RuleViolation.PEER_BANNED. peersNodeAddress={}", getPeersNodeAddressOptional());
-                shutDown(CloseConnectionReason.PEER_BANNED);
-            } else if (ruleViolation == RuleViolation.INVALID_CLASS) {
-                log.warn("We close connection due RuleViolation.INVALID_CLASS");
-                shutDown(CloseConnectionReason.INVALID_CLASS_RECEIVED);
-            } else {
-                log.warn("We close connection due RuleViolation.RULE_VIOLATION");
-                shutDown(CloseConnectionReason.RULE_VIOLATION);
-            }
-
+            shutDownOnRuleViolation(ruleViolation);
             return true;
         } else {
             return false;
+        }
+    }
+
+    private void shutDownOnRuleViolation(RuleViolation ruleViolation) {
+        this.ruleViolation = ruleViolation;
+        if (ruleViolation == RuleViolation.PEER_BANNED) {
+            log.debug("We close connection due RuleViolation.PEER_BANNED. peersNodeAddress={}", getPeersNodeAddressOptional());
+            shutDown(CloseConnectionReason.PEER_BANNED);
+        } else if (ruleViolation == RuleViolation.INVALID_CLASS) {
+            log.warn("We close connection due RuleViolation.INVALID_CLASS");
+            shutDown(CloseConnectionReason.INVALID_CLASS_RECEIVED);
+        } else {
+            log.warn("We close connection due RuleViolation.RULE_VIOLATION");
+            shutDown(CloseConnectionReason.RULE_VIOLATION);
         }
     }
 
@@ -703,7 +782,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     // Runs in same thread as Connection, receives a message, performs several checks on it
     // (including throttling limits, validity and statistics)
     // and delivers it to the message listener given in the constructor.
-    private InputStream protoInputStream;
     private final NetworkProtoResolver networkProtoResolver;
 
     private long lastReadTimeStamp;
@@ -727,7 +805,19 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     }
 
                     // Blocking read from the inputStream
-                    protobuf.NetworkEnvelope proto = protobuf.NetworkEnvelope.parseDelimitedFrom(protoInputStream);
+                    byte[] message;
+                    try {
+                        message = networkEnvelopeReader.receiveNextMessage();
+                    } catch (InvalidProtocolBufferException e) {
+                        // The length prefix is invalid or above the size limit. We did not read the message, so we
+                        // cannot find the next one in the stream.
+                        log.warn("We close the connection as the length prefix of a received message is invalid. {}. " +
+                                "connection={}", e.getMessage(), this);
+                        ruleViolations.merge(RuleViolation.MAX_MSG_SIZE_EXCEEDED, 1, Integer::sum);
+                        shutDownOnRuleViolation(RuleViolation.MAX_MSG_SIZE_EXCEEDED);
+                        return;
+                    }
+                    protobuf.NetworkEnvelope proto = message != null ? NetworkEnvelopeReader.parse(message) : null;
 
                     long ts = System.currentTimeMillis();
 
@@ -777,7 +867,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     NetworkEnvelope networkEnvelope = networkProtoResolver.fromProto(proto);
                     lastReadTimeStamp = now;
                     log.debug("<< Received networkEnvelope of type: {}", networkEnvelope.getClass().getSimpleName());
-                    int size = proto.getSerializedSize();
+                    // Protobuf can discard duplicate fields, so its serialized size can undercount received bytes.
+                    int size = message.length;
 
                     // We want to track the size of each object even if it is invalid data
                     statistic.addReceivedBytes(size);
@@ -786,13 +877,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     statistic.addReceivedMessage(networkEnvelope);
 
                     // First we check the size
-                    boolean exceeds;
-                    if (networkEnvelope instanceof ExtendedDataSizePermission) {
-                        exceeds = size > MAX_PERMITTED_MESSAGE_SIZE;
-                    } else {
-                        exceeds = size > PERMITTED_MESSAGE_SIZE;
-                    }
+                    boolean exceeds = exceedsPermittedSize(networkEnvelope, size);
 
+                    // The tolerance of a rule violation only decides when we close the connection. We never deliver
+                    // the message which violates the rule.
                     if (networkEnvelope instanceof AddPersistableNetworkPayloadMessage &&
                             !((AddPersistableNetworkPayloadMessage) networkEnvelope).getPersistableNetworkPayload().verifyHashSize()) {
                         log.warn("PersistableNetworkPayload.verifyHashSize failed: wrong hash size or malformed " +
@@ -801,6 +889,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 Utilities.toTruncatedString(proto));
                         if (reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED))
                             return;
+                        continue;
                     }
 
                     if (exceeds) {
@@ -808,6 +897,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                         if (reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED))
                             return;
+                        continue;
                     }
 
                     if (violatesThrottleLimit() && reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED))
@@ -858,6 +948,11 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         }
 
                         onMessage(networkEnvelope, this);
+                        // A rule violation of an element of a bundle can close the connection. Then we stop reading,
+                        // as after a rule violation of a single message.
+                        if (ruleViolation != null) {
+                            return;
+                        }
                         UserThread.execute(() -> connectionStatistics.addReceivedMsgMetrics(System.currentTimeMillis() - ts, size));
                     }
                 } catch (InvalidClassException e) {
@@ -867,10 +962,16 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                 } catch (ProtobufferException | NoClassDefFoundError | InvalidProtocolBufferException e) {
                     log.error(e.getMessage());
                     reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                } catch (OutOfMemoryError e) {
+                    throw e;
                 } catch (Throwable t) {
                     handleException(t);
                 }
             }
+        } catch (OutOfMemoryError e) {
+            // After an OutOfMemoryError the application might not work as expected, so it is no fault of this
+            // connection. The uncaught exception handler of the application decides, a headless node shuts down.
+            throw e;
         } catch (Throwable t) {
             handleException(t);
         }

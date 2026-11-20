@@ -71,17 +71,33 @@ public class TradeLimitsTest {
 
     @Test
     public void testRiskCategoryMaxTradeLimitsWithCurrentCap() {
-        DaoStateService daoStateService = mock(DaoStateService.class);
-        PeriodService periodService = mock(PeriodService.class);
-        when(periodService.getChainHeight()).thenReturn(0);
-        when(daoStateService.getParamValueAsCoin(Param.MAX_TRADE_LIMIT, 0)).thenReturn(Coin.parseCoin("2"));
+        initTradeLimits(Coin.parseCoin("2"));
 
-        new TradeLimits(daoStateService, periodService);
+        assertEquals(Coin.parseCoin("0.500"), getMaxTradeLimit(PaymentMethod.ADVANCED_CASH_ID, "USD"));
+        assertEquals(Coin.parseCoin("0.250"), getMaxTradeLimit(PaymentMethod.SWISH_ID, "SEK"));
+        assertEquals(Coin.parseCoin("0.1668"), getMaxTradeLimit(PaymentMethod.SWIFT_ID, "USD"));
+        assertEquals(Coin.parseCoin("0.1252"), getMaxTradeLimit(PaymentMethod.SEPA_ID, "EUR"));
+        assertEquals(Coin.parseCoin("0.0125"), getMaxTradeLimit(PaymentMethod.UPI_ID, "INR"));
+    }
+
+    @Test
+    public void testMaxTradeLimitsFollowDaoValueBelowCap() {
+        // MAX_TRADE_LIMIT on mainnet since block 950827
+        initTradeLimits(Coin.parseCoin("0.25"));
 
         assertEquals(Coin.parseCoin("0.250"), getMaxTradeLimit(PaymentMethod.ADVANCED_CASH_ID, "USD"));
         assertEquals(Coin.parseCoin("0.1252"), getMaxTradeLimit(PaymentMethod.SWISH_ID, "SEK"));
         assertEquals(Coin.parseCoin("0.0832"), getMaxTradeLimit(PaymentMethod.SWIFT_ID, "USD"));
         assertEquals(Coin.parseCoin("0.0624"), getMaxTradeLimit(PaymentMethod.SEPA_ID, "EUR"));
+        assertEquals(Coin.parseCoin("0.00625"), getMaxTradeLimit(PaymentMethod.UPI_ID, "INR"));
+    }
+
+    private static void initTradeLimits(Coin daoMaxTradeLimit) {
+        DaoStateService daoStateService = mock(DaoStateService.class);
+        PeriodService periodService = mock(PeriodService.class);
+        when(periodService.getChainHeight()).thenReturn(0);
+        when(daoStateService.getParamValueAsCoin(Param.MAX_TRADE_LIMIT, 0)).thenReturn(daoMaxTradeLimit);
+        new TradeLimits(daoStateService, periodService);
     }
 
     private Coin getMaxTradeLimit(String paymentMethodId, String currencyCode) {

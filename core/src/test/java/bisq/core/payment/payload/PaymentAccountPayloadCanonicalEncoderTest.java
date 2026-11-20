@@ -108,6 +108,14 @@ public class PaymentAccountPayloadCanonicalEncoderTest {
         aliPayWithHolderName.setAccountNr("local-ali-account-2");
         aliPayWithHolderName.setHolderName("Local Holder");
 
+        CustomPaymentMethodAccountPayload custom = new CustomPaymentMethodAccountPayload(PaymentMethod.CUSTOM_ID,
+                "local-custom");
+        custom.setPaymentMethodName("M-Pesa");
+        custom.setAccountData("Jane Doe\n+254 700 000000");
+
+        CustomPaymentMethodAccountPayload customWithoutTexts = new CustomPaymentMethodAccountPayload(
+                PaymentMethod.CUSTOM_ID, "local-custom-2");
+
         NationalBankAccountPayload nationalBankDefaults = new NationalBankAccountPayload(PaymentMethod.NATIONAL_BANK_ID,
                 "local-national-bank");
         nationalBankDefaults.setCountryCode("US");
@@ -121,11 +129,21 @@ public class PaymentAccountPayloadCanonicalEncoderTest {
         sepa.setIban("DE89370400440532013000");
         sepa.setBic("COBADEFFXXX");
 
+        StableCoinAccountPayload stableCoin = new StableCoinAccountPayload("USDC_SPL", "local-stable-coin");
+        stableCoin.setAddress("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+
+        StableCoinAccountPayload stableCoinWithoutAddress = new StableCoinAccountPayload("USDT_ERC20",
+                "local-stable-coin-2");
+
         return List.of(
                 new NamedPayload("aliPaySaltOnly", aliPayWithSaltOnly),
                 new NamedPayload("aliPayWithHolderName", aliPayWithHolderName),
+                new NamedPayload("custom", custom),
+                new NamedPayload("customWithoutTexts", customWithoutTexts),
                 new NamedPayload("nationalBankDefaults", nationalBankDefaults),
-                new NamedPayload("sepaWithEmptyAcceptedCountries", sepa));
+                new NamedPayload("sepaWithEmptyAcceptedCountries", sepa),
+                new NamedPayload("stableCoin", stableCoin),
+                new NamedPayload("stableCoinWithoutAddress", stableCoinWithoutAddress));
     }
 
     private record NamedPayload(String name, PaymentAccountPayload payload) {
@@ -463,6 +481,11 @@ public class PaymentAccountPayloadCanonicalEncoderTest {
                         .setVerseAccountPayload(protobuf.VerseAccountPayload.newBuilder()
                                 .setHolderName("Verse Holder"))
                         .build()),
+                testCase("custom", account(PaymentMethod.CUSTOM_ID)
+                        .setCustomPaymentMethodAccountPayload(protobuf.CustomPaymentMethodAccountPayload.newBuilder()
+                                .setPaymentMethodName("Orange Money (CI)")
+                                .setAccountData("Compte: 07 00 00 00 00\nNom: A. Kone"))
+                        .build()),
                 testCase("bsqSwap", account(PaymentMethod.BSQ_SWAP_ID)
                         .setBsqSwapAccountPayload(protobuf.BsqSwapAccountPayload.newBuilder())
                         .build()),
@@ -471,6 +494,10 @@ public class PaymentAccountPayloadCanonicalEncoderTest {
                                 .setHolderName("Sbp Holder")
                                 .setMobileNumber("+79123456789")
                                 .setBankName("Sbp Bank"))
+                        .build()),
+                testCase("stableCoin", account("USDT_TRC20")
+                        .setStableCoinAccountPayload(protobuf.StableCoinAccountPayload.newBuilder()
+                                .setAddress("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"))
                         .build())
         );
     }

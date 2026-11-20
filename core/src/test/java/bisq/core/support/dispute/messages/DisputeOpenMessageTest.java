@@ -26,6 +26,7 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.trade.model.bisq_v1.Contract;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.SendersSignaturePubKeyProvidingPayload;
 
 import bisq.common.crypto.Encryption;
 import bisq.common.crypto.PubKeyRing;
@@ -52,6 +53,8 @@ public class DisputeOpenMessageTest {
     private static final NodeAddress BUYER_NODE_ADDRESS = new NodeAddress("buyer.onion", 9999);
     private static final NodeAddress SELLER_NODE_ADDRESS = new NodeAddress("seller.onion", 9999);
     private static final NodeAddress MEDIATOR_NODE_ADDRESS = new NodeAddress("mediator.onion", 9999);
+    // 2023-11-14, long before the sender key existed. The key is required for disputes of any trade date.
+    private static final long TRADE_DATE = 1_700_000_000_000L;
 
     @Test
     public void openNewDisputeMessageRoundTripPreservesSenderSignaturePubKey() {
@@ -83,6 +86,11 @@ public class DisputeOpenMessageTest {
         OpenNewDisputeMessage fromProto = OpenNewDisputeMessage.fromProto(proto, mock(CoreProtoResolver.class), 1);
 
         assertNull(fromProto.getSenderSignaturePubKey());
+        assertTrue(fromProto.isSenderSignaturePubKeyRequired());
+        assertFalse(SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(
+                fromProto.getSenderSignaturePubKey(),
+                Sig.generateKeyPair().getPublic(),
+                fromProto.isSenderSignaturePubKeyRequired()));
     }
 
     @Test
@@ -115,6 +123,11 @@ public class DisputeOpenMessageTest {
         PeerOpenedDisputeMessage fromProto = PeerOpenedDisputeMessage.fromProto(proto, mock(CoreProtoResolver.class), 1);
 
         assertNull(fromProto.getSenderSignaturePubKey());
+        assertTrue(fromProto.isSenderSignaturePubKeyRequired());
+        assertFalse(SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(
+                fromProto.getSenderSignaturePubKey(),
+                Sig.generateKeyPair().getPublic(),
+                fromProto.isSenderSignaturePubKeyRequired()));
     }
 
     @Test
@@ -173,7 +186,7 @@ public class DisputeOpenMessageTest {
                 true,
                 true,
                 buyerPubKeyRing,
-                DisputeMessage.SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE.getTime() + 1,
+                TRADE_DATE,
                 0,
                 contract(buyerPubKeyRing, sellerPubKeyRing),
                 null,

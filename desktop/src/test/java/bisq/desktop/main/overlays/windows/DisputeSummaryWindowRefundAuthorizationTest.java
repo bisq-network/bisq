@@ -47,7 +47,6 @@ import org.bitcoinj.core.Transaction;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedConstruction;
@@ -218,6 +217,12 @@ class DisputeSummaryWindowRefundAuthorizationTest {
     }
 
     private Runnable beginPayoutReservation(Transaction transaction, CompletableFuture<Boolean> outcome) throws Exception {
+        return beginPayoutReservation(transaction, outcome, Coin.ZERO);
+    }
+
+    private Runnable beginPayoutReservation(Transaction transaction,
+                                            CompletableFuture<Boolean> outcome,
+                                            Coin sellerPayoutAmount) throws Exception {
         when(transaction.getTxId()).thenReturn(Sha256Hash.ZERO_HASH);
         Contract contract = dispute.getContract();
         when(contract.getOfferPayload()).thenReturn(mock(OfferPayload.class));
@@ -227,7 +232,7 @@ class DisputeSummaryWindowRefundAuthorizationTest {
         Method payout = DisputeSummaryWindow.class.getDeclaredMethod("doPayout", Coin.class, Coin.class,
                 Coin.class, String.class, String.class, CompletableFuture.class);
         payout.setAccessible(true);
-        payout.invoke(window, Coin.valueOf(1_000), Coin.ZERO, Coin.valueOf(100),
+        payout.invoke(window, Coin.valueOf(1_000), sellerPayoutAmount, Coin.valueOf(100),
                 "buyer-address", "seller-address", outcome);
         ArgumentCaptor<Runnable> persisted = ArgumentCaptor.forClass(Runnable.class);
         verify(manager).persistRefundPayoutReservation(eq(dispute), eq(transaction), persisted.capture(), any());
@@ -309,9 +314,9 @@ class DisputeSummaryWindowRefundAuthorizationTest {
             signature.when(() -> RefundClaimSignature.getClaimSubjectHash(replacement)).thenReturn("subject");
             setField("dispute", replacement);
             Method approvalCheck = DisputeSummaryWindow.class.getDeclaredMethod("hasRefundClaimApproval",
-                    Coin.class, Coin.class, boolean.class);
+                    Coin.class, Coin.class);
             approvalCheck.setAccessible(true);
-            assertFalse((boolean) approvalCheck.invoke(window, Coin.valueOf(1_000), Coin.valueOf(500), false));
+            assertFalse((boolean) approvalCheck.invoke(window, Coin.valueOf(1_000), Coin.valueOf(500)));
             setField("dispute", dispute);
 
             result.setSellerPayoutAmount(Coin.valueOf(501));
@@ -340,14 +345,9 @@ class DisputeSummaryWindowRefundAuthorizationTest {
     }
 
     @ParameterizedTest
-    @CsvSource({
-            "false, allocation", "false, subject", "false, malformed", "false, singleRecipient",
-            "true, allocation", "true, subject", "true, malformed",
-            "false, row", "true, row", "false, eligibility", "true, eligibility"
-    })
-    void changedAndRestoredClaimRequiresFreshManualApproval(boolean legacyClaim, String change) throws Exception {
+    @ValueSource(strings = {"allocation", "subject", "malformed", "singleRecipient", "row"})
+    void changedAndRestoredClaimRequiresFreshManualApproval(String change) throws Exception {
         result.setSellerPayoutAmount(Coin.valueOf(500));
-        when(manager.requiresLegacyRefundClaimVerification(dispute)).thenReturn(legacyClaim);
         when(manager.isRefundEvidenceValidationSkipped()).thenReturn(true);
         try (MockedStatic<RefundClaimSignature> signature = mockStatic(RefundClaimSignature.class);
              MockedConstruction<Popup> popups = mockConstruction(Popup.class, withSettings().defaultAnswer(RETURNS_SELF))) {
@@ -371,14 +371,11 @@ class DisputeSummaryWindowRefundAuthorizationTest {
                     when(replacement.getSupportType()).thenReturn(SupportType.REFUND);
                     setField("dispute", replacement);
                 }
-                case "eligibility" -> when(manager.requiresLegacyRefundClaimVerification(dispute))
-                        .thenReturn(!legacyClaim);
                 default -> throw new AssertionError(change);
             }
             assertEquals(change.equals("singleRecipient"), invoke("isRefundValidationCurrent"));
 
             setField("dispute", dispute);
-            when(manager.requiresLegacyRefundClaimVerification(dispute)).thenReturn(legacyClaim);
             result.setSellerPayoutAmount(Coin.valueOf(500));
             signature.when(() -> RefundClaimSignature.getClaimSubjectHash(dispute)).thenReturn("subject");
             assertFalse((boolean) invoke("isRefundValidationCurrent"));
@@ -431,14 +428,14 @@ class DisputeSummaryWindowRefundAuthorizationTest {
 
     @Test
     void subjectChangeAfterReservationDiscardsManualApprovalAndPreventsCommit() throws Exception {
-        when(manager.requiresLegacyRefundClaimVerification(dispute)).thenReturn(true);
+        result.setSellerPayoutAmount(Coin.valueOf(500));
         when(manager.isRefundEvidenceValidationSkipped()).thenReturn(true);
         try (MockedStatic<RefundClaimSignature> signature = mockStatic(RefundClaimSignature.class);
              MockedConstruction<Popup> popups = mockConstruction(Popup.class, withSettings().defaultAnswer(RETURNS_SELF))) {
             signature.when(() -> RefundClaimSignature.getClaimSubjectHash(dispute)).thenReturn("subject");
             confirmRefundClaim(popups);
             CompletableFuture<Boolean> outcome = new CompletableFuture<>();
-            Runnable persisted = beginPayoutReservation(mock(Transaction.class), outcome);
+            Runnable persisted = beginPayoutReservation(mock(Transaction.class), outcome, Coin.valueOf(500));
             signature.when(() -> RefundClaimSignature.getClaimSubjectHash(dispute)).thenReturn("changed");
 
             persisted.run();
@@ -479,51 +476,6 @@ class DisputeSummaryWindowRefundAuthorizationTest {
             CompletableFuture<?> next = (CompletableFuture<?>) invoke("maybeMakePayout");
             assertFalse(next.isDone());
             assertEquals(2, popups.constructed().size());
-        }
-    }
-
-    @Test
-    void legacyGraceRequiresConfirmationAndRejectsChangedAllocation() throws Exception {
-        when(manager.requiresLegacyRefundClaimVerification(dispute)).thenReturn(true);
-        when(manager.isRefundEvidenceValidationSkipped()).thenReturn(true);
-        try (MockedStatic<RefundClaimSignature> signature = mockStatic(RefundClaimSignature.class);
-             MockedConstruction<Popup> popups = mockConstruction(Popup.class, withSettings().defaultAnswer(RETURNS_SELF))) {
-            signature.when(() -> RefundClaimSignature.getClaimSubjectHash(dispute)).thenReturn("subject");
-            assertFalse((boolean) invoke("isRefundValidationCurrent"));
-            CompletableFuture<?> outcome = (CompletableFuture<?>) invoke("maybeCheckTransactions");
-            assertFalse(outcome.isDone());
-            verify(manager, never()).requestBlockchainTransactions(any(), any(), any(), any());
-            ArgumentCaptor<Runnable> action = ArgumentCaptor.forClass(Runnable.class);
-            verify(popups.constructed().get(1)).onAction(action.capture());
-            action.getValue().run();
-            assertEquals(true, outcome.join());
-            assertTrue((boolean) invoke("isRefundValidationCurrent"));
-
-            result.setSellerPayoutAmount(Coin.valueOf(500));
-            assertFalse((boolean) invoke("isRefundValidationCurrent"));
-            result.setSellerPayoutAmount(Coin.ZERO);
-            signature.when(() -> RefundClaimSignature.getClaimSubjectHash(dispute)).thenReturn("changed");
-            assertFalse((boolean) invoke("isRefundValidationCurrent"));
-            signature.when(() -> RefundClaimSignature.getClaimSubjectHash(dispute)).thenReturn("subject");
-            when(manager.requiresLegacyRefundClaimVerification(dispute)).thenReturn(false);
-            doThrow(new IllegalArgumentException("grace period expired"))
-                    .when(manager).verifyRefundClaimForPayout(dispute, Coin.valueOf(1_000), Coin.ZERO);
-            assertFalse((boolean) invoke("isRefundValidationCurrent"));
-        }
-    }
-
-    @Test
-    void cancellingLegacyConfirmationStopsTheCloseAttempt() throws Exception {
-        when(manager.requiresLegacyRefundClaimVerification(dispute)).thenReturn(true);
-        try (MockedStatic<RefundClaimSignature> signature = mockStatic(RefundClaimSignature.class);
-             MockedConstruction<Popup> popups = mockConstruction(Popup.class, withSettings().defaultAnswer(RETURNS_SELF))) {
-            signature.when(() -> RefundClaimSignature.getClaimSubjectHash(dispute)).thenReturn("subject");
-            CompletableFuture<?> outcome = (CompletableFuture<?>) invoke("maybeCheckTransactions");
-            ArgumentCaptor<Runnable> close = ArgumentCaptor.forClass(Runnable.class);
-            verify(popups.constructed().get(0)).onClose(close.capture());
-            close.getValue().run();
-            assertEquals(false, outcome.join());
-            verify(manager, never()).requestBlockchainTransactions(any(), any(), any(), any());
         }
     }
 

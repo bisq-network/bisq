@@ -54,4 +54,32 @@ public class VersionTest {
         assertTrue(Version.isNewVersion("1.9.22", "1.9.9"));
         assertFalse(Version.isNewVersion("1.9.9", "1.9.22"));
     }
+
+    @Test
+    public void testIsValid() {
+        assertTrue(Version.isValid("1.10.10"));
+        assertTrue(Version.isValid("0.0.0"));
+        assertTrue(Version.isValid("01.02.03"));
+
+        assertFalse(Version.isValid(null));
+        assertFalse(Version.isValid(""));
+        assertFalse(Version.isValid("1.10"));
+        assertFalse(Version.isValid("1.10.10.1"));
+        assertFalse(Version.isValid("v1.10.10"));
+        assertFalse(Version.isValid("1.10.10-rc1"));
+        assertFalse(Version.isValid("+1.10.10"));
+        assertFalse(Version.isValid("1.10.-1"));
+        assertFalse(Version.isValid("1.x.10"));
+        assertFalse(Version.isValid("99999999999.1.1"));
+    }
+
+    // A valid version can always be compared with another valid version
+    @Test
+    public void testValidVersionCanBeCompared() {
+        for (String version : new String[]{"1.10.10", "0.0.0", "01.02.03", Version.VERSION}) {
+            assertTrue(Version.isValid(version));
+            Version.isNewVersion(version, "1.10.9");
+            Version.isNewVersion("1.10.9", version);
+        }
+    }
 }

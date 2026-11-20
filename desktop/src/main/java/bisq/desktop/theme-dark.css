@@ -159,6 +159,18 @@
     -xmr-orange: #f26822;
 
     -bs-support-chat-background: #cccccc;
+
+    /* announcement window */
+    -bs-news-background: #161616;
+    -bs-news-text: #ededed;
+    -bs-news-text-secondary: #9a9a9a;
+    -bs-news-separator: #2a2a2a;
+    -bs-news-accent: #25b135;
+    -bs-news-icon: #25b135;
+    -bs-news-warning: #f59e0b;
+    -bs-news-button-border: #3a3a3a;
+    -bs-news-primary: #1a8628;
+    -bs-news-on-primary: #ffffff;
 }
 
 /* table view */

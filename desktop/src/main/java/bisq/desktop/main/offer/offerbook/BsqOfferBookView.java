@@ -38,8 +38,13 @@ import javax.inject.Named;
 
 import javafx.scene.layout.GridPane;
 
+import javafx.beans.value.ChangeListener;
+
 @FxmlView
 public class BsqOfferBookView extends OfferBookView<GridPane, BsqOfferBookViewModel> {
+    // At most one popup per visit of the tab
+    private final BsqOfferPriceRangeHint priceRangeHint;
+    private final ChangeListener<Boolean> allOffersOutsidePriceRangeListener;
 
     @Inject
     BsqOfferBookView(BsqOfferBookViewModel model,
@@ -53,6 +58,9 @@ public class BsqOfferBookView extends OfferBookView<GridPane, BsqOfferBookViewMo
                      SignedWitnessService signedWitnessService,
                      Preferences preferences) {
         super(model, navigation, offerDetailsWindow, bsqSwapOfferDetailsWindow, formatter, privateNotificationManager, useDevPrivilegeKeys, accountAgeWitnessService, signedWitnessService);
+        priceRangeHint = new BsqOfferPriceRangeHint(preferences, navigation,
+                () -> model.isTabSelected && model.allOffersOutsidePriceRange.get());
+        allOffersOutsidePriceRangeListener = (observable, oldValue, newValue) -> priceRangeHint.update();
     }
 
     @Override
@@ -70,6 +78,27 @@ public class BsqOfferBookView extends OfferBookView<GridPane, BsqOfferBookViewMo
 
         currencyComboBoxContainer.setVisible(false);
         currencyComboBoxContainer.setManaged(false);
+
+        model.allOffersOutsidePriceRange.addListener(allOffersOutsidePriceRangeListener);
+        priceRangeHint.update();
+    }
+
+    @Override
+    protected void deactivate() {
+        super.deactivate();
+
+        model.allOffersOutsidePriceRange.removeListener(allOffersOutsidePriceRangeListener);
+        priceRangeHint.reset();
+    }
+
+    // Selecting the tab sets the state of the model, which schedules the popup through the listener
+    @Override
+    public void onTabSelected(boolean isSelected) {
+        super.onTabSelected(isSelected);
+
+        if (!isSelected) {
+            priceRangeHint.reset();
+        }
     }
 
     @Override

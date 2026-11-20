@@ -180,40 +180,16 @@ current dialog, claim subject and buyer/seller amounts. Changed evidence or allo
 fresh approval. Both payout and result-signing authorization must enforce this requirement;
 displaying a warning only in the wallet transaction confirmation is insufficient.
 
-For both split-payout and legacy confirmations, an observed mismatch in the dispute row, claim subject,
-allocation or legacy eligibility must discard the saved approval. A malformed subject must also discard it.
+For split-payout confirmations, an observed mismatch in the dispute row, claim subject or allocation
+must discard the saved approval. A malformed subject must also discard it.
 Restoring the previously approved values must not revive that confirmation. Check for such changes even
 when the current allocation no longer requires manual verification, and require a fresh explicit confirmation
 before a later attempt can use the manual exception again.
 
-Closing without a payout still requires a valid claimant before the agent signs a refund result,
-except for the temporary legacy-record grace period below.
-
-## Temporary grace period for existing disputes
-
-Until **1 November 2026 at 00:00 UTC**, an already stored refund dispute with no claim signature
-and no signed claim-opening date may be closed through manual verification. This exception covers
-legacy records retained by the refund agent when upgrading. New unsigned requests remain rejected
-at admission; an incoming opening date or matching ticket identifier does not establish eligibility.
-Restored local records are treated as trusted local history, not new network admission.
-
-The agent must see a warning and explicitly confirm that they have manually verified participation
-in the real trade and independently verified every payout recipient and address. Cancelling the
-warning stops closing. The confirmation applies only to that dialog's dispute, claim subject and
-buyer/seller amounts; changed evidence or allocation requires fresh confirmation.
-
-This exception permits the missing proof and its recipient-role requirement to be replaced by
-manual verification. It does not waive transaction validation, payout amount limits or receipt
-consumption. The existing regression-test transaction-evidence exception remains separate.
-Malformed/nonempty signatures and records with a signed date but a missing signature do not qualify.
-
-The grace period uses the agent's current clock, not the dispute's opening date. At and after the
-cutoff, all claim checks apply normally, including for old disputes and dialogs confirmed before
-the cutoff. Eligibility and manual approval are checked again before payout and result signing
-on every network. No permanent waiver is persisted.
-
-The grace-period code, confirmation state, popup and related tests can be deleted in releases
-after 1 November 2026. Relevant production code is marked with removal comments.
+Closing without a payout still requires a valid claimant before the agent signs a refund result.
+This also applies to refund disputes that an agent stored before the claim signature existed: without
+a matching valid proof they cannot be closed. A temporary manual exception for such stored disputes
+ended on 1 November 2026.
 
 ## Compatibility and residual risks
 
@@ -225,8 +201,7 @@ key already retained by the wallet. No trade-time negotiation or on-chain migrat
 Both the refund agent and submitting trader must upgrade. Older agents ignore the new fields and
 do not enforce this protection; updated agents reject unsigned old-client requests. Locally retained
 older tickets acquire a proof only when a valid matching request is received, not merely by being
-loaded or reopened locally. During the temporary grace period, eligible stored tickets may instead
-be closed after the manual verification described above. Deployment must use the selected signature format consistently. If an
+loaded or reopened locally. Deployment must use the selected signature format consistently. If an
 incompatible experimental format has already been deployed, explicit migration is required before
 interoperation; no automatic format fallback is defined here.
 

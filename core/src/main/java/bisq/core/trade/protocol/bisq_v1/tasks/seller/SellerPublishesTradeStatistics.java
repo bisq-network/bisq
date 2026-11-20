@@ -23,7 +23,6 @@ import bisq.core.trade.statistics.TradeStatistics3;
 
 import bisq.network.p2p.network.TorNetworkNode;
 
-import bisq.common.app.Capability;
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
@@ -47,29 +46,18 @@ public class SellerPublishesTradeStatistics extends TradeTask {
             }
             checkNotNull(trade.getDepositTx());
 
-            processModel.getP2PService().findPeersCapabilities(trade.getTradingPeerNodeAddress())
-                    .filter(capabilities -> capabilities.containsAll(Capability.TRADE_STATISTICS_3))
-                    .ifPresentOrElse(capabilities -> {
-                                // Our peer has updated, so as we are the seller we will publish the trade statistics.
-                                // The peer as buyer does not publish anymore with v.1.4.0 (where Capability.TRADE_STATISTICS_3 was added)
+            // Only the seller publishes the trade statistics. The buyer does not publish them since release 1.4.0.
+            String referralId = processModel.getReferralIdService().getOptionalReferralId().orElse(null);
+            boolean isTorNetworkNode = processModel.getP2PService().getNetworkNode() instanceof TorNetworkNode;
+            TradeStatistics3 tradeStatistics = TradeStatistics3.from(trade, referralId, isTorNetworkNode);
+            if (tradeStatistics.isValid()) {
+                log.info("Publishing trade statistics");
+                processModel.getP2PService().addPersistableNetworkPayload(tradeStatistics, true);
+            } else {
+                log.warn("Trade statistics are invalid. We do not publish. {}", tradeStatistics);
+            }
 
-                                String referralId = processModel.getReferralIdService().getOptionalReferralId().orElse(null);
-                                boolean isTorNetworkNode = processModel.getP2PService().getNetworkNode() instanceof TorNetworkNode;
-                                TradeStatistics3 tradeStatistics = TradeStatistics3.from(trade, referralId, isTorNetworkNode);
-                                if (tradeStatistics.isValid()) {
-                                    log.info("Publishing trade statistics");
-                                    processModel.getP2PService().addPersistableNetworkPayload(tradeStatistics, true);
-                                } else {
-                                    log.warn("Trade statistics are invalid. We do not publish. {}", tradeStatistics);
-                                }
-
-                                complete();
-                            },
-                            () -> {
-                                log.info("Our peer does not has updated yet, so they will publish the trade statistics. " +
-                                        "To avoid duplicates we do not publish from our side.");
-                                complete();
-                            });
+            complete();
         } catch (Throwable t) {
             failed(t);
         }

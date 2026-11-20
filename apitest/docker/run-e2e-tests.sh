@@ -20,6 +20,8 @@
 #   GLOBAL_TIMEOUT_SECS  hard ceiling for whole run (default: 3600)
 #   READY_TIMEOUT_SECS   per-daemon readiness wait (default: 300)
 #   RUN_POLICY_E2E_TESTS  run deny-list policy phases after the main suite (default: true)
+#   RUN_SHARED_STACK_TESTS  run the shared-stack phase (default: true); false runs only
+#                  the fresh-stack classes, e.g. a FRESH_STACK_TESTS selection
 #   POLICY_DENY_LIST_RESOURCE  classpath fixture for policy phases
 #   BITCOIND_RPC_HOST_PORT  host port published for bitcoind RPC (default: 18443)
 #   BITCOIND_P2P_HOST_PORT  host port published for bitcoind P2P (default: 18444)
@@ -42,6 +44,7 @@ TEST_PATTERN="${TEST_PATTERN:-bisq.apitest.method.* bisq.apitest.dao.*}"
 GLOBAL_TIMEOUT_SECS="${GLOBAL_TIMEOUT_SECS:-3600}"
 READY_TIMEOUT_SECS="${READY_TIMEOUT_SECS:-300}"
 RUN_POLICY_E2E_TESTS="${RUN_POLICY_E2E_TESTS:-true}"
+RUN_SHARED_STACK_TESTS="${RUN_SHARED_STACK_TESTS:-true}"
 POLICY_DENY_LIST_RESOURCE="${POLICY_DENY_LIST_RESOURCE:-denylist/btc_regtest_e2e.denylist}"
 # Opt-in flag for the heavy soak/coverage tests tagged @Tag("longrunning"). They are
 # excluded from every normal run (too slow for per-PR CI, and they probe the v29 SPV
@@ -445,6 +448,8 @@ if [[ "${RUN_LONG_RUNNING_TESTS}" == "true" ]]; then
   # Long-running-only mode: skip the shared-stack phase entirely; only the
   # @Tag("longrunning") classes run, each in its own fresh stack below.
   step "Long-running-only mode: skipping shared-stack phase"
+elif [[ "${RUN_SHARED_STACK_TESTS}" != "true" ]]; then
+  step "RUN_SHARED_STACK_TESTS=${RUN_SHARED_STACK_TESTS}: skipping shared-stack phase"
 else
   step "Running shared-stack tests: ${TEST_PATTERN}"
   # Expand each space-delimited pattern into its own `--tests` arg so Gradle can OR them.

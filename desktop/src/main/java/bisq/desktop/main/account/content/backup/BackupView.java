@@ -271,7 +271,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         List<File> logFiles = new ArrayList<>(nodeLogFiles);
         logFiles.addAll(existingTorLogFiles);
         Map<File, UnaryOperator<String>> redactions = new HashMap<>();
-        nodeLogFiles.forEach(file -> redactions.put(file, TorLogRedaction::withoutBootstrapEventHosts));
+        nodeLogFiles.forEach(file -> redactions.put(file, TorLogRedaction::withoutBridgeDetailsInNodeLog));
         existingTorLogFiles.forEach(file -> redactions.put(file, TorLogRedaction::withoutRelayIdentities));
         new LogFilesZipper(destinationPath).zip(logFiles, redactions);
     }

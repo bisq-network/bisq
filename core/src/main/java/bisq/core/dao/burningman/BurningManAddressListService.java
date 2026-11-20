@@ -70,6 +70,9 @@ public class BurningManAddressListService {
     public static final String FILE_NAME_SUFFIX = ".json";
 
     // Historical resources below this floor remain loadable but are not eligible for current DPT security decisions.
+    // Compatibility with v1.10.11 and earlier: these releases bundle the lists up to version 7. A list that only
+    // unsupported releases select can be removed, and this minimum raised, once no trade that uses it can be disputed
+    // anymore, as the refund agent validates a trade with the list version of its contract.
     public static final int MINIMUM_NEGOTIABLE_VERSION = 1;
 
     private static final Pattern FILE_NAME_PATTERN = Pattern.compile(FILE_NAME_PREFIX + "(\\d{4,})\\" + FILE_NAME_SUFFIX);

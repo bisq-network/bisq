@@ -3,6 +3,8 @@ name: e2e-tests-compat
 # Cross-version compatibility run of the e2e suite: identical to e2e-tests.yml
 # except one peer (bob) runs the latest tagged release instead of master, so the
 # DAO + trade scenarios exercise release<->master P2P/protocol compatibility.
+# With release_peer=alice the release runs on alice, the maker of the trade tests,
+# and only the classes in apitest/docker/compat-alice-tests.txt run.
 #
 # Dispatch-only — it builds an extra (release) source tree and is meaningful only
 # on demand (e.g. before cutting a release), not on every PR.
@@ -13,6 +15,13 @@ on:
         description: "Git tag/ref for the release peer (default: latest tag)"
         required: false
         default: ""
+      release_peer:
+        description: "Peer that runs the release: bob (taker) or alice (maker, trade tests only)"
+        type: choice
+        options:
+          - bob
+          - alice
+        default: bob
       run_long_running_tests:
         description: "Run ONLY the long-running soak/coverage tests (@Tag(\"longrunning\")); skips the normal suite"
         type: boolean
@@ -37,7 +46,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
-          distribution: zulu
+          distribution: corretto
           java-version: '21'
           check-latest: true
 
@@ -131,9 +140,9 @@ jobs:
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
-      - name: Run e2e test stack (compose up + test, bob on ${{ env.RELEASE_REF }})
+      - name: Run e2e test stack (compose up + test, ${{ inputs.release_peer }} on ${{ env.RELEASE_REF }})
         env:
-          COMPOSE_OVERRIDE_FILE: apitest/docker/dao-compose.compat.yml
+          RELEASE_PEER: ${{ inputs.release_peer }}
           # Skip the deny-list policy phase: it injects the master-only
           # --denyListResource daemon flag, which an older release peer does not
           # recognize and exits on. It tests a single-node master feature, not
@@ -142,7 +151,29 @@ jobs:
           # Default false → normal compat suite (long-running tests excluded). Set true
           # via workflow_dispatch to run ONLY the long-running tests against the release peer.
           RUN_LONG_RUNNING_TESTS: ${{ inputs.run_long_running_tests }}
-        run: apitest/docker/run-e2e-tests.sh --skip-build --skip-docker-build
+        # Same peer selection as apitest/docker/run-e2e-tests-compat.sh.
+        run: |
+          set -euo pipefail
+          case "${RELEASE_PEER:-bob}" in
+            bob)
+              export COMPOSE_OVERRIDE_FILE=apitest/docker/dao-compose.compat.yml
+              ;;
+            alice)
+              if [[ "${RUN_LONG_RUNNING_TESTS}" == "true" ]]; then
+                echo "run_long_running_tests is not supported with release_peer=alice" >&2
+                exit 1
+              fi
+              export COMPOSE_OVERRIDE_FILE=apitest/docker/dao-compose.compat-alice.yml
+              export RUN_SHARED_STACK_TESTS=false
+              FRESH_STACK_TESTS="$(grep -v '^#' apitest/docker/compat-alice-tests.txt | tr '\n' ' ')"
+              export FRESH_STACK_TESTS
+              ;;
+            *)
+              echo "Invalid release_peer: ${RELEASE_PEER}" >&2
+              exit 1
+              ;;
+          esac
+          apitest/docker/run-e2e-tests.sh --skip-build --skip-docker-build
 
       - name: Upload container logs
         if: always()

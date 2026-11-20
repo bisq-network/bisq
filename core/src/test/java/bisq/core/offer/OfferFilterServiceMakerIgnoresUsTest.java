@@ -18,6 +18,7 @@
 package bisq.core.offer;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.filter.FilterPolicyService;
 import bisq.core.offer.availability.AvailabilityResult;
 import bisq.core.user.Preferences;
@@ -199,6 +200,8 @@ public class OfferFilterServiceMakerIgnoresUsTest {
         when(offer.getMakerNodeAddress()).thenReturn(new NodeAddress(makerAddress));
         when(offer.getPubKeyRing()).thenReturn(pubKeyRing);
         when(offer.getProtocolVersion()).thenReturn((long) Version.TRADE_PROTOCOL_VERSION);
+        when(offer.getBuyerSecurityDeposit()).thenReturn(Restrictions.getMinBuyerSecurityDepositAsCoin());
+        when(offer.getSellerSecurityDeposit()).thenReturn(Restrictions.getMinSellerSecurityDepositAsCoin());
         return offer;
     }
 }

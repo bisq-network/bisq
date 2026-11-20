@@ -18,6 +18,7 @@
 package bisq.core.offer;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.filter.FilterPolicyService;
 import bisq.core.offer.availability.AvailabilityResult;
 import bisq.core.payment.PaymentAccount;
@@ -27,6 +28,7 @@ import bisq.core.user.User;
 
 import bisq.common.app.Version;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
@@ -89,6 +91,7 @@ public class OfferFilterService {
         API_DISABLED,
         HAS_NO_PAYMENT_ACCOUNT_VALID_FOR_OFFER,
         HAS_NOT_SAME_PROTOCOL_VERSION,
+        HAS_INVALID_SECURITY_DEPOSIT,
         IS_IGNORED,
         IS_IGNORED_BY_MAKER,
         IS_OFFER_BANNED,
@@ -141,6 +144,9 @@ public class OfferFilterService {
         if (isNodeAddressBanned(offer)) {
             return Result.IS_NODE_ADDRESS_BANNED;
         }
+        if (hasInsufficientSecurityDeposit(offer)) {
+            return Result.HAS_INVALID_SECURITY_DEPOSIT;
+        }
         if (requireUpdateToNewVersion()) {
             return Result.REQUIRE_UPDATE_TO_NEW_VERSION;
         }
@@ -157,6 +163,20 @@ public class OfferFilterService {
         }
 
         return Result.VALID;
+    }
+
+    // A maker with a modified client can publish an offer with a dust security deposit, so the taker would lock its
+    // trade amount and deposit against a peer with no stake (a free option for the maker, or the taker's funds locked
+    // until the delayed payout tx time lock). An honest offer bounds both deposits to at least MIN_SECURITY_DEPOSIT
+    // (CreateOfferService.getBoundedBuyerSecurityDeposit), so a value below that floor is not a legitimate offer. BSQ
+    // swap offers have no security deposit. This is the minimum floor only; the percentage-of-amount bound is not
+    // checked here.
+    public boolean hasInsufficientSecurityDeposit(Offer offer) {
+        if (offer.isBsqSwapOffer()) {
+            return false;
+        }
+        return offer.getBuyerSecurityDeposit().isLessThan(Restrictions.getMinBuyerSecurityDepositAsCoin()) ||
+                offer.getSellerSecurityDeposit().isLessThan(Restrictions.getMinSellerSecurityDepositAsCoin());
     }
 
     public boolean isAnyPaymentAccountValidForOffer(Offer offer) {
@@ -235,24 +255,35 @@ public class OfferFilterService {
 
     // This call is a bit expensive so we cache results
     public boolean isInsufficientCounterpartyTradeLimit(Offer offer) {
-        String offerId = offer.getId();
-        if (insufficientCounterpartyTradeLimitCache.containsKey(offerId)) {
-            return insufficientCounterpartyTradeLimitCache.get(offerId);
+        String cacheKey = tradeLimitCacheKey(offer);
+        if (insufficientCounterpartyTradeLimitCache.containsKey(cacheKey)) {
+            return insufficientCounterpartyTradeLimitCache.get(cacheKey);
         }
 
+        // The age of the maker's account cannot lower the trade limit of a stablecoin payment method, as it has no
+        // chargeback risk. Requiring the maker's witness would only block the offers of a new account until its
+        // witness has reached us. The trade itself still verifies the witness of the revealed account.
         boolean result = offer.isFiatOffer() &&
+                !offer.getPaymentMethod().isStableCoin() &&
                 !accountAgeWitnessService.verifyPeersTradeAmount(offer, offer.getAmount(),
                         errorMessage -> {
                         });
-        insufficientCounterpartyTradeLimitCache.put(offerId, result);
+        insufficientCounterpartyTradeLimitCache.put(cacheKey, result);
         return result;
+    }
+
+    // The offer ID is chosen by the maker and the P2P storage keys offers by payload hash, so anyone can publish an
+    // offer with the ID of another maker's offer. Keyed by ID, such a decoy would poison the cache and make the real
+    // offer show as insufficient on every node that saw the decoy. We key the cache by the offer payload hash instead.
+    private static String tradeLimitCacheKey(Offer offer) {
+        return Utilities.encodeToHex(offer.getOfferPayloadBase().getHash());
     }
 
     // This call is a bit expensive so we cache results
     public boolean isMyInsufficientTradeLimit(Offer offer) {
-        String offerId = offer.getId();
-        if (myInsufficientTradeLimitCache.containsKey(offerId)) {
-            return myInsufficientTradeLimitCache.get(offerId);
+        String cacheKey = tradeLimitCacheKey(offer);
+        if (myInsufficientTradeLimitCache.containsKey(cacheKey)) {
+            return myInsufficientTradeLimitCache.get(cacheKey);
         }
 
         Optional<PaymentAccount> accountOptional = PaymentAccountUtil.getMostMaturePaymentAccountForOffer(offer,
@@ -268,7 +299,7 @@ public class OfferFilterService {
                 Coin.valueOf(myTradeLimit).toFriendlyString(),
                 Coin.valueOf(offerMinAmount).toFriendlyString());
         boolean result = accountOptional.isPresent() && myTradeLimit < offerMinAmount;
-        myInsufficientTradeLimitCache.put(offerId, result);
+        myInsufficientTradeLimitCache.put(cacheKey, result);
         return result;
     }
 

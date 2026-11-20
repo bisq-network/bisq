@@ -38,6 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -120,6 +121,22 @@ public class FileUtilTest {
         assertEquals(PosixFilePermissions.fromString("rw-------"),
                 Files.getPosixFilePermissions(destination.resolve("btc_mainnet/tor/hiddenservice/private_key")));
         assertEquals("key", Files.readString(destination.resolve("btc_mainnet/tor/hiddenservice/private_key")));
+    }
+
+    @Test
+    public void restrictToOwnerSetsTheMode(@TempDir Path tmp) throws IOException {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        Path directory = Files.createDirectories(tmp.resolve("data"));
+        Files.setPosixFilePermissions(directory, PosixFilePermissions.fromString("rwxr-xr-x"));
+
+        FileUtil.restrictToOwner(directory, "rwx------");
+
+        assertEquals(PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(directory));
+    }
+
+    @Test
+    public void restrictToOwnerOnlyLogsAFailure(@TempDir Path tmp) {
+        assertDoesNotThrow(() -> FileUtil.restrictToOwner(tmp.resolve("missing"), "rwx------"));
     }
 
     @Test

@@ -52,6 +52,9 @@ class OfferFilterServiceTradeLimitCacheTest {
         });
         Offer offer = mock(Offer.class);
         when(offer.getId()).thenReturn("offerId");
+        OfferPayloadBase offerPayloadBase = mock(OfferPayloadBase.class);
+        when(offerPayloadBase.getHash()).thenReturn(new byte[]{1});
+        when(offer.getOfferPayloadBase()).thenReturn(offerPayloadBase);
         when(offer.getCurrencyCode()).thenReturn("EUR");
         when(offer.getPaymentMethod()).thenReturn(PaymentMethod.REVOLUT);
         when(offer.getMirroredDirection()).thenReturn(OfferDirection.BUY);

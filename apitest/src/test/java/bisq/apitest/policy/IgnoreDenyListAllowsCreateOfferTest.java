@@ -17,6 +17,7 @@
 
 package bisq.apitest.policy;
 
+import bisq.apitest.dao.DaoTestUtils;
 import bisq.apitest.method.offer.DockerOfferTest;
 
 import bisq.proto.grpc.OfferInfo;
@@ -39,14 +40,14 @@ public class IgnoreDenyListAllowsCreateOfferTest extends DockerOfferTest {
     public void testIgnoreDenyListAllowsOfferThatFixtureWouldBlock() {
         PaymentAccount usdAccount = createDummyF2FAccount(aliceClient, "US");
 
-        OfferInfo created = aliceClient.createFixedPricedOffer(BUY.name(),
+        OfferInfo created = DaoTestUtils.placeV1OfferWhenReady(() -> aliceClient.createFixedPricedOffer(BUY.name(),
                 "usd",
                 AMOUNT,
                 AMOUNT,
                 "30000.0000",
                 defaultBuyerSecurityDepositPct.get(),
                 usdAccount.getId(),
-                BSQ);
+                BSQ));
 
         assertTrue(created.getIsMyOffer());
         assertTrue(created.getIsMyPendingOffer());

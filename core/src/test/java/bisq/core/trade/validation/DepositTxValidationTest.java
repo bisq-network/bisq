@@ -19,6 +19,7 @@ package bisq.core.trade.validation;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.WalletUtils;
 import bisq.core.offer.Offer;
@@ -102,6 +103,18 @@ class DepositTxValidationTest {
     }
 
     @Test
+    void checkDepositTxMatchesIgnoringWitnessesAndScriptSigsRejectsDifferentInputSequence() {
+        Transaction expectedDepositTx = depositTx(Coin.valueOf(10_000), BUYER_ADDRESS, 0);
+        Transaction depositTx = copy(expectedDepositTx);
+        depositTx.getInput(0).setSequenceNumber(TransactionInput.NO_SEQUENCE - 1);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> checkDepositTxMatchesIgnoringWitnessesAndScriptSigs(depositTx,
+                        expectedDepositTx,
+                        PARAMS));
+    }
+
+    @Test
     void checkDepositTxMatchesIgnoringWitnessesAndScriptSigsRejectsDifferentOutputAmount() {
         Transaction expectedDepositTx = depositTx(Coin.valueOf(10_000), BUYER_ADDRESS, 0);
         Transaction depositTx = depositTx(Coin.valueOf(9_999), BUYER_ADDRESS, 0);
@@ -177,7 +190,7 @@ class DepositTxValidationTest {
     }
 
     @Test
-    void checkCanonicalDepositTxShapeRejectsRbfEnabledSequence() {
+    void checkCanonicalDepositTxShapeRejectsZeroSequence() {
         Transaction tx = canonicalTx();
         tx.getInput(0).setSequenceNumber(0);
 
@@ -188,12 +201,16 @@ class DepositTxValidationTest {
     }
 
     @Test
-    void checkCanonicalDepositTxShapeAcceptsLockTimeOptInSequence() {
+    void checkCanonicalDepositTxShapeRejectsSequenceOneBelowFinal() {
+        // NO_SEQUENCE - 1 (0xFFFFFFFE) does not opt in to RBF, but the taker signs a tx with NO_SEQUENCE inputs,
+        // which has another txid
         Transaction tx = canonicalTx();
         tx.getInput(0).setSequenceNumber(TransactionInput.NO_SEQUENCE - 1);
-        List<RawTransactionInput> p2wpkhInputs = Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(1_000)));
 
-        assertSame(tx, DepositTxValidation.checkCanonicalDepositTxShape(tx, p2wpkhInputs, PARAMS));
+        assertThrows(IllegalArgumentException.class,
+                () -> DepositTxValidation.checkCanonicalDepositTxShape(tx,
+                        Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(1_000))),
+                        PARAMS));
     }
 
     @Test
@@ -276,6 +293,79 @@ class DepositTxValidationTest {
     }
 
     @Test
+    void checkMakersPreparedDepositTxRejectsNonFinalSequenceInBuyerAsMakerTx() {
+        Offer offer = offer(true,
+                Coin.valueOf(10_000),
+                Coin.valueOf(20_000),
+                Coin.valueOf(10_000),
+                Coin.valueOf(150_000));
+        Coin tradeAmount = Coin.valueOf(100_000);
+        Coin tradeTxFee = Coin.valueOf(5_000);
+        List<RawTransactionInput> makerInputs = Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(10_000)));
+        List<RawTransactionInput> takerInputs = Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(130_000)));
+
+        for (int inputIndex = 0; inputIndex < 2; inputIndex++) {
+            Transaction preparedDepositTx = preparedDepositTx(
+                    orderedInputs(makerInputs, takerInputs, true),
+                    BUYER_MULTI_SIG_KEY.getPubKey(),
+                    SELLER_MULTI_SIG_KEY.getPubKey(),
+                    135_000);
+            preparedDepositTx.getInput(inputIndex).setSequenceNumber(TransactionInput.NO_SEQUENCE - 1);
+
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                    () -> DepositTxValidation.checkMakersPreparedDepositTx(preparedDepositTx,
+                            offer,
+                            tradeAmount,
+                            tradeTxFee,
+                            makerInputs,
+                            takerInputs,
+                            BUYER_MULTI_SIG_KEY.getPubKey(),
+                            SELLER_MULTI_SIG_KEY.getPubKey(),
+                            PARAMS));
+
+            assertEquals("Transaction input has a non-final sequence: " + (TransactionInput.NO_SEQUENCE - 1),
+                    exception.getMessage());
+        }
+    }
+
+    @Test
+    void checkMakersPreparedDepositTxRejectsNonFinalSequenceInSellerAsMakerTx() {
+        Offer offer = offer(false,
+                Coin.valueOf(10_000),
+                Coin.valueOf(20_000),
+                Coin.valueOf(10_000),
+                Coin.valueOf(150_000));
+        Coin tradeAmount = Coin.valueOf(100_000);
+        Coin tradeTxFee = Coin.valueOf(5_000);
+        List<RawTransactionInput> makerInputs = Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(170_000)));
+        List<RawTransactionInput> takerInputs = Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(20_000)));
+
+        for (int inputIndex = 0; inputIndex < 2; inputIndex++) {
+            Transaction preparedDepositTx = preparedDepositTx(
+                    orderedInputs(makerInputs, takerInputs, false),
+                    BUYER_MULTI_SIG_KEY.getPubKey(),
+                    SELLER_MULTI_SIG_KEY.getPubKey(),
+                    135_000,
+                    50_000);
+            preparedDepositTx.getInput(inputIndex).setSequenceNumber(TransactionInput.NO_SEQUENCE - 1);
+
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                    () -> DepositTxValidation.checkMakersPreparedDepositTx(preparedDepositTx,
+                            offer,
+                            tradeAmount,
+                            tradeTxFee,
+                            makerInputs,
+                            takerInputs,
+                            SELLER_MULTI_SIG_KEY.getPubKey(),
+                            BUYER_MULTI_SIG_KEY.getPubKey(),
+                            PARAMS));
+
+            assertEquals("Transaction input has a non-final sequence: " + (TransactionInput.NO_SEQUENCE - 1),
+                    exception.getMessage());
+        }
+    }
+
+    @Test
     void checkMakersPreparedDepositTxRejectsWrongInputOrder() {
         Offer offer = offer(false,
                 Coin.valueOf(10_000),
@@ -336,9 +426,18 @@ class DepositTxValidationTest {
     }
 
     @Test
-    void checkCanonicalDepositTxFieldsRejectsRbfEnabledSequence() {
+    void checkCanonicalDepositTxFieldsRejectsZeroSequence() {
         Transaction tx = canonicalTx();
         tx.getInput(0).setSequenceNumber(0);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DepositTxValidation.checkCanonicalDepositTxFields(tx));
+    }
+
+    @Test
+    void checkCanonicalDepositTxFieldsRejectsSequenceOneBelowFinal() {
+        Transaction tx = canonicalTx();
+        tx.getInput(0).setSequenceNumber(TransactionInput.NO_SEQUENCE - 1);
 
         assertThrows(IllegalArgumentException.class,
                 () -> DepositTxValidation.checkCanonicalDepositTxFields(tx));
@@ -463,6 +562,107 @@ class DepositTxValidationTest {
                         SELLER_MULTI_SIG_KEY.getPubKey(),
                         BUYER_MULTI_SIG_KEY.getPubKey(),
                         PARAMS));
+    }
+
+    @Test
+    void checkMakersPreparedDepositTxRejectsDustMakerChange() {
+        // An honest maker wallet adds dust change to the fee. Only a modified maker adds it as output, which makes
+        // the deposit tx non-standard.
+        Coin dustChange = Restrictions.getMinNonDustOutput().subtract(Coin.SATOSHI);
+        Offer offer = offer(false,
+                Coin.valueOf(10_000),
+                Coin.valueOf(20_000),
+                Coin.valueOf(10_000),
+                Coin.valueOf(150_000));
+        Coin tradeAmount = Coin.valueOf(150_000).subtract(dustChange);
+        Coin tradeTxFee = Coin.valueOf(5_000);
+        List<RawTransactionInput> makerInputs = Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(170_000)));
+        List<RawTransactionInput> takerInputs = Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(20_000)));
+        Transaction preparedDepositTx = preparedDepositTx(
+                orderedInputs(makerInputs, takerInputs, false),
+                BUYER_MULTI_SIG_KEY.getPubKey(),
+                SELLER_MULTI_SIG_KEY.getPubKey(),
+                185_000 - dustChange.value,
+                dustChange.value);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> DepositTxValidation.checkMakersPreparedDepositTx(preparedDepositTx,
+                        offer,
+                        tradeAmount,
+                        tradeTxFee,
+                        makerInputs,
+                        takerInputs,
+                        SELLER_MULTI_SIG_KEY.getPubKey(),
+                        BUYER_MULTI_SIG_KEY.getPubKey(),
+                        PARAMS));
+
+        assertEquals("Maker's preparedDepositTx change output must not be dust. value=" +
+                        dustChange.toFriendlyString() +
+                        ", minNonDustOutput=" + Restrictions.getMinNonDustOutput().toFriendlyString(),
+                exception.getMessage());
+    }
+
+    @Test
+    void checkMakersPreparedDepositTxAcceptsMakerChangeAtDustLimit() {
+        Coin change = Restrictions.getMinNonDustOutput();
+        Offer offer = offer(false,
+                Coin.valueOf(10_000),
+                Coin.valueOf(20_000),
+                Coin.valueOf(10_000),
+                Coin.valueOf(150_000));
+        Coin tradeAmount = Coin.valueOf(150_000).subtract(change);
+        Coin tradeTxFee = Coin.valueOf(5_000);
+        List<RawTransactionInput> makerInputs = Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(170_000)));
+        List<RawTransactionInput> takerInputs = Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(20_000)));
+        Transaction preparedDepositTx = preparedDepositTx(
+                orderedInputs(makerInputs, takerInputs, false),
+                BUYER_MULTI_SIG_KEY.getPubKey(),
+                SELLER_MULTI_SIG_KEY.getPubKey(),
+                185_000 - change.value,
+                change.value);
+
+        assertSame(preparedDepositTx,
+                DepositTxValidation.checkMakersPreparedDepositTx(preparedDepositTx,
+                        offer,
+                        tradeAmount,
+                        tradeTxFee,
+                        makerInputs,
+                        takerInputs,
+                        SELLER_MULTI_SIG_KEY.getPubKey(),
+                        BUYER_MULTI_SIG_KEY.getPubKey(),
+                        PARAMS));
+    }
+
+    @Test
+    void checkMakersPreparedDepositTxRejectsNonP2wpkhMakerChange() {
+        Offer offer = offer(false,
+                Coin.valueOf(10_000),
+                Coin.valueOf(20_000),
+                Coin.valueOf(10_000),
+                Coin.valueOf(150_000));
+        Coin tradeAmount = Coin.valueOf(100_000);
+        Coin tradeTxFee = Coin.valueOf(5_000);
+        List<RawTransactionInput> makerInputs = Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(170_000)));
+        List<RawTransactionInput> takerInputs = Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(20_000)));
+        Transaction preparedDepositTx = preparedDepositTx(
+                orderedInputs(makerInputs, takerInputs, false),
+                BUYER_MULTI_SIG_KEY.getPubKey(),
+                SELLER_MULTI_SIG_KEY.getPubKey(),
+                135_000);
+        preparedDepositTx.addOutput(Coin.valueOf(50_000), Address.fromKey(PARAMS, new ECKey(), Script.ScriptType.P2PKH));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> DepositTxValidation.checkMakersPreparedDepositTx(preparedDepositTx,
+                        offer,
+                        tradeAmount,
+                        tradeTxFee,
+                        makerInputs,
+                        takerInputs,
+                        SELLER_MULTI_SIG_KEY.getPubKey(),
+                        BUYER_MULTI_SIG_KEY.getPubKey(),
+                        PARAMS));
+
+        assertEquals("Maker's preparedDepositTx change output must be P2WPKH", exception.getMessage());
     }
 
     /* --------------------------------------------------------------------- */

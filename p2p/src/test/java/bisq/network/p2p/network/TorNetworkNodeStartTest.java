@@ -130,6 +130,7 @@ class TorNetworkNodeStartTest {
             assertEquals(message, listener.failure.get().getMessage());
             // Bridges of the Tor network settings do not help a running Tor, which uses its own.
             assertFalse(listener.failure.get() instanceof BridgesCanHelpException);
+            assertFalse(listener.failure.get() instanceof TorSandboxUnavailableException);
             // The message says what to change, so the desktop application leaves out its generic advice
             assertTrue(listener.failure.get() instanceof ExplainedStartFailureException);
             waitForTheUserThread();
@@ -155,7 +156,8 @@ class TorNetworkNodeStartTest {
             assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
             assertEquals(sandboxUnavailable.getMessage(), listener.failure.get().getMessage());
             assertTrue(listener.failure.get().getMessage().contains("--useTorSandbox=false"));
-            assertTrue(listener.failure.get() instanceof ExplainedStartFailureException);
+            // The desktop application offers to turn the sandbox off
+            assertTrue(listener.failure.get() instanceof TorSandboxUnavailableException);
         } finally {
             shutDownExecutors(networkNode);
         }
@@ -177,8 +179,10 @@ class TorNetworkNodeStartTest {
             assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
             assertEquals(TorNetworkNode.getPluggableTransportsNotAllowedMessage(List.of("obfs4"),
                     Utilities.isWindows()), listener.failure.get().getMessage());
-            // The desktop application offers to allow these transports or to use no bridges
+            // The desktop application offers to allow these transports or to use no bridges. The refusal is a
+            // SandboxUnavailableException too, but keeps the popup of the bridges.
             assertTrue(listener.failure.get() instanceof BridgesCanHelpException);
+            assertFalse(listener.failure.get() instanceof TorSandboxUnavailableException);
             assertEquals(List.of("obfs4"),
                     ((BridgesCanHelpException) listener.failure.get()).getNotAllowedTransportNames());
             assertTrue(listener.bridgesRequested.await(5, TimeUnit.SECONDS));

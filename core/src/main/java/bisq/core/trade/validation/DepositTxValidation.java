@@ -19,6 +19,7 @@ package bisq.core.trade.validation;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.WalletUtils;
 import bisq.core.btc.wallet.utils.DepositTransactionUtils;
@@ -33,6 +34,7 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.script.Script;
+import org.bitcoinj.script.ScriptPattern;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -190,8 +192,8 @@ public final class DepositTxValidation {
 
     /**
      * Bundles the canonical-shape checks the taker runs against the maker's prepared
-     * deposit tx: version == 1, lockTime == 0, no input opts in to RBF, and every
-     * peer-supplied funding input is P2WPKH. Centralised so both buyer-as-taker and
+     * deposit tx: version == 1, lockTime == 0, every input has the final sequence number, and
+     * every peer-supplied funding input is P2WPKH. Centralised so both buyer-as-taker and
      * seller-as-taker apply the same policy (single point to extend with future checks).
      */
     public static Transaction checkCanonicalDepositTxShape(Transaction transaction,
@@ -209,7 +211,7 @@ public final class DepositTxValidation {
     public static Transaction checkCanonicalDepositTxFields(Transaction transaction) {
         Transaction checkedTransaction = checkVersionIsOne(transaction);
         checkedTransaction = checkLockTimeIsZero(checkedTransaction);
-        checkedTransaction = checkInputSequencesDisableRbf(checkedTransaction);
+        checkedTransaction = checkInputSequencesAreFinal(checkedTransaction);
         return checkedTransaction;
     }
 
@@ -247,18 +249,20 @@ public final class DepositTxValidation {
     }
 
     /**
-     * Throws unless every input has BIP125 opt-in RBF disabled (sequence == NO_SEQUENCE - 1
-     * or NO_SEQUENCE). Any lower value opts in to RBF, which lets a third party (or the peer)
-     * replace the broadcast tx with a different one before it confirms — so the txid that
-     * lands on chain may not be the txid we signed for in any downstream binding.
+     * Throws unless every input has the final sequence number (NO_SEQUENCE, 0xffffffff). Bisq wallets
+     * create every deposit tx input with this value, and the taker builds the tx it signs from the raw
+     * inputs with this value as well (TradeWalletService.takerSignsDepositTx). The sequence number is
+     * part of the txid, so a maker's prepared tx with any other value can never be the tx the taker
+     * signs, and a delayed payout tx built for the prepared tx would not spend the signed tx. A value
+     * below NO_SEQUENCE - 1 would also opt in to RBF (BIP125).
      */
     @VisibleForTesting
-    static Transaction checkInputSequencesDisableRbf(Transaction tx) {
+    static Transaction checkInputSequencesAreFinal(Transaction tx) {
         Transaction checkedTx = checkNotNull(tx, "tx must not be null");
         for (TransactionInput txIn : checkedTx.getInputs()) {
             long seq = txIn.getSequenceNumber();
-            checkArgument(seq == TransactionInput.NO_SEQUENCE - 1 || seq == TransactionInput.NO_SEQUENCE,
-                    "Transaction input has RBF-enabled sequence: %s",
+            checkArgument(seq == TransactionInput.NO_SEQUENCE,
+                    "Transaction input has a non-final sequence: %s",
                     seq);
         }
         return checkedTx;
@@ -417,9 +421,10 @@ public final class DepositTxValidation {
                         ? "Maker's preparedDepositTx must not have a change output"
                         : "Maker's preparedDepositTx must have exactly one change output");
         if (!expectedMakerChange.isZero()) {
-            Coin makerChangeOutput = preparedDepositTx.getOutput(1).getValue();
-            checkArgument(makerChangeOutput.equals(expectedMakerChange),
+            TransactionOutput makerChangeOutput = preparedDepositTx.getOutput(1);
+            checkArgument(makerChangeOutput.getValue().equals(expectedMakerChange),
                     "Maker's preparedDepositTx change output value does not match the expected maker change");
+            checkMakersChangeOutput(makerChangeOutput);
         }
 
         Coin inputTotal = DepositTransactionUtils.sumInputValues(makerInputs).add(DepositTransactionUtils.sumInputValues(takerInputs));
@@ -431,6 +436,24 @@ public final class DepositTxValidation {
                 "Prepared deposit tx fee mismatch. actual=%s, expected=%s",
                 actualTxFee,
                 tradeTxFee);
+    }
+
+    /**
+     * Throws unless the maker's change output in the prepared deposit tx can be relayed. A dust output or a
+     * non-standard script makes the deposit tx non-standard, so the network would not relay it, and the taker
+     * would only notice after publishing the taker fee tx. Honest makers send the change to a fresh P2WPKH
+     * address, so requiring P2WPKH excludes every non-standard script.
+     */
+    public static TransactionOutput checkMakersChangeOutput(TransactionOutput makersChangeOutput) {
+        checkNotNull(makersChangeOutput, "makersChangeOutput must not be null");
+        Coin value = makersChangeOutput.getValue();
+        checkArgument(Restrictions.isAboveDust(value),
+                "Maker's preparedDepositTx change output must not be dust. value=%s, minNonDustOutput=%s",
+                value.toFriendlyString(),
+                Restrictions.getMinNonDustOutput().toFriendlyString());
+        checkArgument(ScriptPattern.isP2WPKH(makersChangeOutput.getScriptPubKey()),
+                "Maker's preparedDepositTx change output must be P2WPKH");
+        return makersChangeOutput;
     }
 
 

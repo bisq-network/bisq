@@ -92,7 +92,7 @@ public class CyclesInDaoStateService {
     public int getHeightOfFirstBlockOfPastCycle(int chainHeight, int numPastCycles) {
         return findCycleAtHeight(chainHeight)
                 .map(cycle -> getIndexForCycle(cycle) - numPastCycles)
-                .filter(targetIndex -> targetIndex > 0)
+                .filter(targetIndex -> targetIndex >= 0)
                 .map(targetIndex -> getCycleAtIndex(targetIndex).getHeightOfFirstBlock())
                 .orElse(daoStateService.getGenesisBlockHeight());
     }

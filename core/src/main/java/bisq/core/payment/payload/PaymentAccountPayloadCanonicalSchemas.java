@@ -219,6 +219,16 @@ final class PaymentAccountPayloadCanonicalSchemas {
                     .string(2, SbpAccountPayload::getMobileNumber)
                     .string(3, SbpAccountPayload::getBankName)
                     .build();
+    private static final CanonicalSchema<CustomPaymentMethodAccountPayload> CUSTOM_PAYMENT_METHOD_ACCOUNT_SCHEMA =
+            CanonicalSchema.<CustomPaymentMethodAccountPayload>newBuilder()
+                    .string(1, CustomPaymentMethodAccountPayload::getPaymentMethodName)
+                    .string(2, CustomPaymentMethodAccountPayload::getAccountData)
+                    .build();
+
+    private static final CanonicalSchema<StableCoinAccountPayload> STABLE_COIN_ACCOUNT_SCHEMA =
+            CanonicalSchema.<StableCoinAccountPayload>newBuilder()
+                    .string(1, StableCoinAccountPayload::getAddress)
+                    .build();
 
     private static final CanonicalSchema<NationalBankAccountPayload> NATIONAL_BANK_ACCOUNT_SCHEMA =
             CanonicalSchema.<NationalBankAccountPayload>newBuilder().build();
@@ -426,6 +436,8 @@ final class PaymentAccountPayloadCanonicalSchemas {
                     .oneof(39, paymentAccountPayload -> as(paymentAccountPayload, VerseAccountPayload.class), VERSE_ACCOUNT_SCHEMA)
                     .oneof(40, paymentAccountPayload -> as(paymentAccountPayload, BsqSwapAccountPayload.class), BSQ_SWAP_ACCOUNT_SCHEMA)
                     .oneof(41, paymentAccountPayload -> as(paymentAccountPayload, SbpAccountPayload.class), SBP_ACCOUNT_SCHEMA)
+                    .oneof(42, paymentAccountPayload -> as(paymentAccountPayload, StableCoinAccountPayload.class), STABLE_COIN_ACCOUNT_SCHEMA)
+                    .oneof(43, paymentAccountPayload -> as(paymentAccountPayload, CustomPaymentMethodAccountPayload.class), CUSTOM_PAYMENT_METHOD_ACCOUNT_SCHEMA)
                     .build();
 
     private PaymentAccountPayloadCanonicalSchemas() {

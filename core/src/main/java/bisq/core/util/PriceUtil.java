@@ -39,12 +39,16 @@ import org.bitcoinj.utils.Fiat;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import java.math.BigDecimal;
+
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -127,6 +131,48 @@ public class PriceUtil {
                     tradeStatisticsManager, 30).second;
         }
         return bsq30DayAveragePrice;
+    }
+
+    // A price of 0 means that there is no average
+    public Price getBsq90DayAveragePrice() {
+        return AveragePriceUtil.getAveragePriceTuple(preferences, tradeStatisticsManager, 90).second;
+    }
+
+    // BSQ offers with a price worse for the taker than the range around the 90-day average BSQ price which the
+    // preferences set. Reads the average and the factor once, so that one filtering of many offers computes the
+    // average once. The largest factor turns the range off: invented statistics can move the average so far that
+    // no factor below it shows the offers at the market price.
+    public Predicate<Offer> getOutsideBsqOfferPriceRangePredicate() {
+        double factor = preferences.getBsqOfferPriceRangeFactor();
+        if (factor >= Preferences.MAX_BSQ_OFFER_PRICE_RANGE_FACTOR) {
+            return offer -> false;
+        }
+        Price averagePrice = getBsq90DayAveragePrice();
+        return offer -> offer.getCurrencyCode().equals("BSQ") &&
+                isOutsidePriceRange(offer.getPrice(), averagePrice, factor, offer.getDirection());
+    }
+
+    // Whether the price of a BSQ offer of the direction is worse for its taker than the range: above the average price
+    // times the factor if the maker buys BTC, so that the taker buys BSQ, and below the average divided by the factor if
+    // the maker sells BTC, so that the taker sells BSQ. A price which is better for the taker is never outside, so that
+    // an average which invented statistics move can hide offers, but never leave only offers visible which are worse
+    // for the taker than the hidden ones. Without a price or an average, no price is outside the range.
+    public static boolean isOutsidePriceRange(@Nullable Price price,
+                                              Price averagePrice,
+                                              double factor,
+                                              OfferDirection direction) {
+        if (price == null || !price.isPositive() || !averagePrice.isPositive()) {
+            return false;
+        }
+        checkArgument(price.getCurrencyCode().equals(averagePrice.getCurrencyCode()),
+                "Price %s and average price %s have different currencies", price, averagePrice);
+        BigDecimal value = BigDecimal.valueOf(price.getValue());
+        BigDecimal average = BigDecimal.valueOf(averagePrice.getValue());
+        BigDecimal rangeFactor = BigDecimal.valueOf(factor);
+        // Compare decimal products to keep the inclusive bound exact, even for a fractional factor.
+        return direction == OfferDirection.BUY ?
+                value.compareTo(average.multiply(rangeFactor)) > 0 :
+                value.multiply(rangeFactor).compareTo(average) < 0;
     }
 
     public static Optional<Double> offerPercentageToDeviation(Offer offer) {

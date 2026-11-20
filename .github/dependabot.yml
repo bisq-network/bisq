@@ -14,7 +14,7 @@ updates:
       default-days: 7
     ignore:
       # The e2e images run the Bisq daemon, which needs Java 21.
-      - dependency-name: "eclipse-temurin"
+      - dependency-name: "amazoncorretto"
         update-types: ["version-update:semver-major"]
   - package-ecosystem: "docker"
     directory: "/docker/release-builder/linux"
@@ -23,6 +23,17 @@ updates:
     cooldown:
       default-days: 7
     ignore:
-      # The release builder needs Java 21. The tag 21 follows the newest Azul build, Dependabot updates the digest.
-      - dependency-name: "azul/zulu-openjdk"
+      # Keep the release tools on Ubuntu 24.04 with the existing apt snapshot.
+      - dependency-name: "ubuntu"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: "docker"
+    directory: "/build-logic/docker-image-builder/src/main/resources"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    ignore:
+      - dependency-name: "amazoncorretto"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "ubuntu"
         update-types: ["version-update:semver-major"]

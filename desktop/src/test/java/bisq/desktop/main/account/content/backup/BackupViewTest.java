@@ -60,12 +60,17 @@ class BackupViewTest {
     @Test
     void theZipGetsTheLogsOfTorWithoutTheBridges(@TempDir Path dir) throws IOException {
         Path nodeLogPath = dir.resolve("bisq.log");
-        Files.writeString(nodeLogPath, "log of the node\n" + BOOTSTRAP_WARNING_OF_THE_TOR_LIBRARY);
+        String nextRecord = "Oct-31 10:36:00.000 [main] INFO  b.c.Node: Bitcoin node 192.0.2.8:8333";
+        String startupException = "java.io.IOException: Embedded Tor exited. exitCode=1, log=/bisq/tor/tor.log, ";
+        String nativeLogTail = "end-of-bridge-certificate\n" + BRIDGE_WARNING;
+        Files.writeString(nodeLogPath, "log of the node\n" + BOOTSTRAP_WARNING_OF_THE_TOR_LIBRARY +
+                startupException + "log=" + nativeLogTail + "\tat example.Frame.method(Frame.java:10)\n" +
+                startupException + "log (written by sandy and by Tor in its sandbox, not verified by Bisq)=" +
+                nativeLogTail + nextRecord);
         List<File> torLogFiles = TorMode.getTorLogFiles(dir.resolve("tor").toFile());
         Files.createDirectories(dir.resolve("tor"));
-        // The standard output of Tor and the earlier log exist, the standard error does not
+        // The log of Tor exists, the earlier log does not
         Files.writeString(torLogFiles.get(0).toPath(), BRIDGE_WARNING);
-        Files.writeString(torLogFiles.get(1).toPath(), BRIDGE_WARNING);
         Path zipPath = dir.resolve("logs.zip");
 
         BackupView.zipLogFiles(List.of(nodeLogPath.toFile()), torLogFiles, zipPath);
@@ -75,13 +80,15 @@ class BackupViewTest {
         assertTrue(nodeLog.startsWith("log of the node\n"), nodeLog);
         assertFalse(nodeLog.contains(BRIDGE_FINGERPRINT), nodeLog);
         assertFalse(nodeLog.contains(BRIDGE_ADDRESS), nodeLog);
-        assertEquals(3, entries.size(), entries.keySet().toString());
-        for (File torLogFile : torLogFiles.subList(0, 2)) {
-            String torLog = entries.get(torLogFile.getName());
-            assertFalse(torLog.contains(BRIDGE_FINGERPRINT), torLog);
-            assertFalse(torLog.contains(BRIDGE_ADDRESS), torLog);
-            assertTrue(torLog.contains("Connection refused"), torLog);
-        }
+        assertFalse(nodeLog.contains("end-of-bridge-certificate"), nodeLog);
+        assertTrue(nodeLog.contains("exitCode=1"), nodeLog);
+        assertTrue(nodeLog.contains("at example.Frame.method"), nodeLog);
+        assertTrue(nodeLog.endsWith(nextRecord), nodeLog);
+        assertEquals(2, entries.size(), entries.keySet().toString());
+        String torLog = entries.get(torLogFiles.get(0).getName());
+        assertFalse(torLog.contains(BRIDGE_FINGERPRINT), torLog);
+        assertFalse(torLog.contains(BRIDGE_ADDRESS), torLog);
+        assertTrue(torLog.contains("Connection refused"), torLog);
     }
 
     private static Map<String, String> readEntries(Path zipPath) throws IOException {

@@ -104,14 +104,9 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
         boolean result = mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
 
         if (!result) {
-            String res1 = this.toString();
-            String res2 = "null";
-            if (mailboxStoragePayload.getOwnerPubKey() != null)
-                res2 = Utilities.encodeToHex(mailboxStoragePayload.getSenderPubKeyForAddOperation().getEncoded(),true);
-
-            log.warn("ProtectedMailboxStorageEntry::isValidForAddOperation() failed. " +
-                    "Entry owner does not match sender key in payload:\nProtectedStorageEntry=%{}\n" +
-                    "SenderPubKeyForAddOperation=%{}", res1, res2);
+            log.warn("ProtectedMailboxStorageEntry::isValidForAddOperation() failed. Entry owner does not match " +
+                    "sender key in payload. Entry: {}. Hash of SenderPubKeyForAddOperation={}", toLogString(),
+                    toKeyHash(mailboxStoragePayload.getSenderPubKeyForAddOperation()));
         }
 
         return result;
@@ -138,14 +133,9 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
                 mailboxStoragePayload.getOwnerPubKey().equals(this.getOwnerPubKey());
 
         if (!result) {
-            String res1 = this.toString();
-            String res2 = "null";
-            if (mailboxStoragePayload.getOwnerPubKey() != null)
-                res2 = Utilities.encodeToHex(mailboxStoragePayload.getOwnerPubKey().getEncoded(), true);
-
-            log.warn("ProtectedMailboxStorageEntry::isValidForRemoveOperation() failed. " +
-                    "Entry owner does not match Payload owner:\nProtectedStorageEntry={}\n" +
-                    "PayloadOwner={}", res1, res2);
+            log.warn("ProtectedMailboxStorageEntry::isValidForRemoveOperation() failed. Entry owner does not match " +
+                    "Payload owner. Entry: {}. Hash of payload owner key={}", toLogString(),
+                    toKeyHash(mailboxStoragePayload.getOwnerPubKey()));
         }
 
         return result;
@@ -159,7 +149,7 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
     public boolean matchesRelevantPubKey(ProtectedStorageEntry protectedStorageEntry) {
         if (!(protectedStorageEntry instanceof ProtectedMailboxStorageEntry)) {
             log.error("ProtectedMailboxStorageEntry::isMetadataEquals() failed due to object type mismatch. " +
-                    "ProtectedMailboxStorageEntry required, but got\n" + protectedStorageEntry);
+                    "ProtectedMailboxStorageEntry required, but got {}", protectedStorageEntry.toLogString());
 
             return false;
         }
@@ -169,8 +159,8 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
         boolean result = protectedMailboxStorageEntry.getReceiversPubKey().equals(this.receiversPubKey);
         if (!result) {
             log.warn("ProtectedMailboxStorageEntry::isMetadataEquals() failed due to metadata mismatch. " +
-                    "new.receiversPubKey=" + Utilities.bytesAsHexString(protectedMailboxStorageEntry.getReceiversPubKeyBytes()) +
-                    "stored.receiversPubKey=" + Utilities.bytesAsHexString(this.getReceiversPubKeyBytes()));
+                    "Hash of new receiversPubKey={}, hash of stored receiversPubKey={}",
+                    toKeyHash(protectedMailboxStorageEntry.getReceiversPubKey()), toKeyHash(this.receiversPubKey));
         }
 
         return result;

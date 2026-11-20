@@ -30,8 +30,11 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -63,23 +66,65 @@ class TorrcOverridesTest {
         assertEquals("1", torrcOverrides.get("AvoidDiskWrites"));
     }
 
+    // Config checks that the file can be read when Bisq starts, but the file can change until Tor starts. Earlier
+    // versions started Tor without the entries of the file.
     @Test
-    void ignoresAMissingTorrcFile(@TempDir Path tempDir) {
+    void aMissingTorrcFileStopsTheStart(@TempDir Path tempDir) {
         File missingFile = tempDir.resolve("missing").toFile();
 
-        assertEquals(Map.of("SocksPort", "9150"), parseFromCommandLine(missingFile, "SocksPort 9150"));
+        var exception = assertThrows(IllegalArgumentException.class,
+                () -> parseFromCommandLine(missingFile, "SocksPort 9150"));
+        assertTrue(exception.getMessage().contains(missingFile.toString()));
     }
 
     @Test
-    void anInvalidOptionDropsTheOptionsBeforeIt() {
-        Map<String, String> torrcOverrides = parseFromCommandLine(null, "SocksPort 9150,invalid,AvoidDiskWrites 1");
+    void aTorrcFileWhichIsNotUtf8TextStopsTheStart(@TempDir Path tempDir) throws IOException {
+        Path latin1File = tempDir.resolve("torrc");
+        Files.write(latin1File, "# Länder\nExcludeNodes {ch}\n".getBytes(StandardCharsets.ISO_8859_1));
 
-        assertEquals(Map.of("AvoidDiskWrites", "1"), torrcOverrides);
+        var exception = assertThrows(IllegalArgumentException.class,
+                () -> parseFromCommandLine(latin1File.toFile(), ""));
+        assertTrue(exception.getMessage().contains(latin1File.toString()));
+        assertTrue(exception.getMessage().contains("UTF-8"));
     }
 
+    // Earlier versions dropped the entries before such a part and started Tor without them, for example without the
+    // relays which ExcludeNodes excludes
+    @ParameterizedTest
+    @ValueSource(strings = {"SocksPort 9150,secret,AvoidDiskWrites 1", "ExcludeNodes",
+            "ExcludeNodes {ch}, StrictNodes  "})
+    void aPartWhichIsNoEntryStopsTheStart(String torrcOptions) {
+        var exception = assertThrows(IllegalArgumentException.class, () -> parseFromCommandLine(null, torrcOptions));
+
+        assertTrue(exception.getMessage().contains("--torrcOptions"));
+        assertFalse(exception.getMessage().contains("secret"));
+    }
+
+    // Config accepts a comma after the last entry, also with spaces after it. With the spaces, earlier versions dropped
+    // all entries.
+    @ParameterizedTest
+    @ValueSource(strings = {"ExcludeNodes {ch},", "ExcludeNodes {ch}, "})
+    void aCommaAfterTheLastEntryKeepsTheEntries(String torrcOptions) {
+        assertEquals(Map.of("ExcludeNodes", "{ch}"), parseFromCommandLine(null, torrcOptions));
+    }
+
+    // A tab separates the key as in a torrc of Tor. netlayer took only a space and dropped such a line, so Tor started
+    // without the restriction of ExcludeNodes and StrictNodes.
+    @Test
+    void aTabSeparatesTheKeyInTheTorrcFile(@TempDir Path tempDir) throws IOException {
+        File torrcFile = writeTorrcFile(tempDir,
+                "ExcludeNodes\t{ru},{by}",
+                "StrictNodes\t1",
+                "Log\tnotice stdout");
+
+        assertEquals(Map.of("ExcludeNodes", "{ru},{by}", "StrictNodes", "1", "Log", "notice stdout"),
+                parseFromCommandLine(torrcFile, ""));
+    }
+
+    // Whitespace which does not separate the key in a torrc of Tor stays in the key
     @Test
     void rejectsAKeyWithWhitespace(@TempDir Path tempDir) throws IOException {
-        File torrcFile = writeTorrcFile(tempDir, "Log\tnotice stdout");
+        File torrcFile = writeTorrcFile(tempDir, "Log\u2003notice stdout");
 
         assertThrows(IllegalArgumentException.class, () -> parseFromCommandLine(torrcFile, ""));
     }

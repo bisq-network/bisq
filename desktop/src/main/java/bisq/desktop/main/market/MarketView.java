@@ -192,6 +192,7 @@ public class MarketView extends ActivatableView<TabPane, Void> {
         List<String> list = tradeStatistics3StorageService.getMapOfAllData().values().stream()
                 .filter(e -> e instanceof TradeStatistics3)
                 .map(e -> (TradeStatistics3) e)
+                .filter(TradeStatistics3::isValid)
                 .filter(tradeStatistics3 -> tradeStatistics3.getExtraDataMap() != null)
                 .filter(tradeStatistics3 -> tradeStatistics3.getExtraDataMap().get(REFERRAL_ID) != null)
                 .map(tradeStatistics3 -> {

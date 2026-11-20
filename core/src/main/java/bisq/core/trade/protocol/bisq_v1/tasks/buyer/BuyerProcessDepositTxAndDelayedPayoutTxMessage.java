@@ -21,6 +21,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.StableCoinAccountPayload;
 import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -48,7 +49,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG;
 import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK;
+import static bisq.core.trade.validation.CustomPaymentMethodValidation.checkPeersPaymentAccountPayload;
 import static bisq.core.trade.validation.DepositTxValidation.checkCanonicalDepositTxFields;
+import static bisq.core.trade.validation.TradeValidation.checkPaymentMethodFromContract;
 import static bisq.core.trade.validation.TransactionValidation.checkSerializedTransaction;
 import static bisq.core.trade.validation.TransactionValidation.toVerifiedTransaction;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -67,6 +70,12 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
 
             var message = (DepositTxAndDelayedPayoutTxMessage) processModel.getTradeMessage();
             checkNotNull(message);
+
+            PaymentAccountPayload sellerPaymentAccountPayload = message.getSellerPaymentAccountPayload();
+            var offer = checkNotNull(trade.getOffer());
+            if (sellerPaymentAccountPayload != null || offer.getPaymentMethod().isCustom()) {
+                checkPeersPaymentAccountPayload(sellerPaymentAccountPayload, offer);
+            }
 
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             Wallet wallet = btcWalletService.getWallet();
@@ -111,7 +120,6 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
-            PaymentAccountPayload sellerPaymentAccountPayload = message.getSellerPaymentAccountPayload();
             if (sellerPaymentAccountPayload != null) {
                 byte[] sellerPaymentAccountPayloadHash = sellerPaymentAccountPayload.getHashForContract();
                 Contract contract = checkNotNull(trade.getContract());
@@ -119,6 +127,9 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
                 byte[] peersPaymentAccountPayloadHash = contract.getHashOfPeersPaymentAccountPayload(pubKeyRing);
                 checkArgument(Arrays.equals(sellerPaymentAccountPayloadHash, peersPaymentAccountPayloadHash),
                         "Hash of payment account is invalid");
+                checkPaymentMethodFromContract(sellerPaymentAccountPayload, contract, pubKeyRing);
+                checkArgument(!StableCoinAccountPayload.isOfAnotherPaymentMethod(offer.getPaymentMethod(), sellerPaymentAccountPayload),
+                        "Seller payment account details do not match the payment rail of the offer");
 
                 tradePeer.setPaymentAccountPayload(sellerPaymentAccountPayload);
                 PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade),

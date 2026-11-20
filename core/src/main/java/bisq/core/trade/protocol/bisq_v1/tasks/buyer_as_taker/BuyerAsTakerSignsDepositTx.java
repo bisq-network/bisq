@@ -31,6 +31,7 @@ import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,6 +40,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.validation.DepositTxValidation.checkCanonicalDepositTxShape;
+import static bisq.core.trade.validation.DepositTxValidation.checkMakersChangeOutput;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -151,9 +153,10 @@ public class BuyerAsTakerSignsDepositTx extends TradeTask {
             throw new TransactionVerificationException("Maker's preparedDepositTx must have exactly one change output");
         }
 
-        Coin makerChangeOutput = makersDepositTx.getOutput(1).getValue();
-        if (!makerChangeOutput.equals(expectedMakerChange)) {
+        TransactionOutput makerChangeOutput = makersDepositTx.getOutput(1);
+        if (!makerChangeOutput.getValue().equals(expectedMakerChange)) {
             throw new TransactionVerificationException("Maker's preparedDepositTx change output value does not match the expected maker change");
         }
+        checkMakersChangeOutput(makerChangeOutput);
     }
 }

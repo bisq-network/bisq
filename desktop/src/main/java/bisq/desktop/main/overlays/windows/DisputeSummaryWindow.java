@@ -127,6 +127,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private Optional<Dispute> peersDisputeOptional;
     private String role;
     private Label delayedPayoutTxStatus;
+    private Label payoutLabel;
     private TextArea summaryNotesTextArea;
 
     private ChangeListener<Boolean> customRadioButtonSelectedListener, buyerGetsTradeAmountSelectedListener, sellerGetsTradeAmountSelectedListener;
@@ -140,13 +141,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private RefundValidationResult refundValidationResult;
     private RefundClaimApproval refundClaimApproval;
 
-    // TODO Remove the legacyClaim discriminator in releases after 2026-11-01.
-    private record RefundClaimApproval(Dispute dispute, String subjectHash, Coin buyerAmount, Coin sellerAmount,
-                                       boolean legacyClaim) {
-        private static RefundClaimApproval capture(Dispute dispute, Coin buyerAmount, Coin sellerAmount,
-                                                   boolean legacyClaim) {
+    private record RefundClaimApproval(Dispute dispute, String subjectHash, Coin buyerAmount, Coin sellerAmount) {
+        private static RefundClaimApproval capture(Dispute dispute, Coin buyerAmount, Coin sellerAmount) {
             return new RefundClaimApproval(dispute, RefundClaimSignature.getClaimSubjectHash(dispute),
-                    buyerAmount, sellerAmount, legacyClaim);
+                    buyerAmount, sellerAmount);
         }
     }
 
@@ -260,54 +258,73 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addPayoutAmountTextFields();
         addReasonControls();
         applyDisputeResultToUiControls();
-        boolean applyPeersDisputeResult = peersDisputeOptional.isPresent() && (
-                peersDisputeOptional.get().getDisputeState() == Dispute.State.RESULT_PROPOSED ||
-                peersDisputeOptional.get().getDisputeState() == Dispute.State.CLOSED);
-        if (applyPeersDisputeResult) {
-            // If the other peers dispute has been closed we apply the result to ourselves
-            DisputeResult peersDisputeResult = peersDisputeOptional.get().getDisputeResultProperty().get();
-            disputeResult.setBuyerPayoutAmount(peersDisputeResult.getBuyerPayoutAmount());
-            disputeResult.setSellerPayoutAmount(peersDisputeResult.getSellerPayoutAmount());
-            disputeResult.setPayoutAdjustmentPercent(peersDisputeResult.getPayoutAdjustmentPercent());
-            disputeResult.setPayoutSuggestion(peersDisputeResult.getPayoutSuggestion());
-            disputeResult.setWinner(peersDisputeResult.getWinner());
-            disputeResult.setReason(peersDisputeResult.getReason());
-            disputeResult.setSummaryNotes(peersDisputeResult.summaryNotesProperty().get());
-
-            buyerGetsTradeAmountRadioButton.setDisable(true);
-            buyerGetsCompensationRadioButton.setDisable(true);
-            buyerGetsTradeAmountMinusPenaltyRadioButton.setDisable(true);
-            sellerGetsTradeAmountRadioButton.setDisable(true);
-            sellerGetsCompensationRadioButton.setDisable(true);
-            sellerGetsTradeAmountMinusPenaltyRadioButton.setDisable(true);
-            customRadioButton.setDisable(true);
-
-            buyerPayoutAmountInputTextField.setDisable(true);
-            sellerPayoutAmountInputTextField.setDisable(true);
-            compensationOrPenaltyInputTextField.setDisable(true);
-            buyerPayoutAmountInputTextField.setEditable(false);
-            sellerPayoutAmountInputTextField.setEditable(false);
-            compensationOrPenaltyInputTextField.setEditable(false);
-
-            reasonWasBugRadioButton.setDisable(true);
-            reasonWasUsabilityIssueRadioButton.setDisable(true);
-            reasonProtocolViolationRadioButton.setDisable(true);
-            reasonNoReplyRadioButton.setDisable(true);
-            reasonWasScamRadioButton.setDisable(true);
-            reasonWasOtherRadioButton.setDisable(true);
-            reasonWasBankRadioButton.setDisable(true);
-            reasonWasOptionTradeRadioButton.setDisable(true);
-            reasonWasSellerNotRespondingRadioButton.setDisable(true);
-            reasonWasWrongSenderAccountRadioButton.setDisable(true);
-            reasonWasPeerWasLateRadioButton.setDisable(true);
-            reasonWasTradeAlreadySettledRadioButton.setDisable(true);
+        // In mediation the payout is final once a result was sent for the trade, also after closing and reopening
+        // the tickets. The refund agent's window applies the result of the other ticket once it is closed.
+        Optional<DisputeResult> lockedResult = isMediationDispute() ?
+                mediationManager.findSentResult(dispute) :
+                findResultOfClosedPeersDispute();
+        if (lockedResult.isPresent()) {
+            if (lockedResult.get() != disputeResult) {
+                applyResultOfOtherTicket(lockedResult.get());
+            }
+            disableResultControls();
             applyDisputeResultToUiControls();
+            if (isMediationDispute()) {
+                payoutLabel.setText(Res.get("disputeSummaryWindow.payout.sent"));
+            }
         }
 
         setReasonRadioButtonState();
 
         addSummaryNotes();
         addButtons();
+    }
+
+    private Optional<DisputeResult> findResultOfClosedPeersDispute() {
+        return peersDisputeOptional
+                .filter(peersDispute -> peersDispute.getDisputeState() == Dispute.State.RESULT_PROPOSED ||
+                        peersDispute.getDisputeState() == Dispute.State.CLOSED)
+                .map(peersDispute -> peersDispute.getDisputeResultProperty().get());
+    }
+
+    private void applyResultOfOtherTicket(DisputeResult otherDisputeResult) {
+        disputeResult.setBuyerPayoutAmount(otherDisputeResult.getBuyerPayoutAmount());
+        disputeResult.setSellerPayoutAmount(otherDisputeResult.getSellerPayoutAmount());
+        disputeResult.setPayoutAdjustmentPercent(otherDisputeResult.getPayoutAdjustmentPercent());
+        disputeResult.setPayoutSuggestion(otherDisputeResult.getPayoutSuggestion());
+        disputeResult.setWinner(otherDisputeResult.getWinner());
+        disputeResult.setReason(otherDisputeResult.getReason());
+        disputeResult.setSummaryNotes(otherDisputeResult.summaryNotesProperty().get());
+    }
+
+    private void disableResultControls() {
+        buyerGetsTradeAmountRadioButton.setDisable(true);
+        buyerGetsCompensationRadioButton.setDisable(true);
+        buyerGetsTradeAmountMinusPenaltyRadioButton.setDisable(true);
+        sellerGetsTradeAmountRadioButton.setDisable(true);
+        sellerGetsCompensationRadioButton.setDisable(true);
+        sellerGetsTradeAmountMinusPenaltyRadioButton.setDisable(true);
+        customRadioButton.setDisable(true);
+
+        buyerPayoutAmountInputTextField.setDisable(true);
+        sellerPayoutAmountInputTextField.setDisable(true);
+        compensationOrPenaltyInputTextField.setDisable(true);
+        buyerPayoutAmountInputTextField.setEditable(false);
+        sellerPayoutAmountInputTextField.setEditable(false);
+        compensationOrPenaltyInputTextField.setEditable(false);
+
+        reasonWasBugRadioButton.setDisable(true);
+        reasonWasUsabilityIssueRadioButton.setDisable(true);
+        reasonProtocolViolationRadioButton.setDisable(true);
+        reasonNoReplyRadioButton.setDisable(true);
+        reasonWasScamRadioButton.setDisable(true);
+        reasonWasOtherRadioButton.setDisable(true);
+        reasonWasBankRadioButton.setDisable(true);
+        reasonWasOptionTradeRadioButton.setDisable(true);
+        reasonWasSellerNotRespondingRadioButton.setDisable(true);
+        reasonWasWrongSenderAccountRadioButton.setDisable(true);
+        reasonWasPeerWasLateRadioButton.setDisable(true);
+        reasonWasTradeAlreadySettledRadioButton.setDisable(true);
     }
 
     private void addInfoPane() {
@@ -380,7 +397,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             radioButtonPane.getChildren().addAll(buyerGetsTradeAmountRadioButton, sellerGetsTradeAmountRadioButton,
                     customRadioButton);
         }
-        addTopLabelWithVBox(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.payout"), radioButtonPane, 0);
+        payoutLabel = addTopLabelWithVBox(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.payout"), radioButtonPane, 0).first;
 
         tradeAmountToggleGroup = new ToggleGroup();
         buyerGetsTradeAmountRadioButton.setToggleGroup(tradeAmountToggleGroup);
@@ -990,31 +1007,20 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             try {
                 Coin buyerAmount = disputeResult.getBuyerPayoutAmount();
                 Coin sellerAmount = disputeResult.getSellerPayoutAmount();
-                // TODO Remove the legacy alternative in releases after 2026-11-01.
-                boolean legacyClaim = refundManager.requiresLegacyRefundClaimVerification(dispute);
-                boolean hasApproval = hasRefundClaimApproval(buyerAmount, sellerAmount, legacyClaim);
+                boolean hasApproval = hasRefundClaimApproval(buyerAmount, sellerAmount);
                 // Claim authentication is independent of explorer availability, including on the local test network.
                 refundManager.verifyRefundClaimForPayout(dispute, buyerAmount, sellerAmount);
-                if ((legacyClaim || buyerAmount.isPositive() && sellerAmount.isPositive()) &&
-                        !hasApproval) {
-                    RefundClaimApproval approval = RefundClaimApproval.capture(dispute,
-                            buyerAmount, sellerAmount, legacyClaim);
-                    String warning = legacyClaim ? Res.get("disputeSummaryWindow.legacyRefundClaim.warning") :
-                            Res.get("disputeSummaryWindow.close.txDetails.verifyBothAddresses");
-                    if (buyerAmount.isPositive()) {
-                        warning += "\n\n" + Res.get("disputeSummaryWindow.close.txDetails.buyer",
-                                formatter.formatCoinWithCode(buyerAmount),
-                                dispute.getContract().getBuyerPayoutAddressString());
-                    }
-                    if (sellerAmount.isPositive()) {
-                        warning += "\n\n" + Res.get("disputeSummaryWindow.close.txDetails.seller",
-                                formatter.formatCoinWithCode(sellerAmount),
-                                dispute.getContract().getSellerPayoutAddressString());
-                    }
-                    String confirm = legacyClaim ? Res.get("disputeSummaryWindow.legacyRefundClaim.confirm") :
-                            Res.get("disputeSummaryWindow.close.confirmBothAddresses");
+                if (buyerAmount.isPositive() && sellerAmount.isPositive() && !hasApproval) {
+                    RefundClaimApproval approval = RefundClaimApproval.capture(dispute, buyerAmount, sellerAmount);
+                    String warning = Res.get("disputeSummaryWindow.close.txDetails.verifyBothAddresses") +
+                            "\n\n" + Res.get("disputeSummaryWindow.close.txDetails.buyer",
+                            formatter.formatCoinWithCode(buyerAmount),
+                            dispute.getContract().getBuyerPayoutAddressString()) +
+                            "\n\n" + Res.get("disputeSummaryWindow.close.txDetails.seller",
+                            formatter.formatCoinWithCode(sellerAmount),
+                            dispute.getContract().getSellerPayoutAddressString());
                     new Popup().warning(warning)
-                            .actionButtonText(confirm)
+                            .actionButtonText(Res.get("disputeSummaryWindow.close.confirmBothAddresses"))
                             .onAction(() -> {
                                 refundClaimApproval = approval;
                                 maybeCheckTransactions().whenComplete((result, error) -> {
@@ -1161,23 +1167,21 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         return asyncStatus;
     }
 
-    private boolean hasRefundClaimApproval(Coin buyerAmount, Coin sellerAmount, boolean legacyClaim) {
+    private boolean hasRefundClaimApproval(Coin buyerAmount, Coin sellerAmount) {
         // Clear before comparing so mismatches and malformed subjects cannot revive an old confirmation later.
         RefundClaimApproval previousApproval = refundClaimApproval;
         refundClaimApproval = null;
         // Approval belongs to this exact in-memory row, not a value-equal replacement or restored copy.
         if (previousApproval != null && previousApproval.dispute() == dispute && previousApproval.equals(
-                RefundClaimApproval.capture(dispute, buyerAmount, sellerAmount, legacyClaim))) {
+                RefundClaimApproval.capture(dispute, buyerAmount, sellerAmount))) {
             refundClaimApproval = previousApproval;
         }
         return refundClaimApproval != null;
     }
 
     private void verifyRefundClaimApproval(Coin buyerAmount, Coin sellerAmount) {
-        // TODO Remove the legacy alternative in releases after 2026-11-01.
-        boolean legacyClaim = refundManager.requiresLegacyRefundClaimVerification(dispute);
-        boolean hasApproval = hasRefundClaimApproval(buyerAmount, sellerAmount, legacyClaim);
-        if (legacyClaim || buyerAmount.isPositive() && sellerAmount.isPositive()) {
+        boolean hasApproval = hasRefundClaimApproval(buyerAmount, sellerAmount);
+        if (buyerAmount.isPositive() && sellerAmount.isPositive()) {
             checkArgument(hasApproval,
                     "The agent must manually verify this refund claim and its payout addresses");
         }
@@ -1246,6 +1250,12 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         if (isRefundAgent && !isRefundValidationCurrent()) {
             return;
         }
+        // Compatibility with v1.10.11 and earlier: only possible with results that mediators of these releases sent
+        // with different payouts. The check can go once no dispute with such results is open anymore.
+        if (isMediationDispute() && !mediationManager.hasPayoutOfSentResults(dispute, disputeResult)) {
+            new Popup().warning(Res.get("disputeSummaryWindow.close.payoutChanged")).show();
+            return;
+        }
         disputeResult.setLoserPublisher(false); // field no longer used per pazza / leo816
         disputeResult.setCloseDate(new Date());
         dispute.setDisputeResult(disputeResult);
@@ -1288,6 +1298,12 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             summaryText += Res.get("disputeSummaryWindow.close.nextStepsForMediation");
         }
 
+        // The payout is final once the result is sent. We lock it before sending, so that a window which stays open
+        // after a failed send cannot change it.
+        if (isMediationDispute()) {
+            disableResultControls();
+            payoutLabel.setText(Res.get("disputeSummaryWindow.payout.sent"));
+        }
         disputeManager.sendDisputeResultMessage(disputeResult, dispute, summaryText);
 
         peersDisputeOptional.ifPresent(peersDispute -> {
@@ -1377,7 +1393,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             disputeResult.setSellerPayoutAmount(totalPot.subtract(buyerPayout));
         } else if (selectedTradeAmountToggle == sellerGetsTradeAmountMinusPenaltyRadioButton) {
             disputeResult.setPayoutSuggestion(DisputeResult.PayoutSuggestion.SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY);
-            Coin sellerPayout = tradeAmount.add(offer.getBuyerSecurityDeposit()).subtract(penalizedPortionOfTradeAmount);
+            Coin sellerPayout = tradeAmount.add(offer.getSellerSecurityDeposit()).subtract(penalizedPortionOfTradeAmount);
             disputeResult.setSellerPayoutAmount(sellerPayout);
             disputeResult.setBuyerPayoutAmount(totalPot.subtract(sellerPayout));
         } else if (selectedTradeAmountToggle == buyerGetsCompensationRadioButton) {

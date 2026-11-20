@@ -110,7 +110,7 @@ public class FeeService {
     @Getter
     private long lastRequest = 0;
     @Getter
-    private long minFeePerVByte;
+    private long minFeePerVByte = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -128,13 +128,8 @@ public class FeeService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onAllServicesInitialized() {
-        minFeePerVByte = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
-    }
-
     public void onAllServicesInitialized(FilterPolicyService providedFilterPolicyService) {
         filterPolicyService = providedFilterPolicyService;
-        onAllServicesInitialized();
     }
 
     // Test-only: wraps a FilterManager in a FilterPolicyService backed by an empty DenyList so existing
@@ -143,7 +138,6 @@ public class FeeService {
     @VisibleForTesting
     public void onAllServicesInitialized(FilterManager providedFilterManager) {
         filterPolicyService = new FilterPolicyService(DenyList.empty(), providedFilterManager);
-        onAllServicesInitialized();
     }
 
 
@@ -179,6 +173,8 @@ public class FeeService {
         // same rate for versions up to v1.10.11, which use the delivered rate as it is and accept the taker's
         // trade tx fee only within a factor of 2 of their own. A higher bound here, such as the network
         // default min fee rate, would break trades with them whenever the pricenode delivers less.
+        // Compatibility with v1.10.11 and earlier: once these releases cannot trade anymore, a higher bound is possible
+        // here, and the pricenodes no longer need to raise their estimate.
         long clampedMinFee = Math.min(minFeePerVByte, BTC_MAX_TX_FEE);
         long lowestTxFee = Math.max(clampedMinFee, MIN_TRADE_TX_FEE_RATE);
         long clampedTxFee = Math.min(Math.max(txFeePerVbyte, lowestTxFee), BTC_MAX_TX_FEE);

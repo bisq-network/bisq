@@ -22,6 +22,7 @@ import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.components.controls.BisqJfxProgressBar;
+import bisq.desktop.components.paymentmethods.StableCoinForm;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.TradeStepInfo;
@@ -30,6 +31,8 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.payment.stablecoin.StableCoin;
+import bisq.core.payment.stablecoin.StableCoinPaymentRail;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.mediation.MediationResultState;
@@ -716,11 +719,24 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected String getCurrencyName(Trade trade) {
-        return CurrencyUtil.getNameByCode(getCurrencyCode(trade));
+        // The payment of a trade with a stablecoin payment method is made in the coin, not in its peg currency
+        return findStableCoin(trade)
+                .map(StableCoinForm::getCoinDisplayString)
+                .orElseGet(() -> CurrencyUtil.getNameByCode(checkNotNull(trade.getOffer()).getCurrencyCode()));
     }
 
+    // The coin of the payment method of the trade, if it is a stablecoin payment method. It is taken from the offer,
+    // not from the payment account data of the peer.
+    protected Optional<StableCoin> findStableCoin(Trade trade) {
+        return StableCoinPaymentRail.find(checkNotNull(trade.getOffer()).getPaymentMethod().getId())
+                .map(StableCoinPaymentRail::getStableCoin);
+    }
+
+    // Only for texts: the code of the coin or currency in which the payment is made
     protected String getCurrencyCode(Trade trade) {
-        return checkNotNull(trade.getOffer()).getCurrencyCode();
+        return findStableCoin(trade)
+                .map(StableCoin::getCode)
+                .orElseGet(() -> checkNotNull(trade.getOffer()).getCurrencyCode());
     }
 
     protected boolean isXmrTrade() {

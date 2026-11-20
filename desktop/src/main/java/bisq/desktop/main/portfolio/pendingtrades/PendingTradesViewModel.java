@@ -30,6 +30,7 @@ import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
+import bisq.core.payment.StableCoinAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.provider.mempool.MempoolService;
@@ -462,9 +463,18 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getFiatVolume() {
-        return dataModel.getTrade() != null
-                ? VolumeUtil.formatVolumeWithCode(dataModel.getTrade().getVolume())
-                : "";
+        Trade trade = dataModel.getTrade();
+        if (trade == null) {
+            return "";
+        }
+        Offer offer = trade.getOffer();
+        if (trade.getVolume() != null && offer != null && offer.getPaymentMethod().isStableCoin()) {
+            // The volume of a trade with a stablecoin payment method is in the currency the coin is pegged to and
+            // is paid with the same number of units of the coin
+            return VolumeUtil.formatVolume(trade.getVolume()) + " " +
+                    StableCoinAccount.getStableCoin(offer.getPaymentMethod()).getCode();
+        }
+        return VolumeUtil.formatVolumeWithCode(trade.getVolume());
     }
 
     public String getTxFee() {
