@@ -1,5 +1,5 @@
 # Keep Ubuntu's package snapshots for the release tools; pin the Corretto JDK separately.
-FROM --platform=linux/amd64 ubuntu:24.04@sha256:77eb101c607d6e3d4f5ad0c8a02c2136c689b98aba1f359e6502ba517e5c57ec
+FROM --platform=linux/amd64 ubuntu:24.10@sha256:cdf755952ed117f6126ff4e65810bf93767d4c38f5c7185b50ec1f1078b464cc
 
 # Corretto 21.0.13.1.2 includes the fix for CVE-2026-114938.
 ADD --checksum=sha256:2aaa2a9a43143b20ff0b28c8d0da27407b97dc40b160d9a2f60a26965815e948 https://corretto.aws/downloads/resources/21.0.13.1.2/amazon-corretto-21.0.13.1.2-linux-x64.tar.gz /tmp/corretto.tar.gz
