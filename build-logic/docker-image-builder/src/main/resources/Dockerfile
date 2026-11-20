@@ -1,4 +1,4 @@
-FROM ubuntu:24.04@sha256:73b999393d07f2bf65a40373778a44dc9a6d54ad7718d29247d8ff9413c4d6a8 AS build
+FROM ubuntu:24.10@sha256:cdf755952ed117f6126ff4e65810bf93767d4c38f5c7185b50ec1f1078b464cc AS build
 
 COPY '{{ ARCHIVE_PATH }}' /
 RUN tar xvf /seednode.tar
