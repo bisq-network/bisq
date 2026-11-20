@@ -39,7 +39,7 @@ most of the other files.
 The version must have exactly three parts that are separated by a dot. `Version.getSubVersion`
 rejects any other form.
 
-The task `verifyGithubReleaseReadiness` checks only entries 1, 2 and 5. Check the other eight by
+The task `verifyGithubReleaseReadiness` checks only entries 1, 2, 5 and 7. Check the other seven by
 hand, for example with `grep -rn "<old version>"`.
 
 The version number on the website is changed in a separate repository, in `_config.yml` of
