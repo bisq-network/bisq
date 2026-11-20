@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd $(dirname $0)/../../../.
+cd "$(dirname "$0")/../../../." || exit 1
 
 oldVersion=1.10.11
 newVersion=1.10.12
