@@ -17,7 +17,8 @@ Supported:
 
 Remaining gaps:
 
-- Linux release-builder is manual CI, not automatic push or pull-request CI.
+- Linux release-builder is manual CI, not automatic push or pull-request CI. Only its image is built on each push and
+  pull request that changes it.
 - Evidence must still be signed and published by the release manager.
 
 ## Build The Release-Builder Image
