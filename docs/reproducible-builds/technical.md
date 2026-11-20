@@ -94,7 +94,7 @@ The Linux release-builder image is defined in
 
 - `linux/amd64` Ubuntu 24.04 base image by digest
 - Amazon Corretto 21 JDK archive by version and SHA-256 checksum, at or above `releaseBuild.javaVersion`
-- Ubuntu apt snapshot timestamp
+- Ubuntu apt snapshot timestamp, not older than the packages of the base image
 - `SOURCE_DATE_EPOCH=0`
 - `TZ=UTC`
 - `LANG=C.UTF-8`
