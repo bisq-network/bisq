@@ -1744,6 +1744,14 @@ tasks.register('verifyReleaseBuilderImage') {
         if (!text.contains('APT::Snapshot "%s";') || !text.contains('$UBUNTU_APT_SNAPSHOT')) {
             violations << 'Dockerfile must write apt snapshot configuration from UBUNTU_APT_SNAPSHOT'
         }
+        if (!text.contains('[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]T[0-9][0-9][0-9][0-9][0-9][0-9]Z)') ||
+                !text.contains('is not a UTC timestamp of the form YYYYMMDDTHHMMSSZ')) {
+            violations << 'Dockerfile must reject an UBUNTU_APT_SNAPSHOT value that is not an exact UTC timestamp'
+        }
+        if (!text.contains('stat -c %Y /var/lib/dpkg/status') ||
+                !text.contains('is older than the packages of the base image')) {
+            violations << 'Dockerfile must fail when UBUNTU_APT_SNAPSHOT is older than the packages of the base image'
+        }
         if (!text.contains('/etc/apt/sources.list.d/ubuntu.sources') || !text.contains('Snapshot: yes')) {
             violations << 'Dockerfile must enable apt snapshots for deb822 ubuntu.sources files when present'
         }
