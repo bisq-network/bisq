@@ -63,6 +63,13 @@ public final class TorLogRedaction {
     // The relay or bridge of a bootstrap warning in the log of the node, see withoutBootstrapEventHosts
     private static final Pattern BOOTSTRAP_EVENT_HOST = Pattern.compile("\\b(HOSTID|HOSTADDR)=\"[^\"\\s,)]*");
 
+    // EmbeddedTorProcess appends the tail of the native log to a startup exception. The first line of the quote can
+    // start mid-identity, so omit the whole quote up to the Java stack frame, the next Bisq log record, or EOF.
+    private static final Pattern STARTUP_LOG_QUOTE = Pattern.compile(
+            "(?s)(exitCode=(?:-?\\d+|still running|not started), log=[^\\r\\n]*?, " +
+                    "log(?: \\(written by sandy and by Tor in its sandbox, not verified by Bisq\\))?=).*?" +
+                    "(?=\\R(?:\\tat |\\S+-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3} \\[)|\\z)");
+
     private TorLogRedaction() {
     }
 
@@ -92,6 +99,10 @@ public final class TorLogRedaction {
     private static String withoutUrlsAndHostNames(String line) {
         String text = URL.matcher(line).replaceAll("[url]");
         return HOST_NAME.matcher(text).replaceAll("[host]");
+    }
+
+    public static String withoutBridgeDetailsInNodeLog(String nodeLogText) {
+        return withoutBootstrapEventHosts(STARTUP_LOG_QUOTE.matcher(nodeLogText).replaceAll("$1[omitted]"));
     }
 
     /**

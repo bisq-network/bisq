@@ -95,9 +95,7 @@ public class AppendOnlyDataStoreService {
     }
 
     public boolean put(P2PDataStorage.ByteArray hashAsByteArray, PersistableNetworkPayload payload) {
-        Optional<MapStoreService<? extends PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>, PersistableNetworkPayload>> optionalService = findService(payload);
-        optionalService.ifPresent(service -> service.putIfAbsent(hashAsByteArray, payload));
-        return optionalService.isPresent();
+        return findService(payload).map(service -> service.addIfAbsent(hashAsByteArray, payload)).orElse(false);
     }
 
     @NotNull

@@ -23,6 +23,7 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferDirection;
+import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -273,7 +274,7 @@ class DisputeManagerAuthTest {
                 10,
                 buyerPubKeyRing,
                 agentPubKeyRing,
-                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing));
+                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing, agentPubKeyRing));
         dispute.setBurningManSelectionHeight(1);
         OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
                 BUYER_NODE_ADDRESS,
@@ -310,7 +311,7 @@ class DisputeManagerAuthTest {
                 0,
                 buyerPubKeyRing,
                 agentPubKeyRing,
-                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing, invalidBuyerNodeAddress, SELLER_NODE_ADDRESS));
+                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing, agentPubKeyRing, invalidBuyerNodeAddress, SELLER_NODE_ADDRESS));
         dispute.setBurningManSelectionHeight(1);
         OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
                 invalidBuyerNodeAddress,
@@ -346,7 +347,7 @@ class DisputeManagerAuthTest {
                 0,
                 buyerPubKeyRing,
                 agentPubKeyRing,
-                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing));
+                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing, agentPubKeyRing));
         dispute.setBurningManSelectionHeight(1);
         OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
                 MEDIATOR_NODE_ADDRESS,
@@ -361,6 +362,42 @@ class DisputeManagerAuthTest {
                 assertInstanceOf(DisputeValidation.NodeAddressException.class, manager.getValidationExceptions().get(0));
         assertEquals("senderNodeAddress not matching any of the traders node addresses",
                 validationException.getMessage());
+        verify(disputeListService, never()).requestPersistence();
+    }
+
+    @Test
+    void openNewDisputeAddressedToAnotherAgentDoesNotMutateDisputeList() {
+        TestDisputeList disputeList = new TestDisputeList();
+        DisputeListService<DisputeList<Dispute>> disputeListService = disputeListService(disputeList);
+        TestDisputeManager manager = new TestDisputeManager(mockP2PService(),
+                tradeManager,
+                closedTradableManager,
+                failedTradesManager,
+                keyStorageDir,
+                disputeListService,
+                mock(DaoFacade.class),
+                localP2PConfig());
+
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        // The dispute and its contract consistently name another agent, but the message reached us.
+        PubKeyRing otherAgentPubKeyRing = pubKeyRing();
+        Dispute dispute = validDispute(TRADE_ID,
+                0,
+                buyerPubKeyRing,
+                otherAgentPubKeyRing,
+                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing, otherAgentPubKeyRing));
+        dispute.setBurningManSelectionHeight(1);
+        OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
+                BUYER_NODE_ADDRESS,
+                "open-dispute-uid",
+                SupportType.MEDIATION);
+
+        manager.onOpenNewDispute(message, buyerPubKeyRing.getSignaturePubKey());
+
+        assertTrue(disputeList.isEmpty());
+        assertEquals(1, manager.getValidationExceptions().size());
+        assertEquals("Dispute is not addressed to this agent", manager.getValidationExceptions().get(0).getMessage());
         verify(disputeListService, never()).requestPersistence();
     }
 
@@ -387,7 +424,7 @@ class DisputeManagerAuthTest {
                 0,
                 buyerPubKeyRing,
                 agentPubKeyRing,
-                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing));
+                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing, agentPubKeyRing));
         dispute.setDonationAddressOfDelayedPayoutTx("unknown-donation-address");
         OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
                 BUYER_NODE_ADDRESS,
@@ -423,7 +460,7 @@ class DisputeManagerAuthTest {
                 0,
                 buyerPubKeyRing,
                 agentPubKeyRing,
-                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing));
+                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing, agentPubKeyRing));
         dispute.setBurningManSelectionHeight(1);
         OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
                 BUYER_NODE_ADDRESS,
@@ -459,7 +496,7 @@ class DisputeManagerAuthTest {
                 0,
                 buyerPubKeyRing,
                 agentPubKeyRing,
-                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing),
+                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing, agentPubKeyRing),
                 SupportType.ARBITRATION);
         dispute.setBurningManSelectionHeight(1);
         OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
@@ -499,7 +536,7 @@ class DisputeManagerAuthTest {
                 0,
                 buyerPubKeyRing,
                 agentPubKeyRing,
-                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing));
+                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing, agentPubKeyRing));
         dispute.setState(Dispute.State.CLOSED);
         dispute.setBurningManSelectionHeight(1);
         OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
@@ -537,6 +574,20 @@ class DisputeManagerAuthTest {
         assertOpenNewDisputePayloadStateRejected(
                 dispute -> dispute.setDelayedPayoutTxId("not-a-tx-id"),
                 "delayedPayoutTxId must be a canonical 32-byte transaction ID");
+    }
+
+    @Test
+    void ignoresPeerOpenedDisputeForCanceledOffer() {
+        OpenOffer canceledOffer = mock(OpenOffer.class);
+        when(closedTradableManager.getTradableById(TRADE_ID)).thenReturn(Optional.of(canceledOffer));
+        PubKeyRing agent = pubKeyRing();
+        PeerOpenedDisputeMessage message = new PeerOpenedDisputeMessage(dispute(TRADE_ID, agent),
+                PEER_NODE_ADDRESS, "uid", SupportType.MEDIATION);
+
+        manager.onPeerOpenedDispute(message, agent.getSignaturePubKey());
+
+        verify(closedTradableManager, never()).remove(canceledOffer);
+        verify(tradeManager, never()).addTradeToPendingTrades(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -594,7 +645,7 @@ class DisputeManagerAuthTest {
                 0,
                 buyerPubKeyRing,
                 agentPubKeyRing,
-                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing));
+                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing, agentPubKeyRing));
         dispute.setBurningManSelectionHeight(1);
         payloadMutation.accept(dispute);
         OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
@@ -718,13 +769,19 @@ class DisputeManagerAuthTest {
                 0);
     }
 
-    private static Contract validContract(String tradeId, PubKeyRing buyerPubKeyRing, PubKeyRing sellerPubKeyRing) {
-        return validContract(tradeId, buyerPubKeyRing, sellerPubKeyRing, BUYER_NODE_ADDRESS, SELLER_NODE_ADDRESS);
-    }
-
     private static Contract validContract(String tradeId,
                                           PubKeyRing buyerPubKeyRing,
                                           PubKeyRing sellerPubKeyRing,
+                                          PubKeyRing agentPubKeyRing) {
+        return validContract(tradeId, buyerPubKeyRing, sellerPubKeyRing, agentPubKeyRing,
+                BUYER_NODE_ADDRESS, SELLER_NODE_ADDRESS);
+    }
+
+    // The agent is named as mediator and as refund agent, so that it matches disputes of both types.
+    private static Contract validContract(String tradeId,
+                                          PubKeyRing buyerPubKeyRing,
+                                          PubKeyRing sellerPubKeyRing,
+                                          PubKeyRing agentPubKeyRing,
                                           NodeAddress buyerNodeAddress,
                                           NodeAddress sellerNodeAddress) {
         return new Contract(
@@ -752,7 +809,9 @@ class DisputeManagerAuthTest {
                 null,
                 PaymentMethod.SEPA_ID,
                 PaymentMethod.SEPA_ID,
-                0);
+                0,
+                agentPubKeyRing,
+                agentPubKeyRing);
     }
 
     private static OfferPayload offerPayload(String tradeId, PubKeyRing makerPubKeyRing) {

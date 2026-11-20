@@ -136,9 +136,11 @@ public abstract class PaymentMethodForm {
         accountNameTextField = tuple.second;
         accountNameTextField.setPrefWidth(300);
         accountNameTextField.setEditable(isEditMode);
-        accountNameTextField.setValidator(inputValidator);
         accountNameTextField.setFocusTraversable(false);
+        // The name of a new account is null. Set before the validator, it is not validated, so the empty field does
+        // not show as invalid before anything was entered.
         accountNameTextField.setText(paymentAccount.getAccountName());
+        accountNameTextField.setValidator(inputValidator);
         accountNameTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             paymentAccount.setAccountName(newValue);
             updateAllInputsValid();
@@ -225,7 +227,7 @@ public abstract class PaymentMethodForm {
                 AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(
                         paymentAccount.paymentAccountPayload);
                 AccountAgeWitnessService.SignState signState =
-                        accountAgeWitnessService.getSignState(myWitness);
+                        accountAgeWitnessService.getMySignState(paymentAccount.paymentAccountPayload);
 
                 accountSigningStateText = StringUtils.capitalize(signState.getDisplayString());
 
@@ -235,7 +237,8 @@ public abstract class PaymentMethodForm {
                         Res.get("offerbook.timeSinceSigning.daysSinceSigning",
                                 daysSinceSigning));
 
-                if (!signState.equals(AccountAgeWitnessService.SignState.UNSIGNED)) {
+                if (!signState.equals(AccountAgeWitnessService.SignState.UNSIGNED) &&
+                        !signState.equals(AccountAgeWitnessService.SignState.BANNED)) {
                     accountSigningStateText += " / " + timeSinceSigning;
                 }
 

@@ -164,18 +164,21 @@ public class DaoBlockSignatureVerifierTest {
         assertEquals(rawBlock, roundTripped.getSignedRawBlocks().get(0).getBlock());
     }
 
+    // Full nodes before 1.10.4 send unsigned blocks. The lite node needs them to recognize and ignore such a response.
     @Test
-    public void getBlocksResponseRoundTripsUnsignedBlocks() {
+    public void getBlocksResponseFromProtoKeepsUnsignedBlocks() {
         RawBlock rawBlock = createRawBlock("block-hash");
-        GetBlocksResponse response = GetBlocksResponse.forUnsignedBlocks(List.of(rawBlock), 42);
 
-        GetBlocksResponse roundTripped = (GetBlocksResponse) GetBlocksResponse.fromProto(
-                response.toProtoNetworkEnvelope().getGetBlocksResponse(),
+        GetBlocksResponse fromProto = (GetBlocksResponse) GetBlocksResponse.fromProto(
+                protobuf.GetBlocksResponse.newBuilder()
+                        .addRawBlocks(rawBlock.toProtoMessage())
+                        .setRequestNonce(42)
+                        .build(),
                 1);
 
-        assertEquals(1, roundTripped.getBlocks().size());
-        assertTrue(roundTripped.getSignedRawBlocks().isEmpty());
-        assertEquals(rawBlock, roundTripped.getBlocks().get(0));
+        assertEquals(1, fromProto.getBlocks().size());
+        assertTrue(fromProto.getSignedRawBlocks().isEmpty());
+        assertEquals(rawBlock, fromProto.getBlocks().get(0));
     }
 
     private static SignedRawBlock createSignedRawBlock(RawBlock rawBlock,

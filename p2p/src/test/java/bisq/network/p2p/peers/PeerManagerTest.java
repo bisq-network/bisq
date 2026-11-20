@@ -18,15 +18,22 @@
 package bisq.network.p2p.peers;
 
 import bisq.network.p2p.MockNode;
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.InboundConnection;
+import bisq.network.p2p.network.OutboundConnection;
 import bisq.network.p2p.network.PeerType;
+import bisq.network.p2p.network.RuleViolation;
+import bisq.network.p2p.peers.peerexchange.Peer;
+
+import bisq.common.app.Capabilities;
 
 import java.io.IOException;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterEach;
@@ -39,9 +46,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class PeerManagerTest {
     private MockNode node;
@@ -193,5 +202,36 @@ public class PeerManagerTest {
 
         node.getNetworkNode().getAllConnections().forEach(connection ->
                 verify(connection, never()).shutDown(eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN), isA(Runnable.class)));
+    }
+
+    // The first message above 10 MB closes the connection for the rule violation MAX_MSG_SIZE_EXCEEDED (see
+    // ConnectionTest). The peer is then removed from the persisted peers, also an honest peer of an earlier version.
+    @Test
+    public void testRuleViolationRemovesPersistedPeer() {
+        NodeAddress peersNodeAddress = new NodeAddress("peer.onion", 8000);
+        PeerManager peerManager = node.getPeerManager();
+        peerManager.getPersistedPeers().add(new Peer(peersNodeAddress, new Capabilities()));
+        Connection connection = mock(OutboundConnection.class);
+        when(connection.getPeersNodeAddressOptional()).thenReturn(Optional.of(peersNodeAddress));
+        when(connection.getRuleViolation()).thenReturn(RuleViolation.MAX_MSG_SIZE_EXCEEDED);
+
+        peerManager.onDisconnect(CloseConnectionReason.RULE_VIOLATION, connection);
+
+        assertTrue(peerManager.getPersistedPeers().isEmpty());
+    }
+
+    // A connection which ends without a rule violation, for example at the end of the stream, keeps the persisted peer
+    @Test
+    public void testTerminatedConnectionKeepsPersistedPeer() {
+        NodeAddress peersNodeAddress = new NodeAddress("peer.onion", 8000);
+        PeerManager peerManager = node.getPeerManager();
+        Peer persistedPeer = new Peer(peersNodeAddress, new Capabilities());
+        peerManager.getPersistedPeers().add(persistedPeer);
+        Connection connection = mock(OutboundConnection.class);
+        when(connection.getPeersNodeAddressOptional()).thenReturn(Optional.of(peersNodeAddress));
+
+        peerManager.onDisconnect(CloseConnectionReason.TERMINATED, connection);
+
+        assertTrue(peerManager.getPersistedPeers().contains(persistedPeer));
     }
 }

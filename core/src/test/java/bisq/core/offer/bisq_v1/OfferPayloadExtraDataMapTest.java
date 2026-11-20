@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.ACCOUNT_AGE_WITNESS_HASH;
 import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.CAPABILITIES;
 import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.CASH_BY_MAIL_EXTRA_INFO;
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.CUSTOM_PAYMENT_METHOD_NAME;
 import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.F2F_CITY;
 import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.F2F_EXTRA_INFO;
 import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.REFERRAL_ID;
@@ -138,6 +139,21 @@ public class OfferPayloadExtraDataMapTest {
         extraDataMap.putAll(reverseCanonicalInput);
 
         assertEquals(CANONICAL_ORDER, keys(extraDataMap.getMap()));
+    }
+
+    // A client since v1.10.4 which does not know the custom payment method refuses an offer with a key it does not
+    // know. So the name has to use a reserved key and its position.
+    @Test
+    public void customPaymentMethodNameUsesTheFirstReservedKey() {
+        assertEquals("reserved0", CUSTOM_PAYMENT_METHOD_NAME);
+
+        OfferPayloadExtraDataMap extraDataMap = new OfferPayloadExtraDataMap();
+        extraDataMap.put(CUSTOM_PAYMENT_METHOD_NAME, "M-Pesa");
+        extraDataMap.put(CAPABILITIES, valueFor(CAPABILITIES));
+        extraDataMap.put(ACCOUNT_AGE_WITNESS_HASH, valueFor(ACCOUNT_AGE_WITNESS_HASH));
+
+        assertEquals(List.of(CAPABILITIES, ACCOUNT_AGE_WITNESS_HASH, RESERVED_0), keys(extraDataMap.getMap()));
+        assertEquals("M-Pesa", new OfferPayloadExtraDataMap(extraDataMap.getMap()).get(RESERVED_0));
     }
 
     @Test

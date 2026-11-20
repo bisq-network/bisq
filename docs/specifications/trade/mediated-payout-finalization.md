@@ -12,6 +12,19 @@ peer's MediatedPayoutTxPublishedMessage also after that and during a refund requ
 - Accepting the mediation result signs the mediated payout and sends the signature to the peer.
   The signature is the acceptance: the peer can publish the payout with it, so it cannot be
   withdrawn. The desktop therefore disables rejecting the result once the trader has signed.
+- A node signs the mediated payout of a trade only once. A repeated acceptance, by the accept button
+  or by the publication without a click, reuses the stored signature if it is valid for the payout of
+  the stored mediation amounts, and fails without signing otherwise. A second signature for another
+  payout would let the peer choose between two payouts.
+- Only the first acceptance takes the amounts of the displayed result for the trade. A repeated
+  acceptance keeps the amounts that the own signature covers, so that a refused repetition does not
+  leave the trade with amounts that no signature covers. If the first acceptance takes other amounts
+  than the trade had, which only happens for a result that replaced another one before the rules of
+  [`../dispute/mediation-payout-finality.md`](../dispute/mediation-payout-finality.md), the node
+  drops a stored signature of the peer, as it covers the earlier amounts.
+- Before publishing, the node checks both signatures against the payout transaction. If one of them
+  is for another payout, the publication fails before the trade stores the payout: the network would
+  drop the transaction, and the trade would be closed with a payout that never confirms.
 - A node that has signed the mediated payout and has the peer's signature publishes it, whichever
   of the two came last. The accept button publishes it when the peer's signature is already there,
   and the processing of the peer's signature publishes it when the trader has already accepted,
@@ -62,14 +75,20 @@ acceptance. If our node has the older peer's signature, our node publishes, and 
 completes the trade with our MediatedPayoutTxPublishedMessage as before. If the older peer publishes
 with its accept button at the same moment, it rejects our message, which only logs an error there.
 
+Earlier versions took the amounts of a later mediation result when the mediation had been opened
+again, also after the trader had signed the payout of the first result. If the trader did not accept
+again before updating, the stored amounts are not covered by the trader's signature. Accepting then
+fails, because the node neither takes the amounts again nor signs a second time, and only
+arbitration can settle the trade.
+
 ## Not covered
 
 A delayed payout tx that the peer publishes at the same time, or whose
 PeerPublishedDelayedPayoutTxMessage has not arrived, as that tx pays nothing to the wallet and the
 wallet does not watch the deposit output. A refund request that reaches the node only after the
-check, for example in a later mailbox message. A mediation result that is replaced after both
-traders signed: the node publishes the payout that both signatures cover. The mediator's desktop
-fills the second ticket of a trade with the result of the first one and does not let it be changed.
+check, for example in a later mailbox message. A mediation result with another payout than the
+result that the node has: the node refuses it, so it cannot replace the result that the signatures
+cover ([`../dispute/mediation-payout-finality.md`](../dispute/mediation-payout-finality.md)).
 A MediatedPayoutTxPublishedMessage that the node received directly and rejected during a refund
 request because the payout was not confirmed yet: it is not handled again, but the wallet completes
 the trade if the payout confirms while the refund request is open. A mediated payout that pays

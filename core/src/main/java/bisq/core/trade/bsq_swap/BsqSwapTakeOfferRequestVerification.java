@@ -22,6 +22,8 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapRequest;
+import bisq.core.trade.protocol.bsq_swap.messages.BuyersBsqSwapRequest;
+import bisq.core.trade.protocol.bsq_swap.messages.SellersBsqSwapRequest;
 import bisq.core.trade.validation.MinerFeeValidation;
 import bisq.core.util.Validator;
 
@@ -70,6 +72,15 @@ public class BsqSwapTakeOfferRequestVerification {
             Offer offer = openOffer.getOffer();
             checkTradeId(offer.getId(), request);
             checkArgument(offer.isMyOffer(keyRing), "Offer must be mine");
+            // The swap takes the fixed price of the offer as the price of BSQ in BTC, so a fiat or altcoin offer
+            // would be settled in BSQ at a price set for another currency.
+            checkArgument(offer.isBsqSwapOffer(), "Offer must be a BSQ swap offer");
+            if (request instanceof BuyersBsqSwapRequest) {
+                checkArgument(offer.isSellOffer(), "Offer must be a sell offer for a BuyersBsqSwapRequest");
+            } else {
+                checkArgument(request instanceof SellersBsqSwapRequest, "Unexpected request type");
+                checkArgument(offer.isBuyOffer(), "Offer must be a buy offer for a SellersBsqSwapRequest");
+            }
 
             long tradeAmount = request.getTradeAmount();
             Coin amountAsCoin = Coin.valueOf(request.getTradeAmount());
@@ -80,16 +91,9 @@ public class BsqSwapTakeOfferRequestVerification {
 
             long peersMinerFeeRate = request.getTxFeePerVbyte();
             long expectedMinerFeeRate = feeService.getTxFeePerVbyte().getValue();
-
-            long minMinerFeeRate = feeService.getMinFeePerVByte();
-            Validator.checkIsPositive(minMinerFeeRate, "minMinerFeeRate");
-
-            // To not break backward compatibility, we do not apply that strict check but rely on the tolerance only.
-            // Once trade version has enforces > v1.10.0 we can use the strict check again.
-            /* checkArgument(peersMinerFeeRate >= minMinerFeeRate,
-                    "Peer miner fee rate is below minimum. peer=%s, min=%s", peersMinerFeeRate, minMinerFeeRate);
-            */
-
+            // We check the peer's rate only against the tolerance around our own estimate, not against our minimum fee
+            // rate. That minimum is the economy fee rate of our pricenode, and the peer may use another pricenode, so a
+            // rate at the peer's minimum can be below ours.
             MinerFeeValidation.checkBsqSwapMinerFeeRateIsInTolerance(peersMinerFeeRate, expectedMinerFeeRate);
 
             checkMakerFee(request.getMakerFee(), false, amountAsCoin);

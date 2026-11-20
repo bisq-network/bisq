@@ -152,6 +152,7 @@ public class PaymentAccountForm {
      */
     public File getPaymentAccountForm(String paymentMethodId) {
         PaymentMethod paymentMethod = getPaymentMethod(paymentMethodId);
+        checkPaymentMethodIsSupported(paymentMethod);
         File file = getTmpJsonFile(paymentMethodId);
         try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(checkNotNull(file), false), UTF_8)) {
             PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(paymentMethod);
@@ -248,6 +249,18 @@ public class PaymentAccountForm {
 
     private Class<? extends PaymentAccount> getPaymentAccountClass(String paymentMethodId) {
         PaymentMethod paymentMethod = getPaymentMethod(paymentMethodId);
+        checkPaymentMethodIsSupported(paymentMethod);
         return PaymentAccountFactory.getPaymentAccount(paymentMethod).getClass();
+    }
+
+    // An account of the custom payment method is created in the desktop application only. There the name of the
+    // payment method is checked and the user has to confirm the warnings about the risks.
+    // The stablecoin payment methods share one account class, which is created with its payment method. The form
+    // creates an account from its class alone, so it cannot create an account of such a payment method.
+    private static void checkPaymentMethodIsSupported(PaymentMethod paymentMethod) {
+        if (paymentMethod.isCustom() || paymentMethod.isStableCoin()) {
+            throw new IllegalArgumentException(
+                    format("the api does not support %s payment accounts", paymentMethod.getId()));
+        }
     }
 }

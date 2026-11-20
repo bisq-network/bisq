@@ -283,6 +283,61 @@ public class P2PDataStorageProcessGetDataResponse {
                 beforeState, addFromSecondResponse, false, false, false);
     }
 
+    // TESTCASE: A seed response without seed-node-only PNP does not consume the guard of the seed-node-only PNP
+    @Test
+    public void processGetDataResponse_seedResponseWithoutSeedNodeOnlyPNPDoesNotBlockLaterSeedNodeOnlyPNP() {
+        PersistableNetworkPayload normalPayload = new LazyPersistableNetworkPayloadStub(new byte[]{1});
+        GetDataResponse getDataResponse = buildGetDataResponse(normalPayload);
+
+        TestState.SavedTestState beforeState = this.testState.saveTestState(normalPayload);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
+        this.testState.verifyPersistableAdd(
+                beforeState, normalPayload, true, false, false);
+
+        PersistableNetworkPayload seedOnlyPayload = new SeedNodeOnlyLazyPersistableNetworkPayloadStub(new byte[]{2});
+        getDataResponse = buildGetDataResponse(seedOnlyPayload);
+
+        beforeState = this.testState.saveTestState(seedOnlyPayload);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
+        this.testState.verifyPersistableAdd(
+                beforeState, seedOnlyPayload, true, false, false);
+    }
+
+    // TESTCASE: An empty seed response does not consume the guard of the seed-node-only PNP
+    @Test
+    public void processGetDataResponse_emptySeedResponseDoesNotBlockLaterSeedNodeOnlyPNP() {
+        GetDataResponse getDataResponse = buildGetDataResponse(Collections.emptyList(), Collections.emptyList());
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
+
+        PersistableNetworkPayload seedOnlyPayload = new SeedNodeOnlyLazyPersistableNetworkPayloadStub(new byte[]{1});
+        getDataResponse = buildGetDataResponse(seedOnlyPayload);
+
+        TestState.SavedTestState beforeState = this.testState.saveTestState(seedOnlyPayload);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
+        this.testState.verifyPersistableAdd(
+                beforeState, seedOnlyPayload, true, false, false);
+    }
+
+    // TESTCASE: Seed-node-only PNP are applied from one seed response only
+    @Test
+    public void processGetDataResponse_secondSeedResponseDoesNotAddSeedNodeOnlyPNP() {
+        PersistableNetworkPayload addFromFirstSeedResponse = new SeedNodeOnlyLazyPersistableNetworkPayloadStub(new byte[]{1});
+        GetDataResponse getDataResponse = buildGetDataResponse(addFromFirstSeedResponse);
+
+        TestState.SavedTestState beforeState = this.testState.saveTestState(addFromFirstSeedResponse);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
+        this.testState.verifyPersistableAdd(
+                beforeState, addFromFirstSeedResponse, true, false, false);
+
+        PersistableNetworkPayload addFromSecondSeedResponse = new SeedNodeOnlyLazyPersistableNetworkPayloadStub(new byte[]{2});
+        getDataResponse = buildGetDataResponse(addFromSecondSeedResponse);
+
+        beforeState = this.testState.saveTestState(addFromSecondSeedResponse);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
+        this.testState.verifyPersistableAdd(
+                beforeState, addFromSecondSeedResponse, false, false, false);
+    }
+
     // TESTCASE: GetDataResponse w/ missing PSE is added with no broadcast or listener signal
     // XXXBUGXXX: We signal listeners for all ProtectedStorageEntrys
     @Test

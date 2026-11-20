@@ -90,6 +90,19 @@ class FeeServiceTest {
         assertTrue(feeService.getTxFeePerVbyte().getValue() >= feeService.getMinFeePerVByte());
     }
 
+    // The price feed is requested once Tor is ready, so fee data can arrive before the domain services are
+    // initialized. Initializing must not reset the delivered min fee rate to the default.
+    @Test
+    void initializingKeepsMinFeeDeliveredBefore() {
+        FeeService feeService = new FeeService(mock(DaoStateService.class), mock(PeriodService.class));
+        feeService.updateFeeInfo(10, 1);
+
+        feeService.onAllServicesInitialized(mock(FilterManager.class));
+
+        assertEquals(10, feeService.getTxFeePerVbyte().getValue());
+        assertEquals(1, feeService.getMinFeePerVByte());
+    }
+
     @Test
     void updateFeeInfoCapsAbsurdProviderRates() {
         FeeService feeService = newFeeService();

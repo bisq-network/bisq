@@ -18,6 +18,7 @@
 package bisq.network.p2p.peers;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.storage.messages.BroadcastMessage;
 
@@ -48,11 +49,16 @@ import org.jetbrains.annotations.Nullable;
 @Slf4j
 public class Broadcaster implements BroadcastHandler.ResultHandler {
     private static final long BROADCAST_INTERVAL_MS = 2000;
+    // Upper bounds of what a BundleOfEnvelopes adds to the serialized size of its elements: its envelope, and the tag
+    // and length of an element
+    private static final int BUNDLE_FRAME_RESERVE = 1024;
+    private static final int BUNDLE_ELEMENT_FRAME_RESERVE = 6;
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
     private final Set<BroadcastHandler> broadcastHandlers = new CopyOnWriteArraySet<>();
     private final List<BroadcastRequest> broadcastRequests = new ArrayList<>();
+    private long bundleElementsSize;
     private Timer timer;
     private boolean shutDownRequested;
     @Nullable
@@ -131,7 +137,15 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
             log.warn("Ignoring broadcast request for {} after shutdown", message.getClass().getSimpleName());
             return;
         }
+        // A peer closes the connection at a message above the largest message size, so the requests go out before the
+        // interval ends if the bundle with this one would not fit
+        long elementSize = message.toProtoNetworkEnvelope().getSerializedSize() + BUNDLE_ELEMENT_FRAME_RESERVE;
+        if (!broadcastRequests.isEmpty() &&
+                BUNDLE_FRAME_RESERVE + bundleElementsSize + elementSize > Connection.getMaxPermittedMessageSize()) {
+            maybeBroadcastBundle();
+        }
         broadcastRequests.add(new BroadcastRequest(message, sender, listener));
+        bundleElementsSize += elementSize;
         if (timer == null) {
             timer = UserThread.runAfter(this::maybeBroadcastBundle, BROADCAST_INTERVAL_MS, TimeUnit.MILLISECONDS);
         }
@@ -146,6 +160,7 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
             }
             broadcastHandler.broadcast(new ArrayList<>(broadcastRequests), shutDownRequested, executor);
             broadcastRequests.clear();
+            bundleElementsSize = 0;
 
             if (timer != null) {
                 timer.stop();

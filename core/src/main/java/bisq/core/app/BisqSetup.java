@@ -813,8 +813,7 @@ public class BisqSetup {
                     .filter(a -> PaymentMethod.hasChargebackRisk(a.getPaymentMethod(), a.getTradeCurrencies()))
                     .filter(a -> Arrays.equals(((SignedWitness) payload).getAccountAgeWitnessHash(),
                             accountAgeWitnessService.getMyWitness(a.getPaymentAccountPayload()).getHash()))
-                    .anyMatch(a -> accountAgeWitnessService.getSignState(accountAgeWitnessService.getMyWitness(
-                            a.getPaymentAccountPayload())).equals(state));
+                    .anyMatch(a -> accountAgeWitnessService.getMySignState(a.getPaymentAccountPayload()).equals(state));
         }
         return false;
     }
@@ -899,6 +898,10 @@ public class BisqSetup {
     @Nullable
     public BridgesCanHelpException getBridgesCanHelpFailure() {
         return p2PNetworkSetup.getBridgesCanHelpFailure();
+    }
+
+    public boolean isTorSandboxUnavailable() {
+        return p2PNetworkSetup.isTorSandboxUnavailable();
     }
 
     public StringProperty getP2PNetworkIconId() {

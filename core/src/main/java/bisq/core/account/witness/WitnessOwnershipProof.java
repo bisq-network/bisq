@@ -155,7 +155,7 @@ public abstract class WitnessOwnershipProof {
         checkArgument(accountInputDataWithSaltLength > 0 &&
                         accountInputDataWithSaltLength <= MAX_ACCOUNT_INPUT_LENGTH,
                 "Account input data must contain between 1 and %s bytes", MAX_ACCOUNT_INPUT_LENGTH);
-        checkArgument(ownerPublicKeyLength >= 300 && ownerPublicKeyLength <= 600,
+        checkArgument(ownerPublicKeyLength >= 300 && ownerPublicKeyLength <= Sig.MAX_SIG_PUB_KEY_BYTES,
                 "Account owner public key has an unexpected size");
         checkArgument(signatureLength >= 30 && signatureLength <= 60,
                 "Account ownership signature has an unexpected size");

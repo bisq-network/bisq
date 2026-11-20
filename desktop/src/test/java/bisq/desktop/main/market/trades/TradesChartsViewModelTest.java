@@ -54,6 +54,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,7 +67,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TradesChartsViewModelTest {
     TradesChartsViewModel model;
@@ -208,6 +214,118 @@ public class TradesChartsViewModelTest {
         assertEquals(date, candleData.date);
     }
 
+    // Before 2021-11-01 there is no amount cap. The amounts of these valid statistics sum up to 2^64, which a long sum
+    // wraps to 0. The average still is the price of all three, and the shown amount saturates instead of wrapping.
+    @Test
+    public void candleWhoseAmountsSumUpTo2Pow64HasTheirAverage() {
+        Set<TradeStatistics3> set = Set.copyOf(usdStatisticsWithAmountsSummingUpTo2Pow64());
+
+        CandleData candleData = candleData("USD", set);
+
+        assertEquals(Price.parse("USD", "1").getValue(), candleData.average);
+        assertEquals(Long.MAX_VALUE, candleData.accumulatedAmount);
+    }
+
+    // The volumes of these valid statistics before 2021-11-01 sum up to 2^64 + 1, which a long sum wraps to 1
+    @Test
+    public void candleWhoseAltcoinVolumesSumUpTo2Pow64HasTheirAverage() {
+        long date = 1_600_000_000_000L;
+        Set<TradeStatistics3> set = Set.of(
+                new TradeStatistics3("XMR", 1, 92_233_720_368L, PaymentMethod.BLOCK_CHAINS_ID, date, null, null,
+                        (TreeMap<String, String>) null),
+                new TradeStatistics3("XMR", 1, 92_233_720_368L, PaymentMethod.BLOCK_CHAINS_ID, date + 1, null, null,
+                        (TreeMap<String, String>) null),
+                new TradeStatistics3("XMR", 100_000_000, 109_551_617L, PaymentMethod.BLOCK_CHAINS_ID, date + 2, null,
+                        null, (TreeMap<String, String>) null));
+        set.forEach(tradeStatistics -> assertTrue(tradeStatistics.isValid()));
+
+        CandleData candleData = candleData("XMR", set);
+
+        assertEquals(1, candleData.average);
+        assertEquals(Long.MAX_VALUE, candleData.accumulatedVolume);
+    }
+
+    @Test
+    public void usdAveragePriceWhoseAmountsSumUpTo2Pow64IsTheirAverage() throws Exception {
+        TreeSet<TradeStatistics3> set = new TreeSet<>(usdStatisticsWithAmountsSummingUpTo2Pow64());
+
+        Map<TradesChartsViewModel.TickUnit, Map<Long, Long>> usdAveragePrices =
+                ChartCalculations.getUsdAveragePriceMapsPerTickUnit(set).get();
+
+        assertEquals(List.of(Price.parse("USD", "1").getValue()),
+                new ArrayList<>(usdAveragePrices.get(TradesChartsViewModel.TickUnit.DAY).values()));
+    }
+
+    // The amount times the USD average exceeds the long range. The volume in USD is computed without wrapping.
+    @Test
+    public void volumeInUsdBeyondTheLongProductDoesNotWrap() {
+        long date = 1_600_000_000_000L;
+        TradeStatistics3 tradeStatistics = new TradeStatistics3("EUR", Price.parse("EUR", "1").getValue(),
+                Long.MAX_VALUE, PaymentMethod.SEPA_ID, date, null, null, (TreeMap<String, String>) null);
+        assertTrue(tradeStatistics.isValid());
+
+        CandleData candleData = candleData("EUR", Set.of(tradeStatistics), Price.parse("USD", "50000").getValue());
+
+        // Long.MAX_VALUE satoshi are about 9.2 * 10^10 BTC, at 50000 USD about 4.6 * 10^15 USD
+        assertEquals(4.611686018427385e15, candleData.volumeInUsd, 1e3);
+    }
+
+    // A USD average of 0 stands for no average, so the volume in USD uses the previous one, as for a missing day
+    @Test
+    public void zeroUsdAverageKeepsThePreviousOne() throws Exception {
+        long now = System.currentTimeMillis();
+        long yesterday = now - TimeUnit.DAYS.toMillis(1);
+        List<TradeStatistics3> eurStatistics = List.of(eurStatistics(yesterday), eurStatistics(now));
+        Map<Long, Long> usdAveragePrices = Map.of(
+                ChartCalculations.roundToTick(new Date(yesterday), TradesChartsViewModel.TickUnit.DAY).getTime(),
+                Price.parse("USD", "50000").getValue(),
+                ChartCalculations.roundToTick(new Date(now), TradesChartsViewModel.TickUnit.DAY).getTime(),
+                0L);
+
+        ChartCalculations.UpdateChartResult result = ChartCalculations.getUpdateChartResult(eurStatistics,
+                TradesChartsViewModel.TickUnit.DAY,
+                Map.of(TradesChartsViewModel.TickUnit.DAY, usdAveragePrices),
+                "EUR").get();
+
+        List<Long> volumesInUsd = result.getVolumeInUsdItems().stream()
+                .map(item -> item.getYValue().longValue())
+                .collect(Collectors.toList());
+        assertEquals(List.of(50_000L, 50_000L), volumesInUsd);
+    }
+
+    private static TradeStatistics3 eurStatistics(long date) {
+        return new TradeStatistics3("EUR", Price.parse("EUR", "45000").getValue(), Coin.parseCoin("1").getValue(),
+                PaymentMethod.SEPA_ID, date, null, null, (TreeMap<String, String>) null);
+    }
+
+    private static List<TradeStatistics3> usdStatisticsWithAmountsSummingUpTo2Pow64() {
+        long date = 1_600_000_000_000L;
+        long price = Price.parse("USD", "1").getValue();
+        List<TradeStatistics3> list = List.of(
+                new TradeStatistics3("USD", price, Long.MAX_VALUE, PaymentMethod.SEPA_ID, date, null, null,
+                        (TreeMap<String, String>) null),
+                new TradeStatistics3("USD", price, Long.MAX_VALUE, PaymentMethod.SEPA_ID, date + 1, null, null,
+                        (TreeMap<String, String>) null),
+                new TradeStatistics3("USD", price, 2, PaymentMethod.SEPA_ID, date + 2, null, null,
+                        (TreeMap<String, String>) null));
+        list.forEach(tradeStatistics -> assertTrue(tradeStatistics.isValid()));
+        return list;
+    }
+
+    private static CandleData candleData(String currencyCode, Set<TradeStatistics3> set) {
+        return candleData(currencyCode, set, 0);
+    }
+
+    private static CandleData candleData(String currencyCode, Set<TradeStatistics3> set, long averageUsdPrice) {
+        Date date = set.iterator().next().getDate();
+        Date tickStart = ChartCalculations.roundToTick(date, TradesChartsViewModel.TickUnit.DAY);
+        List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = List.of(new Pair<>(tickStart, set),
+                new Pair<>(date, Set.of()));
+        return assertDoesNotThrow(() -> ChartCalculations.getCandleData(0, set, averageUsdPrice,
+                TradesChartsViewModel.TickUnit.DAY,
+                currencyCode, itemsPerInterval));
+    }
+
     @Test
     public void getUpdateChartResultToleratesEmptyUsdAveragePriceMaps() {
         // Regression: a chart update that runs before the USD-average maps are populated must not
@@ -302,5 +420,45 @@ public class TradesChartsViewModelTest {
             assertEquals(2, model.priceItems.size());
             assertEquals(2, model.volumeItems.size());
         }
+    }
+
+    // Stablecoin payment methods are payment methods of the USD market, so the trades of USD can be filtered by them
+    @Test
+    public void tradesOfACurrencyAreFilteredByTheGroupOfTheirPaymentMethods() throws Exception {
+        long date = 1_700_000_000_000L;
+        TradeStatistics3 sepa = new TradeStatistics3("USD", Price.parse("USD", "50000").getValue(), 10_000_000L,
+                PaymentMethod.CLEAR_X_CHANGE_ID, date, null, null, (TreeMap<String, String>) null);
+        TradeStatistics3 custom = new TradeStatistics3("USD", Price.parse("USD", "50000").getValue(), 10_000_000L,
+                PaymentMethod.CUSTOM_ID, date + 1, null, null, (TreeMap<String, String>) null);
+        TradeStatistics3 usdt = new TradeStatistics3("USD", Price.parse("USD", "50000").getValue(), 10_000_000L,
+                "USDT_TRC20", date + 2, null, null, (TreeMap<String, String>) null);
+        TradeStatistics3 eur = new TradeStatistics3("EUR", Price.parse("EUR", "50000").getValue(), 10_000_000L,
+                PaymentMethod.SEPA_ID, date + 3, null, null, (TreeMap<String, String>) null);
+        Set<TradeStatistics3> set = Set.of(sepa, custom, usdt, eur);
+
+        assertEquals(Set.of(sepa, custom, usdt), Set.copyOf(ChartCalculations.getTradeStatisticsForCurrency(set, "USD",
+                false, TradesChartsViewModel.PaymentMethodGroup.FIAT_AND_STABLECOINS).get()));
+        assertEquals(Set.of(sepa, custom), Set.copyOf(ChartCalculations.getTradeStatisticsForCurrency(set, "USD",
+                false, TradesChartsViewModel.PaymentMethodGroup.FIAT_ONLY).get()));
+        assertEquals(Set.of(usdt), Set.copyOf(ChartCalculations.getTradeStatisticsForCurrency(set, "USD",
+                false, TradesChartsViewModel.PaymentMethodGroup.STABLECOINS_ONLY).get()));
+    }
+
+    @Test
+    public void reselectingTheCurrencyKeepsItsPaymentMethodGroup() {
+        FiatCurrency usd = new FiatCurrency("USD");
+        model.selectedTradeCurrencyProperty.set(usd);
+        model.paymentMethodGroupProperty.set(TradesChartsViewModel.PaymentMethodGroup.STABLECOINS_ONLY);
+        when(tradeStatisticsManager.getObservableTradeStatisticsSet()).thenReturn(FXCollections.observableSet());
+
+        model.onSetTradeCurrency(usd);
+
+        assertEquals(TradesChartsViewModel.PaymentMethodGroup.STABLECOINS_ONLY, model.getAppliedPaymentMethodGroup());
+    }
+
+    @Test
+    public void onlyCurrenciesWithStableCoinsOfferTheGroupsOfPaymentMethods() {
+        assertTrue(TradesChartsViewModel.hasStableCoins("USD"));
+        assertFalse(TradesChartsViewModel.hasStableCoins("EUR"));
     }
 }

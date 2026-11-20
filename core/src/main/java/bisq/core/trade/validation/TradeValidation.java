@@ -17,9 +17,11 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.support.dispute.refund.refundagent.RefundAgent;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.user.User;
 
@@ -100,6 +102,30 @@ public final class TradeValidation {
                 Utilities.toTruncatedString(Hex.encode(current), 8),
                 Utilities.toTruncatedString(Hex.encode(expected), 8));
         return current;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Payment method from contract
+    /* --------------------------------------------------------------------- */
+
+    // The hash in the contract binds the payment account data which the peer reveals later, but the peer has chosen
+    // the data behind that hash. The payment method which the peer has agreed to is the one in the contract, so the
+    // revealed data must be of that payment method.
+    public static PaymentAccountPayload checkPaymentMethodFromContract(PaymentAccountPayload peersPaymentAccountPayload,
+                                                                       Contract contract,
+                                                                       PubKeyRing myPubKeyRing) {
+        checkNotNull(peersPaymentAccountPayload, "peersPaymentAccountPayload must not be null");
+        checkNotNull(contract, "contract must not be null");
+        String current = checkNonBlankString(peersPaymentAccountPayload.getPaymentMethodId(),
+                "peersPaymentAccountPayload.paymentMethodId");
+        String expected = checkNonBlankString(contract.getPeersPaymentMethodId(myPubKeyRing),
+                "contract.peersPaymentMethodId");
+        checkArgument(current.equals(expected),
+                "peersPaymentMethodId mismatch. current=%s, expected=%s",
+                Utilities.toTruncatedString(current, 50),
+                expected);
+        return peersPaymentAccountPayload;
     }
 
 

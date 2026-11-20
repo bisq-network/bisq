@@ -30,6 +30,7 @@ import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.payment.stablecoin.StableCoinPaymentRail;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -54,6 +55,7 @@ import javafx.collections.SetChangeListener;
 import javafx.util.Pair;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -83,6 +85,25 @@ class TradesChartsViewModel extends ActivatableViewModel {
         MINUTE_10
     }
 
+    // The payment methods of the trades of a currency which has stablecoins
+    public enum PaymentMethodGroup {
+        FIAT_AND_STABLECOINS,
+        FIAT_ONLY,
+        STABLECOINS_ONLY;
+
+        boolean matches(String paymentMethodId) {
+            boolean isStableCoin = StableCoinPaymentRail.find(paymentMethodId).isPresent();
+            switch (this) {
+                case FIAT_ONLY:
+                    return !isStableCoin;
+                case STABLECOINS_ONLY:
+                    return isStableCoin;
+                default:
+                    return true;
+            }
+        }
+    }
+
     private final TradeStatisticsManager tradeStatisticsManager;
     final Preferences preferences;
     private final PriceFeedService priceFeedService;
@@ -91,6 +112,9 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private final SetChangeListener<TradeStatistics3> setChangeListener;
     final ObjectProperty<TradeCurrency> selectedTradeCurrencyProperty = new SimpleObjectProperty<>();
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(false);
+    // Applies only to a single currency which has stablecoins, see getAppliedPaymentMethodGroup
+    final ObjectProperty<PaymentMethodGroup> paymentMethodGroupProperty =
+            new SimpleObjectProperty<>(PaymentMethodGroup.FIAT_AND_STABLECOINS);
     private final CurrencyList currencyListItems;
     private final CurrencyListItem showAllCurrencyListItem = new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, ""), -1);
     final ObservableList<TradeStatistics3> tradeStatisticsByCurrency = FXCollections.observableArrayList();
@@ -127,19 +151,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         this.navigation = navigation;
 
         setChangeListener = change -> {
-            applyAsyncTradeStatisticsForCurrency(getCurrencyCode())
-                    .whenComplete((result, throwable) -> {
-                        if (deactivateCalled) {
-                            return;
-                        }
-                        if (throwable != null) {
-                            log.error("Error at setChangeListener/applyAsyncTradeStatisticsForCurrency. {}", throwable.toString());
-                            return;
-                        }
-                        if (Boolean.TRUE.equals(result)) {
-                            applyAsyncChartData();
-                        }
-                    });
+            applyAsyncTradeStatisticsAndChartData("setChangeListener");
             fillTradeCurrencies();
         };
 
@@ -262,7 +274,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
         int generation = ++refilterGeneration;
         ChartCalculations.getTradeStatisticsForCurrency(tradeStatisticsManager.getObservableTradeStatisticsSet(),
                         currencyCode,
-                        showAllTradeCurrenciesProperty.get())
+                        showAllTradeCurrenciesProperty.get(),
+                        getAppliedPaymentMethodGroup())
                 .whenComplete((list, throwable) -> {
                     if (deactivateCalled) {
                         return;
@@ -344,6 +357,9 @@ class TradesChartsViewModel extends ActivatableViewModel {
             }
 
             boolean showAllEntry = isShowAllEntry(code);
+            if (showAllEntry || !code.equals(getCurrencyCode())) {
+                paymentMethodGroupProperty.set(PaymentMethodGroup.FIAT_AND_STABLECOINS);
+            }
             showAllTradeCurrenciesProperty.set(showAllEntry);
             if (showAllEntry) {
                 priceFeedService.setCurrencyCode(GlobalSettings.getDefaultTradeCurrency().getCode());
@@ -354,20 +370,31 @@ class TradesChartsViewModel extends ActivatableViewModel {
             }
             preferences.setTradeChartsScreenCurrencyCode(code);
 
-            applyAsyncTradeStatisticsForCurrency(getCurrencyCode())
-                    .whenComplete((result, throwable) -> {
-                        if (deactivateCalled) {
-                            return;
-                        }
-                        if (throwable != null) {
-                            log.error("Error at onSetTradeCurrency/applyAsyncTradeStatisticsForCurrency. {}", throwable.toString());
-                            return;
-                        }
-                        if (Boolean.TRUE.equals(result)) {
-                            applyAsyncChartData();
-                        }
-                    });
+            applyAsyncTradeStatisticsAndChartData("onSetTradeCurrency");
         }
+    }
+
+    void onSetPaymentMethodGroup(PaymentMethodGroup paymentMethodGroup) {
+        if (paymentMethodGroup != null && paymentMethodGroup != paymentMethodGroupProperty.get()) {
+            paymentMethodGroupProperty.set(paymentMethodGroup);
+            applyAsyncTradeStatisticsAndChartData("onSetPaymentMethodGroup");
+        }
+    }
+
+    private void applyAsyncTradeStatisticsAndChartData(String caller) {
+        applyAsyncTradeStatisticsForCurrency(getCurrencyCode())
+                .whenComplete((result, throwable) -> {
+                    if (deactivateCalled) {
+                        return;
+                    }
+                    if (throwable != null) {
+                        log.error("Error at {}/applyAsyncTradeStatisticsForCurrency. {}", caller, throwable.toString());
+                        return;
+                    }
+                    if (Boolean.TRUE.equals(result)) {
+                        applyAsyncChartData();
+                    }
+                });
     }
 
     void setTickUnit(TickUnit tickUnit) {
@@ -389,6 +416,20 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     public String getCurrencyCode() {
         return selectedTradeCurrencyProperty.get().getCode();
+    }
+
+    // The trades of a currency can be filtered by their payment methods only if the currency has stablecoins
+    boolean isPaymentMethodGroupAvailable() {
+        return !showAllTradeCurrenciesProperty.get() && hasStableCoins(getCurrencyCode());
+    }
+
+    PaymentMethodGroup getAppliedPaymentMethodGroup() {
+        return isPaymentMethodGroupAvailable() ? paymentMethodGroupProperty.get() : PaymentMethodGroup.FIAT_AND_STABLECOINS;
+    }
+
+    static boolean hasStableCoins(String currencyCode) {
+        return Arrays.stream(StableCoinPaymentRail.values())
+                .anyMatch(rail -> rail.getStableCoin().getPegCurrencyCode().equals(currencyCode));
     }
 
     public ObservableList<CurrencyListItem> getCurrencyListItems() {

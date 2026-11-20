@@ -239,12 +239,6 @@ public class SignedWitnessService {
                 .anyMatch(this::verifySignature);
     }
 
-    public boolean isFilteredWitness(AccountAgeWitness accountAgeWitness) {
-        return getSignedWitnessSet(accountAgeWitness).stream()
-                .map(SignedWitness::getWitnessOwnerPubKey)
-                .anyMatch(ownerPubKey -> filterPolicyService.isWitnessSignerPubKeyBanned(Utils.HEX.encode(ownerPubKey)));
-    }
-
     private byte[] ownerPubKey(AccountAgeWitness accountAgeWitness) {
         return getSignedWitnessSet(accountAgeWitness).stream()
                 .map(SignedWitness::getWitnessOwnerPubKey)

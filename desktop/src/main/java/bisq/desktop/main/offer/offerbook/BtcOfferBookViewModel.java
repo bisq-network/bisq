@@ -128,8 +128,7 @@ public class BtcOfferBookViewModel extends OfferBookViewModel {
             boolean directionResult = offer.getDirection() != direction;
             boolean currencyResult = (showAllTradeCurrenciesProperty.get() && offer.isFiatOffer()) ||
                     offer.getCurrencyCode().equals(selectedTradeCurrency.getCode());
-            boolean paymentMethodResult = showAllPaymentMethods ||
-                    offer.getPaymentMethod().equals(selectedPaymentMethod);
+            boolean paymentMethodResult = isMatchingSelectedPaymentMethod(offer);
             boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
             return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
         };

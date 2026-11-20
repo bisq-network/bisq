@@ -143,8 +143,9 @@ in a proposal list kept for display. That list is not refreshed per block during
 a running node recorded the proposal while a node that parsed the result block during startup or a
 resync usually did not. The two groups computed different DAO state hashes from that block on.
 
-This rule has no activation height. The bundled mainnet resources through height `969 240` contain
-no evaluated proposal without an accept or reject vote, so replaying them gives the same results.
+This rule has no activation height. The bundled mainnet resources through height `976 481`, which
+include the RESULT blocks `969 537` and `974 217`, contain no evaluated proposal without an accept or
+reject vote, so replaying them gives the same results.
 The first known result in which running nodes recorded such a proposal is the RESULT block
 `969 537`, where one reimbursement request got no accept or reject vote. Nodes that did not record
 it already match this rule; nodes that recorded it must rebuild their DAO state. Nodes on an earlier
@@ -172,18 +173,21 @@ evaluated proposal without an accept or reject vote. Run it with:
   -PrunResourceAudits=true --console=plain
 ```
 
-For the bundled mainnet resources through height `971 800`, all 963 stored payloads have distinct
-transaction IDs. Exactly 951 have an on-chain reveal and decrypt successfully; none contains a
+For the bundled mainnet resources through height `976 481`, all 971 stored payloads have distinct
+transaction IDs. Exactly 959 have an on-chain reveal and decrypt successfully; none contains a
 duplicate proposal transaction ID and none has a merit-list decryption failure. The 12 payloads
-without a reveal cannot enter a vote result and their encrypted contents cannot be audited. Of the 16
+without a reveal cannot enter a vote result and their encrypted contents cannot be audited. They are
+older payloads whose vote-reveal phases have ended; none was added after height `971 800`. Of the 24
 payloads added after the pre-activation audit at `963 120`, five were cast in the blind-vote phase of
-the cycle that started at height `960 187`; all five were revealed and decrypt. The other 11 were cast
+the cycle that started at height `960 187`; all five were revealed and decrypt. Eleven were cast
 between heights `968 645` and `968 922` in the blind-vote phase of the cycle that started at height
 `964 867`; all 11 were revealed and decrypt. Ten of them were revealed in that cycle's vote-reveal
 phase (heights `969 077` to `969 527`). The last one was revealed at height `970 486`, after the
 cycle's RESULT phase (heights `969 537` to `969 546`). `TxParser` accepts such a late reveal as a
 valid BSQ transaction, so the audit decrypts it, but `VoteResultService` ignores reveals outside the
-vote-reveal phase.
+vote-reveal phase. The last 8 were cast between heights `973 306` and `973 610` in the blind-vote
+phase of the cycle that started at height `969 547`; all 8 were revealed in that cycle's vote-reveal
+phase (heights `973 758` to `973 831`) and decrypt.
 
 This audit supports deployment confidence but does not replace the explicit height gates. Between the
 pre-activation audit at `963 120` and the mainnet activation height `963 350`, the network was in the

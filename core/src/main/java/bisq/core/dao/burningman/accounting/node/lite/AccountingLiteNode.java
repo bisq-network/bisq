@@ -90,6 +90,7 @@ public class AccountingLiteNode extends AccountingNode implements AccountingLite
         blockDownloadListener = (observable, oldValue, newValue) -> {
             if ((double) newValue == 1) {
                 setupWalletBestBlockListener();
+                maybeStartRequestingBlocks();
             }
         };
     }
@@ -157,7 +158,13 @@ public class AccountingLiteNode extends AccountingNode implements AccountingLite
 
         accountingLiteNodeNetworkService.addListener(this);
 
-        if (!initialBlockRequestsComplete) {
+        maybeStartRequestingBlocks();
+    }
+
+    // A response can contain only part of the missing blocks. We need the synced wallet height to decide whether
+    // to request the next part instead of declaring the initial download complete.
+    private void maybeStartRequestingBlocks() {
+        if (walletsSetup.isDownloadComplete() && p2pNetworkReady && !initialBlockRequestsComplete) {
             startRequestBlocks();
         }
     }
@@ -216,10 +223,10 @@ public class AccountingLiteNode extends AccountingNode implements AccountingLite
                 }
 
                 int heightOfLastBlock = burningManAccountingService.getBlockHeightOfLastBlock();
-                if (walletsSetup.isDownloadComplete() && heightOfLastBlock < bsqWalletService.getBestChainHeight()) {
-                    accountingLiteNodeNetworkService.requestBlocks(heightOfLastBlock + 1);
-                } else {
-                    if (!initialBlockRequestsComplete) {
+                if (walletsSetup.isDownloadComplete()) {
+                    if (heightOfLastBlock < bsqWalletService.getBestChainHeight()) {
+                        accountingLiteNodeNetworkService.requestBlocks(heightOfLastBlock + 1);
+                    } else if (!initialBlockRequestsComplete) {
                         onInitialBlockRequestsComplete();
                     }
                 }

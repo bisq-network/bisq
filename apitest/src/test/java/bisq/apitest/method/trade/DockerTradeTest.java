@@ -129,6 +129,38 @@ public abstract class DockerTradeTest extends DockerMethodTest {
         long aliceBtcBefore = totalBtc(aliceClient);
         long bobBtcBefore = totalBtc(bobClient);
 
+        TradeInfo trade = takeOfferAndConfirmDeposit(offer, takerPaymentAccountId, currency, btcAmount);
+
+        GrpcClient btcBuyer = bobIsBtcBuyer ? bobClient : aliceClient;
+        GrpcClient btcSeller = bobIsBtcBuyer ? aliceClient : bobClient;
+
+        btcBuyer.confirmPaymentStarted(trade.getTradeId());
+        DaoTestUtils.await(() -> btcSeller.getTrade(trade.getTradeId()).getIsPaymentStartedMessageSent(),
+                60_000, "seller sees payment-started");
+        confirmPaymentReceivedAndClose(trade.getTradeId(), btcBuyer, btcSeller);
+
+        long aliceBtcAfter = totalBtc(aliceClient);
+        long bobBtcAfter = totalBtc(bobClient);
+        if (bobIsBtcBuyer) {
+            assertTrue(bobBtcAfter > bobBtcBefore,
+                    "bob (btc buyer) total BTC must increase: " + bobBtcBefore + " → " + bobBtcAfter);
+            assertTrue(aliceBtcAfter < aliceBtcBefore,
+                    "alice (btc seller) total BTC must decrease: " + aliceBtcBefore + " → " + aliceBtcAfter);
+        } else {
+            assertTrue(aliceBtcAfter > aliceBtcBefore,
+                    "alice (btc buyer) total BTC must increase: " + aliceBtcBefore + " → " + aliceBtcAfter);
+            assertTrue(bobBtcAfter < bobBtcBefore,
+                    "bob (btc seller) total BTC must decrease: " + bobBtcBefore + " → " + bobBtcAfter);
+        }
+        return trade;
+    }
+
+    /**
+     * Bob takes alice's offer; returns once bob's deposit tx is confirmed. First part of
+     * {@link #runV1Trade}.
+     */
+    protected TradeInfo takeOfferAndConfirmDeposit(OfferInfo offer, String takerPaymentAccountId,
+                                                   String currency, long btcAmount) {
         if (!offer.getOfferFeePaymentTxId().isEmpty()) {
             chain.confirmTx(aliceClient, offer.getOfferFeePaymentTxId());
         }
@@ -150,37 +182,23 @@ public abstract class DockerTradeTest extends DockerMethodTest {
         chain.confirmTx(bobClient, depositTxId);
         DaoTestUtils.await(() -> bobClient.getTrade(trade.getTradeId()).getIsDepositConfirmed(),
                 30_000, "deposit confirmed");
+        return trade;
+    }
 
-        GrpcClient btcBuyer = bobIsBtcBuyer ? bobClient : aliceClient;
-        GrpcClient btcSeller = bobIsBtcBuyer ? aliceClient : bobClient;
-
-        btcBuyer.confirmPaymentStarted(trade.getTradeId());
-        DaoTestUtils.await(() -> btcSeller.getTrade(trade.getTradeId()).getIsPaymentStartedMessageSent(),
-                60_000, "seller sees payment-started");
-        btcSeller.confirmPaymentReceived(trade.getTradeId());
-        DaoTestUtils.await(() -> !btcSeller.getTrade(trade.getTradeId()).getPayoutTxId().isEmpty(),
+    /**
+     * The seller confirms the payment, the payout tx is confirmed and the buyer closes the
+     * trade. Last part of {@link #runV1Trade}; the seller must have seen payment-started.
+     */
+    protected void confirmPaymentReceivedAndClose(String tradeId, GrpcClient btcBuyer, GrpcClient btcSeller) {
+        btcSeller.confirmPaymentReceived(tradeId);
+        DaoTestUtils.await(() -> !btcSeller.getTrade(tradeId).getPayoutTxId().isEmpty(),
                 30_000, "seller has payout_tx_id");
-        chain.confirmTx(btcSeller, btcSeller.getTrade(trade.getTradeId()).getPayoutTxId());
-        DaoTestUtils.await(() -> btcBuyer.getTrade(trade.getTradeId()).getIsPayoutPublished(),
+        chain.confirmTx(btcSeller, btcSeller.getTrade(tradeId).getPayoutTxId());
+        DaoTestUtils.await(() -> btcBuyer.getTrade(tradeId).getIsPayoutPublished(),
                 30_000, "payout published");
 
-        btcBuyer.closeTrade(trade.getTradeId());
+        btcBuyer.closeTrade(tradeId);
         chain.generateBlocks(1);
-
-        long aliceBtcAfter = totalBtc(aliceClient);
-        long bobBtcAfter = totalBtc(bobClient);
-        if (bobIsBtcBuyer) {
-            assertTrue(bobBtcAfter > bobBtcBefore,
-                    "bob (btc buyer) total BTC must increase: " + bobBtcBefore + " → " + bobBtcAfter);
-            assertTrue(aliceBtcAfter < aliceBtcBefore,
-                    "alice (btc seller) total BTC must decrease: " + aliceBtcBefore + " → " + aliceBtcAfter);
-        } else {
-            assertTrue(aliceBtcAfter > aliceBtcBefore,
-                    "alice (btc buyer) total BTC must increase: " + aliceBtcBefore + " → " + aliceBtcAfter);
-            assertTrue(bobBtcAfter < bobBtcBefore,
-                    "bob (btc seller) total BTC must decrease: " + bobBtcBefore + " → " + bobBtcAfter);
-        }
-        return trade;
     }
 
     protected static long totalBtc(GrpcClient c) {

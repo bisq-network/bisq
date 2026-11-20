@@ -86,21 +86,28 @@ public class DisplayUtils {
                                                PaymentAccountPayload paymentAccountPayload,
                                                PubKeyRing pubKeyRing) {
         String description = Res.get("peerInfoIcon.tooltip.unknownAge");
+        // A banned account is shown with the ban and never as signed. The witness hash is computed from this key, so
+        // it is the key of the owner.
+        boolean isBanned = PaymentMethod.hasChargebackRisk(paymentMethod) &&
+                accountAgeWitnessService.isWitnessOwnerPubKeyBanned(pubKeyRing.getSignaturePubKeyBytes());
         Optional<AccountAgeWitness> aaw = accountAgeWitnessService.findWitness(paymentAccountPayload, pubKeyRing);
         if (aaw.isPresent()) {
             long accountAge = accountAgeWitnessService.getAccountAge(aaw.get(), new Date());
             long signAge = -1L;
-            if (PaymentMethod.hasChargebackRisk(paymentMethod)) {
+            if (PaymentMethod.hasChargebackRisk(paymentMethod) && !isBanned) {
                 signAge = accountAgeWitnessService.getWitnessSignAge(aaw.get(), new Date());
             }
             if (signAge > -1) {
                 description = Res.get("peerInfo.age.chargeBackRisk") + ": " + formatAccountAge(signAge);
             } else if (accountAge > -1) {
                 description = Res.get("peerInfoIcon.tooltip.age", formatAccountAge(accountAge));
-                if (PaymentMethod.hasChargebackRisk(paymentMethod)) {
+                if (PaymentMethod.hasChargebackRisk(paymentMethod) && !isBanned) {
                     description += ", " + Res.get("offerbook.timeSinceSigning.notSigned");
                 }
             }
+        }
+        if (isBanned) {
+            description += ", " + StringUtils.capitalize(Res.get("offerbook.timeSinceSigning.info.banned"));
         }
         return description;
     }

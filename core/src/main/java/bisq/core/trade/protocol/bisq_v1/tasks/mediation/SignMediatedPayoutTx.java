@@ -37,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutAddresses;
 import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutAmounts;
+import static bisq.core.trade.validation.PayoutTxValidation.checkPayoutTxSignature;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -51,10 +52,6 @@ public class SignMediatedPayoutTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-
-            if (processModel.getMediatedPayoutTxSignature() != null) {
-                log.warn("processModel.getTxSignatureFromMediation is already set");
-            }
 
             TradingPeer tradingPeer = processModel.getTradePeer();
             BtcWalletService walletService = processModel.getBtcWalletService();
@@ -87,8 +84,6 @@ public class SignMediatedPayoutTx extends TradeTask {
             byte[] buyerMultiSigPubKey = isMyRoleBuyer ? myMultiSigPubKey : peersMultiSigPubKey;
             byte[] sellerMultiSigPubKey = isMyRoleBuyer ? peersMultiSigPubKey : myMultiSigPubKey;
 
-            DeterministicKey myMultiSigKeyPair = walletService.getMultiSigKeyPair(tradeId, myMultiSigPubKey);
-
             checkArgument(Arrays.equals(myMultiSigPubKey,
                     walletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.MULTI_SIG).getPubKey()),
                     "myMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + tradeId);
@@ -96,6 +91,34 @@ public class SignMediatedPayoutTx extends TradeTask {
             processModel.getTradeWalletService().verifyDepositTxMultiSigOutput(
                     depositTx, buyerMultiSigPubKey, sellerMultiSigPubKey);
 
+            byte[] existingSignature = processModel.getMediatedPayoutTxSignature();
+            if (existingSignature != null) {
+                // A trader signs the mediated payout only once. The peer may hold that signature, and a second one
+                // would let the peer choose the payout. A repeated acceptance, by click or by the automatic
+                // publication, reuses the signature only for the same payout.
+                try {
+                    checkPayoutTxSignature(existingSignature,
+                            walletService,
+                            depositTx,
+                            buyerPayoutAmount,
+                            sellerPayoutAmount,
+                            buyerPayoutAddressString,
+                            sellerPayoutAddressString,
+                            myMultiSigPubKey,
+                            buyerMultiSigPubKey,
+                            sellerMultiSigPubKey,
+                            "own mediatedPayoutTxSignature");
+                } catch (IllegalArgumentException e) {
+                    log.warn("Our signature of the mediated payout does not cover the payout of the stored " +
+                            "mediation amounts. We do not sign again. tradeId={}", tradeId);
+                    throw e;
+                }
+                log.info("We reuse our signature of the mediated payout. tradeId={}", tradeId);
+                complete();
+                return;
+            }
+
+            DeterministicKey myMultiSigKeyPair = walletService.getMultiSigKeyPair(tradeId, myMultiSigPubKey);
             byte[] mediatedPayoutTxSignature = processModel.getTradeWalletService().signMediatedPayoutTx(
                     depositTx,
                     buyerPayoutAmount,

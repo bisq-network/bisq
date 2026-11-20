@@ -22,6 +22,7 @@ import bisq.core.dao.burningman.accounting.blockchain.AccountingBlock;
 import bisq.core.dao.burningman.accounting.node.AccountingNode;
 import bisq.core.dao.burningman.accounting.node.messages.GetAccountingBlocksRequest;
 import bisq.core.dao.burningman.accounting.node.messages.GetAccountingBlocksResponse;
+import bisq.core.dao.node.ResponseSizeLimit;
 
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
@@ -91,7 +92,10 @@ class GetAccountingBlocksRequestHandler {
 
     public void onGetBlocksRequest(GetAccountingBlocksRequest request, Connection connection) {
         long ts = System.currentTimeMillis();
-        List<AccountingBlock> blocks = burningManAccountingService.getBlocksAtLeastWithHeight(request.getFromBlockHeight());
+        List<AccountingBlock> blocks = ResponseSizeLimit.leadingElementsWithin(
+                burningManAccountingService.getBlocksAtLeastWithHeight(request.getFromBlockHeight()),
+                block -> block.toProtoMessage().getSerializedSize(),
+                ResponseSizeLimit.MAX_BLOCKS_SIZE);
         byte[] signature = AccountingNode.getSignature(AccountingNode.getSha256Hash(blocks), bmOracleNodePrivKey);
         GetAccountingBlocksResponse getBlocksResponse = new GetAccountingBlocksResponse(blocks, request.getNonce(), bmOracleNodePubKey, signature);
         log.info("Received GetAccountingBlocksRequest from {} for blocks from height {}. " +

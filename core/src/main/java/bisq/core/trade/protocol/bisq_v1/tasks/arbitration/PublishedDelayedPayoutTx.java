@@ -44,16 +44,16 @@ public class PublishedDelayedPayoutTx extends TradeTask {
             Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
 
-            // We have spent the funds from the deposit tx with the delayedPayoutTx
-            btcWalletService.resetCoinLockedInMultiSigAddressEntry(trade.getId());
-            // We might receive funds on AddressEntry.Context.TRADE_PAYOUT so we don't swap that
-
             Transaction committedDelayedPayoutTx = WalletService.maybeAddSelfTxToWallet(delayedPayoutTx, btcWalletService.getWallet());
 
             processModel.getTradeWalletService().broadcastTx(committedDelayedPayoutTx, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     log.info("publishDelayedPayoutTx onSuccess " + transaction);
+                    // The delayedPayoutTx spends the funds of the deposit tx. Until it is broadcast, they are still
+                    // locked in the multisig output. A broadcast timeout calls onSuccess as well.
+                    btcWalletService.resetCoinLockedInMultiSigAddressEntry(trade.getId());
+                    // We might receive funds on AddressEntry.Context.TRADE_PAYOUT so we don't swap that
                     complete();
                 }
 

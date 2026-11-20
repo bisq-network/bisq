@@ -38,7 +38,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @Singleton
 public class TradeLimits implements DaoStateListener {
-    public static final Coin MAX_TRADE_AMOUNT = Coin.parseCoin("0.250");
+    public static final Coin MAX_TRADE_AMOUNT = Coin.parseCoin("0.500");
 
     @Nullable
     @Getter

@@ -466,12 +466,14 @@ class CoreWalletsService {
         verifyWalletIsAvailableAndEncrypted();
 
         KeyCrypterScrypt keyCrypterScrypt = getKeyCrypterScrypt();
+        KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
+        // A wrong password must not change the lock state: any key in tempAesKey counts as unlocked.
+        if (!walletsManager.checkAESKey(aesKey))
+            throw new IllegalArgumentException("incorrect password");
+
         // The aesKey is also cached for timeout (secs) after being used to decrypt the
         // wallet, in case the user wants to manually lock the wallet before the timeout.
-        tempAesKey = keyCrypterScrypt.deriveKey(password);
-
-        if (!walletsManager.checkAESKey(tempAesKey))
-            throw new IllegalArgumentException("incorrect password");
+        tempAesKey = aesKey;
 
         if (lockTimer != null) {
             // The user has called unlockwallet again, before the prior unlockwallet

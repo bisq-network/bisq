@@ -34,6 +34,8 @@ public final class MinerFeeValidation {
     public static final double MAX_FEE_DEVIATION_FACTOR = 4;
     // The taker checks its own trade tx fee against its own fee rate before it sends a take offer request. Makers up
     // to v1.10.11 drop a request outside a factor of 2 without a reply, so the taker keeps their factor.
+    // Compatibility with v1.10.11 and earlier: use MAX_FEE_DEVIATION_FACTOR once makers of these releases cannot trade
+    // anymore.
     public static final double MAX_OWN_FEE_DEVIATION_FACTOR = 2;
     // The BSQ swap maker pays its own share of the miner fee at the fee rate of the taker's request. A wider
     // tolerance would let the taker raise the maker's fee further or delay the confirmation of the swap tx.
@@ -52,6 +54,9 @@ public final class MinerFeeValidation {
     // an existing trade use this bound: the trade object, also when the trade is loaded from disk, where one trade
     // that fails its check makes the whole trade file unreadable, and the buyer's check of the delayed payout tx. A
     // new take offer request is checked against MIN_TRADE_TX_FEE_SAT.
+    // Compatibility with v1.10.11 and earlier: once makers of these releases cannot trade anymore, the buyer's check of
+    // the delayed payout tx can use MIN_TRADE_TX_FEE_SAT. Loading a trade must keep this bound, as closed trades of
+    // these releases stay stored.
     public static final long MIN_STORED_TRADE_TX_FEE_SAT = 250L;
 
     private MinerFeeValidation() {

@@ -91,7 +91,7 @@ public class BuyerAsMakerProtocol extends BuyerProtocol implements MakerProtocol
                                     errorMessageHandler.handleErrorMessage(errorMessage);
                                     handleTaskRunnerFault(message, errorMessage);
                                 }))
-                        .withTimeout(120))
+                        .withTimeout(TAKE_OFFER_HANDSHAKE_TIMEOUT_SEC))
                 .executeTasks();
     }
 

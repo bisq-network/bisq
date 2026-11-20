@@ -106,6 +106,34 @@ class CoreTradesServiceConfirmPaymentStartedTest {
     }
 
     @Test
+    void mismatchedSellerPaymentRailIsRejectedBeforeRecordingPayment() {
+        when(trade.getContract()).thenReturn(contract);
+        when(contract.getSellerPaymentAccountPayload()).thenReturn(mock(PaymentAccountPayload.class));
+        when(trade.hasMismatchedSellerPaymentRail()).thenReturn(true);
+
+        assertThrows(FailedPreconditionException.class,
+                () -> coreTradesService.confirmPaymentStarted(TRADE_ID, "txId", "txKey"));
+
+        verify(buyerProtocol, never()).onPaymentStarted(any(), any());
+        verify(trade, never()).setCounterCurrencyTxId(any());
+    }
+
+    // The protocol ignores a second confirmation, so the call must not report success or replace the XMR proof
+    @Test
+    void alreadyConfirmedPaymentIsRejectedBeforeRecordingPayment() {
+        when(trade.isFiatSent()).thenReturn(true);
+        when(trade.getContract()).thenReturn(contract);
+        when(contract.getSellerPaymentAccountPayload()).thenReturn(mock(PaymentAccountPayload.class));
+
+        assertThrows(FailedPreconditionException.class,
+                () -> coreTradesService.confirmPaymentStarted(TRADE_ID, "txId", "txKey"));
+
+        verify(buyerProtocol, never()).onPaymentStarted(any(), any());
+        verify(trade, never()).setCounterCurrencyTxId(any());
+        verify(trade, never()).setCounterCurrencyExtraData(any());
+    }
+
+    @Test
     void presentSellerPaymentAccountPayloadStartsPayment() {
         when(trade.getContract()).thenReturn(contract);
         when(contract.getSellerPaymentAccountPayload()).thenReturn(mock(PaymentAccountPayload.class));

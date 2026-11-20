@@ -29,11 +29,14 @@ import javax.inject.Inject;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 
 /**
@@ -74,9 +77,23 @@ public class TempProposalStore implements PersistableEnvelope {
 
     public static TempProposalStore fromProto(protobuf.TempProposalStore proto, NetworkProtoResolver networkProtoResolver) {
         List<ProtectedStorageEntry> list = proto.getItemsList().stream()
-                .map(entry -> ProtectedStorageEntry.fromProto(entry, networkProtoResolver))
+                .map(entry -> getProtectedStorageEntryOrNull(entry, networkProtoResolver))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         return new TempProposalStore(list);
+    }
+
+    // The entries come from the network, so one of them failing to deserialize must not cost us the whole store.
+    // PersistenceManager treats a throw here as a corrupted file and moves it aside.
+    @Nullable
+    private static ProtectedStorageEntry getProtectedStorageEntryOrNull(protobuf.ProtectedStorageEntry proto,
+                                                                        NetworkProtoResolver networkProtoResolver) {
+        try {
+            return ProtectedStorageEntry.fromProto(proto, networkProtoResolver);
+        } catch (RuntimeException e) {
+            log.warn("Ignoring invalid ProtectedStorageEntry from TempProposalStore. {}", e.toString());
+            return null;
+        }
     }
 
     public boolean containsKey(P2PDataStorage.ByteArray hash) {

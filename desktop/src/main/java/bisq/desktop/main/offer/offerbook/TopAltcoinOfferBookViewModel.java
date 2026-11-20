@@ -113,8 +113,7 @@ public class TopAltcoinOfferBookViewModel extends OfferBookViewModel {
             // BUY Altcoin is actually SELL Bitcoin
             boolean directionResult = offer.getDirection() == direction;
             boolean currencyResult = offer.getCurrencyCode().equals(TOP_ALTCOIN.getCode());
-            boolean paymentMethodResult = showAllPaymentMethods ||
-                    offer.getPaymentMethod().equals(selectedPaymentMethod);
+            boolean paymentMethodResult = isMatchingSelectedPaymentMethod(offer);
             boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
             return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
         };

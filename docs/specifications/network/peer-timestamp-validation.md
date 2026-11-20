@@ -14,6 +14,8 @@ outside this scope. Those rules are subject to the same overflow requirements be
 - The confirmation time of the Monero transaction used as payment proof, which is validated against
   the start date of the trade. See
   [`trade/xmr-payment-proof-timestamp.md`](../trade/xmr-payment-proof-timestamp.md).
+- The date of a peer reported during peer exchange, which is not used: the peer gets the local time
+  of reception. See [`network/reported-peer-dates.md`](reported-peer-dates.md).
 
 ## Security invariant
 

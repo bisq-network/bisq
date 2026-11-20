@@ -68,6 +68,12 @@ public class MailboxMessageList extends PersistableList<MailboxItem> {
                         protobufferException.printStackTrace();
                         log.error("Error at MailboxItem.fromProto: {}", protobufferException.toString());
                         return null;
+                    } catch (RuntimeException runtimeException) {
+                        // The entries come from the network, so one of them failing to deserialize must not cost
+                        // us the whole store. PersistenceManager treats a throw here as a corrupted file and moves
+                        // it aside.
+                        log.error("Unexpected failure at MailboxItem.fromProto: {}", runtimeException.toString());
+                        return null;
                     }
                 })
                 .filter(Objects::nonNull)

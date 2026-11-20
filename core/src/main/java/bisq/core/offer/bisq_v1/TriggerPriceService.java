@@ -130,7 +130,8 @@ public class TriggerPriceService {
 
     public static boolean wasTriggered(MarketPrice marketPrice, OpenOffer openOffer) {
         Price price = openOffer.getOffer().getPrice();
-        if (price == null || marketPrice == null) {
+        // Only a recent price from the price feed triggers an offer, not a price derived from trade statistics
+        if (price == null || marketPrice == null || !marketPrice.isRecentExternalPriceAvailable()) {
             return false;
         }
 

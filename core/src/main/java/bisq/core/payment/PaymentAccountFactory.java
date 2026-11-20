@@ -22,6 +22,10 @@ import bisq.core.payment.payload.PaymentMethod;
 public class PaymentAccountFactory {
     @SuppressWarnings("deprecation")
     public static PaymentAccount getPaymentAccount(PaymentMethod paymentMethod) {
+        if (paymentMethod.isStableCoin()) {
+            return new StableCoinAccount(paymentMethod);
+        }
+
         switch (paymentMethod.getId()) {
             case PaymentMethod.UPHOLD_ID:
                 return new UpholdAccount();
@@ -135,6 +139,8 @@ public class PaymentAccountFactory {
                 return new MercadoPagoAccount();
             case PaymentMethod.SBP_ID:
                 return new SbpAccount();
+            case PaymentMethod.CUSTOM_ID:
+                return new CustomPaymentMethodAccount();
 
             // Cannot be deleted as it would break old trade history entries
             case PaymentMethod.OK_PAY_ID:

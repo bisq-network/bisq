@@ -183,7 +183,7 @@ public class OfferInfo implements Payload {
                 .withIsCurrencyForMakerFeeBtc(offer.isCurrencyForMakerFeeBtc())
                 .withPaymentAccountId(offer.getMakerPaymentAccountId())
                 .withPaymentMethodId(offer.getPaymentMethod().getId())
-                .withPaymentMethodShortName(offer.getPaymentMethod().getShortName())
+                .withPaymentMethodShortName(offer.getPaymentMethodShortName())
                 .withBaseCurrencyCode(offer.getBaseCurrencyCode())
                 .withCounterCurrencyCode(offer.getCounterCurrencyCode())
                 .withDate(offer.getDate().getTime())

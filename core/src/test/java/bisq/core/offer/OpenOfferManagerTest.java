@@ -252,6 +252,73 @@ public class OpenOfferManagerTest {
         verify(offer, never()).getOfferPayload();
     }
 
+    // The TradeManager ignores a take offer request for the offer in that time, so the offer counts as taken, as a
+    // reserved offer does. The answer does not depend on the ignore list or on the price check.
+    @Test
+    public void testOfferIsTakenWhileTakeOfferHandshakeIsPending() {
+        P2PService p2PService = mock(P2PService.class);
+        OfferBookService offerBookService = mock(OfferBookService.class);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        Preferences preferences = mock(Preferences.class);
+        when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
+        when(preferences.getIgnoreTradersList()).thenReturn(Collections.emptyList());
+        OpenOfferManager manager = new OpenOfferManager(coreContext,
+                null,
+                null,
+                null,
+                p2PService,
+                null,
+                null,
+                null,
+                offerBookService,
+                null,
+                priceFeedService,
+                preferences,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                persistenceManager,
+                null
+        );
+
+        // The mock is a BSQ swap offer only so that the answer without a pending handshake needs no mediator and no
+        // refund agent. The check for a pending handshake comes before the offer type is read.
+        Offer offer = mock(Offer.class);
+        when(offer.getId()).thenReturn("offer-id");
+        when(offer.isBsqSwapOffer()).thenReturn(true);
+        OpenOffer openOffer = new OpenOffer(offer);
+        NodeAddress peer = new NodeAddress("taker.onion", 9999);
+        OfferAvailabilityRequest request = new OfferAvailabilityRequest("offer-id",
+                mock(PubKeyRing.class),
+                1,
+                false,
+                0);
+
+        // Without the TradeManager no handshake is pending
+        assertEquals(AvailabilityResult.AVAILABLE,
+                manager.checkAvailabilityForAvailableOpenOffer(openOffer, request, peer).availabilityResult);
+
+        manager.setTakeOfferHandshakePending("other-offer-id"::equals);
+        assertEquals(AvailabilityResult.AVAILABLE,
+                manager.checkAvailabilityForAvailableOpenOffer(openOffer, request, peer).availabilityResult);
+        verify(preferences, times(2)).getIgnoreTradersList();
+
+        manager.setTakeOfferHandshakePending("offer-id"::equals);
+        OpenOfferManager.AvailabilityCheckResult result = manager.checkAvailabilityForAvailableOpenOffer(openOffer,
+                request,
+                peer);
+
+        assertEquals(AvailabilityResult.OFFER_TAKEN, result.availabilityResult);
+        assertNull(result.mediatorNodeAddress);
+        assertNull(result.refundAgentNodeAddress);
+        verify(preferences, times(2)).getIgnoreTradersList();
+    }
+
     @Test
     public void testStartEditOfferClearsEditStateOnDeactivateFailure() {
         P2PService p2PService = mock(P2PService.class);

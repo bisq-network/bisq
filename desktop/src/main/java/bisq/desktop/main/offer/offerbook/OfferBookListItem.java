@@ -77,19 +77,21 @@ public class OfferBookListItem {
             } else if (PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode())) {
                 // Fiat and signed witness required
                 Optional<AccountAgeWitness> optionalWitness = accountAgeWitnessService.findWitness(offer);
-                AccountAgeWitnessService.SignState signState = optionalWitness
-                        .map(accountAgeWitnessService::getSignState)
-                        .orElse(AccountAgeWitnessService.SignState.UNSIGNED);
+                AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(offer);
 
                 boolean isSignedAccountAgeWitness = optionalWitness
                         .map(signedWitnessService::isSignedAccountAgeWitness)
                         .orElse(false);
 
-                if (isSignedAccountAgeWitness || !signState.equals(AccountAgeWitnessService.SignState.UNSIGNED)) {
+                // A banned account is shown as not signed, the badge of the maker shows the ban
+                boolean isBanned = signState.equals(AccountAgeWitnessService.SignState.BANNED);
+                if (!isBanned &&
+                        (isSignedAccountAgeWitness || !signState.equals(AccountAgeWitnessService.SignState.UNSIGNED))) {
                     // either signed & limits lifted, or waiting for limits to be lifted
-                    // Or banned
                     witnessAgeData = new WitnessAgeData(
-                            signState.isLimitLifted() ? WitnessAgeData.TYPE_SIGNED_AND_LIMIT_LIFTED : WitnessAgeData.TYPE_SIGNED_OR_BANNED,
+                            signState.isLimitLifted() ?
+                                    WitnessAgeData.TYPE_SIGNED_AND_LIMIT_LIFTED :
+                                    WitnessAgeData.TYPE_SIGNED,
                             optionalWitness.map(witness -> accountAgeWitnessService.getWitnessSignAge(witness, new Date())).orElse(0L),
                             signState);
                 } else {
@@ -130,7 +132,7 @@ public class OfferBookListItem {
         Long days;
 
         public static final long TYPE_SIGNED_AND_LIMIT_LIFTED = 4L;
-        public static final long TYPE_SIGNED_OR_BANNED = 3L;
+        public static final long TYPE_SIGNED = 3L;
         public static final long TYPE_NOT_SIGNED = 2L;
         public static final long TYPE_NOT_SIGNING_REQUIRED = 1L;
         public static final long TYPE_ALTCOINS = 0L;
@@ -152,7 +154,7 @@ public class OfferBookListItem {
                 this.displayString = Res.get("offerbook.timeSinceSigning.daysSinceSigning", days);
                 this.info = Res.get("offerbook.timeSinceSigning.tooltip.info.signedAndLifted");
                 this.icon = GUIUtil.getIconForSignState(signState);
-            } else if (type == TYPE_SIGNED_OR_BANNED) {
+            } else if (type == TYPE_SIGNED) {
                 this.displayString = Res.get("offerbook.timeSinceSigning.daysSinceSigning", days);
                 this.info = Res.get("offerbook.timeSinceSigning.tooltip.info.signed");
                 this.icon = GUIUtil.getIconForSignState(signState);
@@ -172,7 +174,7 @@ public class OfferBookListItem {
         }
 
         public boolean isAccountSigned() {
-            return this.type == TYPE_SIGNED_AND_LIMIT_LIFTED || this.type == TYPE_SIGNED_OR_BANNED;
+            return this.type == TYPE_SIGNED_AND_LIMIT_LIFTED || this.type == TYPE_SIGNED;
         }
 
         public boolean isLimitLifted() {

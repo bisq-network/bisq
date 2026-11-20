@@ -23,6 +23,7 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.backup.BackupView;
+import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.notifications.Notification;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
@@ -30,6 +31,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.popups.PopupManager;
 import bisq.desktop.main.overlays.popups.WalletColdStorageReminder;
 import bisq.desktop.main.overlays.windows.DisplayAlertMessageWindow;
+import bisq.desktop.main.overlays.windows.NewPaymentMethodsWindow;
 import bisq.desktop.main.overlays.windows.TacWindow;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.main.overlays.windows.UpdateAmazonGiftCardAccountWindow;
@@ -369,6 +371,12 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         notificationCenter.onAllServicesAndViewsInitialized();
 
         maybeShowPopupsFromQueue();
+
+        if (!DevEnv.isIgnorePopupsInDevMode() && !NewPaymentMethodsWindow.wasShown()) {
+            new NewPaymentMethodsWindow()
+                    .onAction(() -> navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class))
+                    .show();
+        }
 
         walletColdStorageReminder.onAppStarted();
     }
@@ -902,6 +910,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     @Nullable
     BridgesCanHelpException getBridgesCanHelpFailure() {
         return bisqSetup.getBridgesCanHelpFailure();
+    }
+
+    boolean isTorSandboxUnavailable() {
+        return bisqSetup.isTorSandboxUnavailable();
     }
 
     StringProperty getP2PNetworkIconId() {

@@ -7,13 +7,13 @@ echo "[*] Bisq Seednode installation script"
 
 ROOT_USER=root
 ROOT_GROUP=root
-ROOT_PKG="build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 git vim screen ufw zulu21-jdk"
+ROOT_PKG="build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 git vim screen ufw java-21-amazon-corretto-jdk"
 ROOT_HOME=/root
-AZUL_REPO_PKG="ca-certificates curl gnupg"
-AZUL_APT_KEY_URL=https://repos.azul.com/azul-repo.key
-AZUL_APT_KEY_FINGERPRINT=27BC0C8CB3D81623F59BDADCB1998361219BD9C9
-AZUL_APT_KEYRING=/usr/share/keyrings/azul.gpg
-AZUL_APT_SOURCE=/etc/apt/sources.list.d/zulu.list
+CORRETTO_REPO_PKG="ca-certificates curl gnupg"
+CORRETTO_APT_KEY_URL=https://apt.corretto.aws/corretto.key
+CORRETTO_APT_KEY_FINGERPRINT=6DC3636DAE534049C8B94623A122542AB04F24E3
+CORRETTO_APT_KEYRING=/usr/share/keyrings/corretto.gpg
+CORRETTO_APT_SOURCE=/etc/apt/sources.list.d/corretto.list
 
 SYSTEMD_SERVICE_HOME=/etc/systemd/system
 SYSTEMD_ENV_HOME=/etc/default
@@ -67,25 +67,25 @@ sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get update -q
 echo "[*] Upgrading OS packages"
 sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get upgrade -qq -y
 
-echo "[*] Installing Azul Zulu apt repository"
-sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq -y ${AZUL_REPO_PKG}
-AZUL_APT_KEY=$(mktemp)
-AZUL_APT_GNUPGHOME=$(mktemp -d)
-trap 'rm -rf "${AZUL_APT_KEY}" "${AZUL_APT_GNUPGHOME}"' EXIT
-curl -fsSL "${AZUL_APT_KEY_URL}" -o "${AZUL_APT_KEY}"
-AZUL_APT_ACTUAL_FINGERPRINT=$(GNUPGHOME="${AZUL_APT_GNUPGHOME}" gpg --batch --show-keys --with-fingerprint --with-colons "${AZUL_APT_KEY}" | awk -F: '/^fpr:/ {print $10; exit}')
-if [ "${AZUL_APT_ACTUAL_FINGERPRINT}" != "${AZUL_APT_KEY_FINGERPRINT}" ]; then
-	echo "Azul signing key fingerprint mismatch: expected ${AZUL_APT_KEY_FINGERPRINT}, got ${AZUL_APT_ACTUAL_FINGERPRINT}" >&2
+echo "[*] Installing Amazon Corretto apt repository"
+sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq -y ${CORRETTO_REPO_PKG}
+CORRETTO_APT_KEY=$(mktemp)
+CORRETTO_APT_GNUPGHOME=$(mktemp -d)
+trap 'rm -rf "${CORRETTO_APT_KEY}" "${CORRETTO_APT_GNUPGHOME}"' EXIT
+curl -fsSL "${CORRETTO_APT_KEY_URL}" -o "${CORRETTO_APT_KEY}"
+CORRETTO_APT_ACTUAL_FINGERPRINT=$(GNUPGHOME="${CORRETTO_APT_GNUPGHOME}" gpg --batch --show-keys --with-fingerprint --with-colons "${CORRETTO_APT_KEY}" | awk -F: '/^fpr:/ {print $10; exit}')
+if [ "${CORRETTO_APT_ACTUAL_FINGERPRINT}" != "${CORRETTO_APT_KEY_FINGERPRINT}" ]; then
+	echo "Corretto signing key fingerprint mismatch: expected ${CORRETTO_APT_KEY_FINGERPRINT}, got ${CORRETTO_APT_ACTUAL_FINGERPRINT}" >&2
 	exit 1
 fi
-sudo -H -i -u "${ROOT_USER}" gpg --batch --dearmor --yes -o "${AZUL_APT_KEYRING}" "${AZUL_APT_KEY}"
-sudo -H -i -u "${ROOT_USER}" chmod 644 "${AZUL_APT_KEYRING}"
-sudo -H -i -u "${ROOT_USER}" sh -c "echo 'deb [signed-by=${AZUL_APT_KEYRING}] https://repos.azul.com/zulu/deb stable main' > ${AZUL_APT_SOURCE}"
+sudo -H -i -u "${ROOT_USER}" gpg --batch --dearmor --yes -o "${CORRETTO_APT_KEYRING}" "${CORRETTO_APT_KEY}"
+sudo -H -i -u "${ROOT_USER}" chmod 644 "${CORRETTO_APT_KEYRING}"
+sudo -H -i -u "${ROOT_USER}" sh -c "echo 'deb [signed-by=${CORRETTO_APT_KEYRING}] https://apt.corretto.aws stable main' > ${CORRETTO_APT_SOURCE}"
 sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get update -q
 
 echo "[*] Installing base packages"
 sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq -y ${ROOT_PKG}
-JAVA_HOME=$(dirname "$(dirname "$(readlink -f /usr/bin/java)")")
+JAVA_HOME=/usr/lib/jvm/java-21-amazon-corretto
 
 echo "[*] Cloning Bisq repo"
 sudo -H -i -u "${ROOT_USER}" git config --global advice.detachedHead false
@@ -191,7 +191,7 @@ echo "[*] Checking out Bisq ${BISQ_LATEST_RELEASE}"
 sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && git checkout ${BISQ_LATEST_RELEASE} && git submodule update --init --recursive"
 
 echo "[*] Building Bisq from source"
-sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && ./gradlew build -x test < /dev/null" # redirect from /dev/null is necessary to workaround gradlew non-interactive shell hanging issue
+sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && JAVA_HOME=${JAVA_HOME} ./gradlew build -x test < /dev/null" # redirect from /dev/null is necessary to workaround gradlew non-interactive shell hanging issue
 
 echo "[*] Updating systemd daemon configuration"
 sudo -H -i -u "${ROOT_USER}" systemctl daemon-reload

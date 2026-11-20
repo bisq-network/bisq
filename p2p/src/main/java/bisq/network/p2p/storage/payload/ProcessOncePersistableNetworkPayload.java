@@ -20,9 +20,9 @@ package bisq.network.p2p.storage.payload;
 import bisq.common.Payload;
 
 /**
- * Marker interface for PersistableNetworkPayloads that are only added during the FIRST call to
- * P2PDataStorage::processDataResponse. This improves performance for objects that don't go out
- * of sync frequently.
+ * Marker interface for PersistableNetworkPayloads that P2PDataStorage applies from one response of the initial data
+ * only, apart from truncated responses (see docs/specifications/network/initial-data-process-once.md). This improves
+ * performance for objects that don't go out of sync frequently.
  */
 public interface ProcessOncePersistableNetworkPayload extends Payload {
 }

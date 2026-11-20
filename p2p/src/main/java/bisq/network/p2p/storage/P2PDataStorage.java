@@ -116,6 +116,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -143,9 +144,17 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return Connection.getMaxPermittedMessageSize() * 0.6;
     }
 
+    // Upper bounds of what a GetDataResponse adds to the serialized size of its items: the other fields of the
+    // response with its envelope, and the tag and length of an item, twice for an entry in its StorageEntryWrapper.
+    @VisibleForTesting
+    static final int GET_DATA_RESPONSE_FRAME_RESERVE = 1024;
+    @VisibleForTesting
+    static final int GET_DATA_RESPONSE_ITEM_FRAME_RESERVE = 12;
+
     private boolean initialRequestApplied = false;
     private boolean seedNodeOnlyInitialRequestApplied = false;
 
+    private final NetworkNode networkNode;
     private final Broadcaster broadcaster;
     @VisibleForTesting
     final AppendOnlyDataStoreService appendOnlyDataStoreService;
@@ -193,6 +202,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                           Clock clock,
                           @Named("MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE") int maxSequenceNumberBeforePurge,
                           @Named(Config.P2P_DATA_STORAGE_MAX_SIZE) double maxGetDataResponseSize) {
+        this.networkNode = networkNode;
         this.broadcaster = broadcaster;
         this.appendOnlyDataStoreService = appendOnlyDataStoreService;
         this.protectedDataStoreService = protectedDataStoreService;
@@ -370,6 +380,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         .map(e -> get32ByteHashAsByteArray((e.getProtectedStoragePayload())))
                         .toArray());
 
+        // The items with the priorities MID and HIGH do not count for the size limits above. The requester closes the
+        // connection instead of reading a message above the largest it reads, so such a response is cut to fit.
+        cutToFrameLimit(filteredPersistableNetworkPayloads,
+                filteredProtectedStorageEntries,
+                Connection.getMaxPermittedMessageSize(),
+                wasPersistableNetworkPayloadsTruncated,
+                wasProtectedStorageEntriesTruncated);
+
         boolean wasTruncated = wasPersistableNetworkPayloadsTruncated.get() || wasProtectedStorageEntriesTruncated.get();
         return new GetDataResponse(
                 filteredProtectedStorageEntries,
@@ -467,6 +485,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         //    reverse order so in case we cut off at next step we cut off oldest items.
         // 4. We truncate list if resultList size > maxEntries
         // 5. Add all payloads with GetDataResponsePriority.HIGH
+        // In 2. and 3. a payload which alone is above the limit is left out and does not count as exceededSizeLimit.
 
 
         // 1. Add all payloads with GetDataResponsePriority.MID
@@ -480,16 +499,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         List<T> lowPrioItems = filteredItems.stream()
                 .filter(item -> item.getGetDataResponsePriority() == GetDataResponsePriority.LOW)
                 .filter(item -> !(asPayload.apply(item) instanceof DateSortedTruncatablePayload))
-                .filter(item -> {
-                    if (exceededSizeLimit.get()) {
-                        return false;
-                    }
-                    if (totalSize.addAndGet(item.toProtoMessage().getSerializedSize()) > limit) {
-                        exceededSizeLimit.set(true);
-                        return false;
-                    }
-                    return true;
-                })
+                .filter(item -> fitsIntoSizeLimit(item, asPayload, limit, totalSize, exceededSizeLimit))
                 .collect(Collectors.toList());
         resultItems.addAll(lowPrioItems);
         log.info("Number of items with GetDataResponsePriority.LOW and !DateSortedTruncatablePayload: {}. Exceeded size limit: {}", lowPrioItems.size(), exceededSizeLimit.get());
@@ -501,16 +511,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             List<T> dateSortedItems = filteredItems.stream()
                     .filter(item -> item.getGetDataResponsePriority() == GetDataResponsePriority.LOW)
                     .filter(item -> asPayload.apply(item) instanceof DateSortedTruncatablePayload)
-                    .filter(item -> {
-                        if (exceededSizeLimit.get()) {
-                            return false;
-                        }
-                        if (totalSize.addAndGet(item.toProtoMessage().getSerializedSize()) > limit) {
-                            exceededSizeLimit.set(true);
-                            return false;
-                        }
-                        return true;
-                    })
+                    .filter(item -> fitsIntoSizeLimit(item, asPayload, limit, totalSize, exceededSizeLimit))
                     .sorted(Comparator.comparing(item -> ((DateSortedTruncatablePayload) asPayload.apply(item)).getDate()))
                     .collect(Collectors.toList());
             if (!dateSortedItems.isEmpty()) {
@@ -552,6 +553,84 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         log.info("Number of items with GetDataResponsePriority.HIGH: {}", highPrioItems.size());
         log.info("Number of result items we send to requester: {}", resultItems.size());
         return new HashSet<>(resultItems);
+    }
+
+    // The items with GetDataResponsePriority.LOW are added until their total size exceeds the limit
+    private static <T extends NetworkPayload> boolean fitsIntoSizeLimit(T item,
+                                                                        Function<T, ? extends NetworkPayload> asPayload,
+                                                                        long limit,
+                                                                        AtomicLong totalSize,
+                                                                        AtomicBoolean exceededSizeLimit) {
+        if (exceededSizeLimit.get()) {
+            return false;
+        }
+        int size = item.toProtoMessage().getSerializedSize();
+        if (size > limit) {
+            // An item above the limit fits into no response. If it counted for the limit, the items after it would
+            // be left out of this response and of every repeated one, as the requester never learns its hash. It
+            // does not mark the response as truncated either, as a repeated request could not deliver it.
+            log.warn("We leave a {} of {} bytes out of the GetDataResponse as it is above the size limit of {} bytes",
+                    asPayload.apply(item).getClass().getSimpleName(), size, limit);
+            return false;
+        }
+        if (totalSize.addAndGet(size) > limit) {
+            exceededSizeLimit.set(true);
+            return false;
+        }
+        return true;
+    }
+
+    // An item of a GetDataResponse with an upper bound of the bytes that it adds to the serialized response
+    private record ResponseItem(NetworkPayload item, boolean isHighPriority, long frameSize) {
+    }
+
+    // Leaves items out of a response which is above frameLimit, the largest message that a requester reads, until it
+    // fits: the largest items first, and items with GetDataResponsePriority.HIGH only when no other item is left. An
+    // item which fits into a later response marks its part of the response as truncated, so that the requester repeats
+    // its request. An item which alone is above frameLimit fits into no response and does not mark it.
+    private static void cutToFrameLimit(Set<PersistableNetworkPayload> persistableNetworkPayloads,
+                                        Set<ProtectedStorageEntry> protectedStorageEntries,
+                                        int frameLimit,
+                                        AtomicBoolean wasPersistableNetworkPayloadsTruncated,
+                                        AtomicBoolean wasProtectedStorageEntriesTruncated) {
+        List<ResponseItem> items = new ArrayList<>();
+        persistableNetworkPayloads.forEach(item -> items.add(toResponseItem(item)));
+        protectedStorageEntries.forEach(item -> items.add(toResponseItem(item)));
+        long responseSize = GET_DATA_RESPONSE_FRAME_RESERVE + items.stream().mapToLong(ResponseItem::frameSize).sum();
+        if (responseSize <= frameLimit) {
+            return;
+        }
+
+        long sizeBeforeCut = responseSize;
+        items.sort(Comparator.comparing(ResponseItem::isHighPriority)
+                .thenComparing(Comparator.comparingLong(ResponseItem::frameSize).reversed()));
+        int numLeftOut = 0;
+        for (ResponseItem responseItem : items) {
+            if (responseSize <= frameLimit) {
+                break;
+            }
+            responseSize -= responseItem.frameSize();
+            numLeftOut++;
+            boolean fitsIntoLaterResponse = GET_DATA_RESPONSE_FRAME_RESERVE + responseItem.frameSize() <= frameLimit;
+            if (responseItem.item() instanceof PersistableNetworkPayload persistableNetworkPayload) {
+                persistableNetworkPayloads.remove(persistableNetworkPayload);
+                if (fitsIntoLaterResponse) {
+                    wasPersistableNetworkPayloadsTruncated.set(true);
+                }
+            } else {
+                protectedStorageEntries.remove((ProtectedStorageEntry) responseItem.item());
+                if (fitsIntoLaterResponse) {
+                    wasProtectedStorageEntriesTruncated.set(true);
+                }
+            }
+        }
+        log.warn("The GetDataResponse had up to {} bytes, above the largest message of {} bytes. We left out {} items, " +
+                "so it has now up to {} bytes", sizeBeforeCut, frameLimit, numLeftOut, responseSize);
+    }
+
+    private static ResponseItem toResponseItem(NetworkPayload item) {
+        long frameSize = item.toProtoMessage().getSerializedSize() + GET_DATA_RESPONSE_ITEM_FRAME_RESERVE;
+        return new ResponseItem(item, item.getGetDataResponsePriority() == GetDataResponsePriority.HIGH, frameSize);
     }
 
     public Collection<PersistableNetworkPayload> getPersistableNetworkPayloadCollection() {
@@ -614,7 +693,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         log.info("Processing {} protectedStorageEntries took {} ms.", protectedStorageEntries.size(), this.clock.millis() - ts);
 
         ts = this.clock.millis();
-        persistableNetworkPayloadSet.forEach(e -> {
+        boolean seedNodeOnlyPayloadsApplied = false;
+        for (PersistableNetworkPayload e : persistableNetworkPayloadSet) {
             if (e instanceof ProcessOncePersistableNetworkPayload) {
                 // We use an optimized method as many checks are not required in that case to avoid
                 // performance issues.
@@ -638,12 +718,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         (!payloadTypeAlreadyApplied || getDataResponse.isWasTruncated());
                 if (shouldApplyPayload) {
                     addPersistableNetworkPayloadFromInitialRequest(e);
+                    seedNodeOnlyPayloadsApplied |= seedNodeOnlyPayload;
                 }
             } else {
                 // We don't broadcast here as we are only connected to the seed node and would be pointless
                 addPersistableNetworkPayload(e, sender, false, false, false);
             }
-        });
+        }
         log.info("Processing {} persistableNetworkPayloads took {} ms.",
                 persistableNetworkPayloadSet.size(), this.clock.millis() - ts);
 
@@ -651,7 +732,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // issues and since the data is rarely out of sync it is not worth it to apply them from multiple peers during
         // startup.
 
-        if (isSeedNodeResponse) {
+        // A seed node response without seed-node-only payloads has applied none of them, so it must not keep a later
+        // seed node response from providing them.
+        if (seedNodeOnlyPayloadsApplied) {
             seedNodeOnlyInitialRequestApplied = true;
         }
 
@@ -750,6 +833,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         NodeAddress peersNodeAddress = connection.getPeersNodeAddressOptional().get();
 
+        // A connection to our own address is one we dialed ourselves (the self-ping test does), and
+        // losing it does not show that we went offline. Backdating our own payloads would expire them
+        // before their next refresh, and they would drop out of the network until we republish them.
+        if (peersNodeAddress.equals(networkNode.getNodeAddress()))
+            return;
+
         // Backdate all the eligible payloads based on the node that disconnected
         map.values().stream()
                 .filter(protectedStorageEntry -> protectedStorageEntry.getProtectedStoragePayload() instanceof RequiresOwnerIsOnlinePayload)
@@ -826,7 +915,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (!payloadHashAlreadyInStore) {
             wasAdded = appendOnlyDataStoreService.put(hashAsByteArray, payload);
             if (wasAdded) {
-                appendOnlyDataStoreListeners.forEach(e -> e.onAdded(payload));
+                notifyListeners(appendOnlyDataStoreListeners,
+                        appendOnlyDataStoreListener -> appendOnlyDataStoreListener.onAdded(payload));
             }
         }
 
@@ -834,7 +924,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (allowBroadcast && wasAdded)
             broadcaster.broadcast(new AddPersistableNetworkPayloadMessage(payload), sender);
 
-        return true;
+        return payloadHashAlreadyInStore || wasAdded;
     }
 
     // When we receive initial data we skip several checks to improve performance. We requested only missing entries so we
@@ -928,7 +1018,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // This is an updated entry. Record it and signal listeners.
         map.put(hashOfPayload, protectedStorageEntry);
-        hashMapChangedListeners.forEach(e -> e.onAdded(Collections.singletonList(protectedStorageEntry)));
+        List<ProtectedStorageEntry> addedEntries = Collections.singletonList(protectedStorageEntry);
+        notifyListeners(hashMapChangedListeners, hashMapChangedListener -> hashMapChangedListener.onAdded(addedEntries));
 
         // Record the updated sequence number and persist it. Higher delay so we can batch more items.
         sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
@@ -1183,7 +1274,21 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             }
         });
 
-        hashMapChangedListeners.forEach(e -> e.onRemoved(removedProtectedStorageEntries));
+        notifyListeners(hashMapChangedListeners,
+                hashMapChangedListener -> hashMapChangedListener.onRemoved(removedProtectedStorageEntries));
+    }
+
+    // A listener that fails must not keep the change from the other listeners, nor stop the change itself, for
+    // example the sequence number, the persistence and the broadcast of an added entry.
+    private static <T> void notifyListeners(Collection<T> listeners, Consumer<T> notification) {
+        listeners.forEach(listener -> {
+            try {
+                notification.accept(listener);
+            } catch (RuntimeException e) {
+                log.error("A listener of the data storage failed to handle a change. listener={}",
+                        listener.getClass().getName(), e);
+            }
+        });
     }
 
     private boolean hasSequenceNrIncreased(int newSequenceNumber, ByteArray hashOfData) {

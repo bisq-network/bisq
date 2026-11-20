@@ -44,6 +44,10 @@ public class PopupManager {
         return displayedPopup == null;
     }
 
+    public static boolean isReadyForPopup() {
+        return displayedPopup == null && popups.isEmpty();
+    }
+
     public static boolean isDisplayedOrQueued(Popup popup) {
         return displayedPopup == popup || popups.contains(popup);
     }

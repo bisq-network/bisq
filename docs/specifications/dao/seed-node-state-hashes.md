@@ -47,6 +47,26 @@ restart until a DAO resync.
 `RequestDataHandler` also sends its requests only over outbound connections, and it trusts seed node
 data only on an outbound connection to the seed node.
 
+## Response size
+
+A node answers a state hash request with the hashes from the requested height on. If these are more
+than 50000, it sends only the 50000 hashes of the highest heights, in ascending order of height,
+about 1.5 MB, so that the response stays below the maximum size of a message of 10 MB. The requester
+does not request the other hashes.
+
+The hashes of the highest heights are the useful ones. Each hash covers the hash of the previous
+block, so a conflict that started at an earlier height shows in the recent hashes as well. A node
+that takes the missing DAO state hashes from the response, as described under Scope, continues its
+hash chain from the last of them. With the hashes of the lowest heights its chain would end below
+the chain tip, it would not connect to the next block, and the node could not start a trade.
+
+At startup a node requests the DAO state hashes from the height after its last hash, or from 10
+blocks below the chain tip if that is lower, and the proposal and blind vote hashes of the last 5
+cycles, about 23400 blocks. Of these requests, only that of a node whose last DAO state hash is more
+than 50000 blocks, about 11 months, below the chain tip gets fewer hashes than requested. The DAO
+monitor view can request the hashes from the DAO genesis height; it gets those of the last 50000
+blocks.
+
 ## Compatibility
 
 No message and no persisted data change.
@@ -63,3 +83,11 @@ from an unverified peer keeps the conflict until a DAO resync.
 
 The DAO monitor view still shows the hashes of other peers under the address that they claim. This
 affects only the display.
+
+Unless the full mode DAO monitor is enabled, a node whose last DAO state hash is more than 50000
+blocks below the chain tip stores a hash chain with a gap before the hashes of the last 50000
+blocks. The gap affects only the display: the node verifies checkpoints only against hashes that it
+created itself, and a new hash builds only on the last one.
+
+A node of an earlier version answers with all hashes from the requested height on. From the DAO
+genesis height these are 400054 hashes, 12 MB in the snapshot of 1.10.12.

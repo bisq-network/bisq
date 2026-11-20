@@ -30,8 +30,6 @@ import bisq.common.crypto.PubKeyRing;
 
 import java.security.PublicKey;
 
-import java.util.Date;
-
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
@@ -111,11 +109,6 @@ public final class OpenNewDisputeMessage extends DisputeMessage implements Sende
         return senderSignaturePubKey;
     }
 
-    @Override
-    public boolean isSenderSignaturePubKeyRequired() {
-        return DisputeMessage.isSenderSignaturePubKeyValidationRequired(getTradeDate(dispute));
-    }
-
     @Nullable
     private static PublicKey getDisputeOpenerSignaturePubKey(@Nullable Dispute dispute) {
         Contract contract = dispute == null ? null : dispute.getContract();
@@ -127,11 +120,6 @@ public final class OpenNewDisputeMessage extends DisputeMessage implements Sende
                 contract.getBuyerPubKeyRing() :
                 contract.getSellerPubKeyRing();
         return senderPubKeyRing == null ? null : senderPubKeyRing.getSignaturePubKey();
-    }
-
-    @Nullable
-    private static Date getTradeDate(@Nullable Dispute dispute) {
-        return dispute == null ? null : dispute.getTradeDate();
     }
 
     @Override

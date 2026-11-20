@@ -28,6 +28,7 @@ import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
+import bisq.network.p2p.mailbox.MailboxMessage;
 import bisq.network.p2p.mailbox.MailboxMessageService;
 
 import bisq.common.Timer;
@@ -37,11 +38,11 @@ import bisq.common.proto.network.NetworkEnvelope;
 
 import java.security.PublicKey;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,8 +53,8 @@ public abstract class SupportManager {
     protected final P2PService p2PService;
     protected final WalletsSetup walletsSetup;
     protected final Map<String, Timer> delayMsgMap = new HashMap<>();
-    private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
-    private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
+    private final List<DecryptedMessageWithPubKey> decryptedMailboxMessageWithPubKeys = new ArrayList<>();
+    private final List<DecryptedMessageWithPubKey> decryptedDirectMessageWithPubKeys = new ArrayList<>();
     protected final MailboxMessageService mailboxMessageService;
     private boolean allServicesInitialized;
 
@@ -69,18 +70,10 @@ public abstract class SupportManager {
         this.walletsSetup = walletsSetup;
 
         // We get first the message handler called then the onBootstrapped
-        p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, senderAddress) -> {
-            // As decryptedDirectMessageWithPubKeys is a CopyOnWriteArraySet we do not need to check if it was
-            // already stored
-            decryptedDirectMessageWithPubKeys.add(decryptedMessageWithPubKey);
-            tryApplyMessages();
-        });
-        mailboxMessageService.addDecryptedMailboxListener((decryptedMessageWithPubKey, senderAddress) -> {
-            // As decryptedMailboxMessageWithPubKeys is a CopyOnWriteArraySet we do not need to check if it was
-            // already stored
-            decryptedMailboxMessageWithPubKeys.add(decryptedMessageWithPubKey);
-            tryApplyMessages();
-        });
+        p2PService.addDecryptedDirectMessageListener((message, sender) ->
+                queueMessage(message, decryptedDirectMessageWithPubKeys));
+        mailboxMessageService.addDecryptedMailboxListener((message, sender) ->
+                queueMessage(message, decryptedMailboxMessageWithPubKeys));
     }
 
 
@@ -127,8 +120,10 @@ public abstract class SupportManager {
     }
 
     public void tryApplyMessages() {
-        if (isReady())
-            applyMessages();
+        if (isReady()) {
+            applyMessages(decryptedDirectMessageWithPubKeys, false);
+            applyMessages(decryptedMailboxMessageWithPubKeys, true);
+        }
     }
 
 
@@ -352,28 +347,39 @@ public abstract class SupportManager {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void applyMessages() {
-        decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
-            NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-            if (networkEnvelope instanceof SupportMessage supportMessage) {
-                onSupportMessage(supportMessage, decryptedMessageWithPubKey.getSignaturePubKey());
-            } else if (networkEnvelope instanceof AckMessage ackMessage) {
-                onAckMessage(ackMessage, decryptedMessageWithPubKey.getSignaturePubKey());
+    private void queueMessage(DecryptedMessageWithPubKey message, List<DecryptedMessageWithPubKey> queue) {
+        NetworkEnvelope envelope = message.getNetworkEnvelope();
+        if ((envelope instanceof SupportMessage support && canProcessMessage(support)) ||
+                (envelope instanceof AckMessage ack && ack.getSourceType() == getAckMessageSourceType())) {
+            synchronized (queue) {
+                if (!queue.contains(message)) {
+                    queue.add(message);
+                }
             }
-        });
-        decryptedDirectMessageWithPubKeys.clear();
+            tryApplyMessages();
+        }
+    }
 
-        decryptedMailboxMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
-            NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-            log.trace("## decryptedMessageWithPubKey message={}", networkEnvelope.getClass().getSimpleName());
-            if (networkEnvelope instanceof SupportMessage supportMessage) {
-                onSupportMessage(supportMessage, decryptedMessageWithPubKey.getSignaturePubKey());
-                mailboxMessageService.removeMailboxMsg(supportMessage);
-            } else if (networkEnvelope instanceof AckMessage ackMessage) {
-                onAckMessage(ackMessage, decryptedMessageWithPubKey.getSignaturePubKey());
-                mailboxMessageService.removeMailboxMsg(ackMessage);
+    private void applyMessages(List<DecryptedMessageWithPubKey> queue, boolean fromMailbox) {
+        List<DecryptedMessageWithPubKey> pending;
+        synchronized (queue) {
+            pending = List.copyOf(queue);
+            queue.clear();
+        }
+        for (DecryptedMessageWithPubKey message : pending) {
+            NetworkEnvelope envelope = message.getNetworkEnvelope();
+            try {
+                if (envelope instanceof SupportMessage support) {
+                    onSupportMessage(support, message.getSignaturePubKey());
+                } else if (envelope instanceof AckMessage ack) {
+                    onAckMessage(ack, message.getSignaturePubKey());
+                }
+                if (fromMailbox) {
+                    mailboxMessageService.removeMailboxMsg((MailboxMessage) envelope);
+                }
+            } catch (RuntimeException e) {
+                log.warn("Failed to apply {}", envelope.getClass().getSimpleName(), e);
             }
-        });
-        decryptedMailboxMessageWithPubKeys.clear();
+        }
     }
 }

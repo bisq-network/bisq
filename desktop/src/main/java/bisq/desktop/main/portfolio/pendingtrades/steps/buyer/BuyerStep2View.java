@@ -35,6 +35,7 @@ import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.CelPayForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
+import bisq.desktop.components.paymentmethods.CustomPaymentMethodForm;
 import bisq.desktop.components.paymentmethods.DomesticWireTransferForm;
 import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
@@ -64,6 +65,7 @@ import bisq.desktop.components.paymentmethods.SbpForm;
 import bisq.desktop.components.paymentmethods.SepaForm;
 import bisq.desktop.components.paymentmethods.SepaInstantForm;
 import bisq.desktop.components.paymentmethods.SpecificBankForm;
+import bisq.desktop.components.paymentmethods.StableCoinForm;
 import bisq.desktop.components.paymentmethods.StrikeForm;
 import bisq.desktop.components.paymentmethods.SwiftForm;
 import bisq.desktop.components.paymentmethods.SwishForm;
@@ -97,6 +99,7 @@ import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.CashByMailAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
+import bisq.core.payment.payload.CustomPaymentMethodAccountPayload;
 import bisq.core.payment.payload.F2FAccountPayload;
 import bisq.core.payment.payload.FasterPaymentsAccountPayload;
 import bisq.core.payment.payload.HalCashAccountPayload;
@@ -106,9 +109,11 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.SbpAccountPayload;
 import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SepaInstantAccountPayload;
+import bisq.core.payment.payload.StableCoinAccountPayload;
 import bisq.core.payment.payload.SwiftAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
+import bisq.core.payment.stablecoin.StableCoin;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.validation.DelayedPayoutTxValidation;
 import bisq.core.user.DontShowAgainLookup;
@@ -122,6 +127,8 @@ import bisq.common.util.Tuple4;
 
 import org.bitcoinj.core.Transaction;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
@@ -130,6 +137,8 @@ import javafx.scene.layout.Priority;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import javax.annotation.Nullable;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -175,13 +184,8 @@ public class BuyerStep2View extends TradeStepView {
                         switch (state) {
                             case BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED:
                             case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:
-                                busyAnimation.play();
-                                statusLabel.setText(Res.get("shared.sendingConfirmation"));
+                                showSendingConfirmation();
                                 model.setMessageStateProperty(MessageState.SENT);
-                                timeoutTimer = UserThread.runAfter(() -> {
-                                    busyAnimation.stop();
-                                    statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
-                                }, 10);
                                 break;
                             case BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG:
                                 busyAnimation.stop();
@@ -251,7 +255,7 @@ public class BuyerStep2View extends TradeStepView {
 
         int rowSpanStart = gridRow;
 
-        PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
+        PaymentAccountPayload paymentAccountPayload = getSellersPaymentAccountPayloadOfOffersRail();
         PaymentAccountPayload buyersPaymentAccountPayload = model.dataModel.getBuyersPaymentAccountPayload();
         String paymentMethodId = paymentAccountPayload != null ? paymentAccountPayload.getPaymentMethodId() : "";
 
@@ -338,6 +342,12 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.CASH_BY_MAIL_ID:
                 gridRow = CashByMailForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.CUSTOM_ID:
+                checkNotNull(model.dataModel.getTrade(), "model.dataModel.getTrade() must not be null");
+                checkNotNull(model.dataModel.getTrade().getOffer(), "model.dataModel.getTrade().getOffer() must not be null");
+                gridRow = CustomPaymentMethodForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload,
+                        model.dataModel.getTrade().getOffer());
                 break;
             case PaymentMethod.MONEY_GRAM_ID:
                 gridRow = MoneyGramForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
@@ -440,7 +450,11 @@ public class BuyerStep2View extends TradeStepView {
                 gridRow = SbpForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             default:
-                if (paymentAccountPayload != null) {
+                if (paymentAccountPayload instanceof StableCoinAccountPayload && findStableCoin(trade).isPresent()) {
+                    // The stablecoin payment methods share one form. Their IDs are the names of the rails.
+                    gridRow = StableCoinForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload,
+                            findStableCoin(trade).get());
+                } else if (paymentAccountPayload != null) {
                     log.error("Not supported PaymentMethod: " + paymentMethodId);
                 }
         }
@@ -469,7 +483,9 @@ public class BuyerStep2View extends TradeStepView {
             // details to show. Render a warning instead of dereferencing null here,
             // which used to throw an NPE and leave the whole trade step pane blank.
             SimpleMarkdownLabel missingLabel = addSimpleMarkdownLabel(gridPane, ++gridRow,
-                    Res.get("portfolio.pending.step2_buyer.paymentAccountPayloadMissing"), 10);
+                    Res.get(trade.hasMismatchedSellerPaymentRail() ?
+                            "portfolio.pending.step2_buyer.stablecoin.paymentAccountPayloadMismatch" :
+                            "portfolio.pending.step2_buyer.paymentAccountPayloadMissing"), 10);
             missingLabel.getStyleClass().add("medium-text");
             GridPane.setColumnSpan(missingLabel, 2);
         } else if (paymentAccountPayload.showRefTextWarning()) {
@@ -538,7 +554,7 @@ public class BuyerStep2View extends TradeStepView {
     protected void updateDisputeState(Trade.DisputeState disputeState) {
         super.updateDisputeState(disputeState);
 
-        confirmButton.setDisable(model.dataModel.getSellersPaymentAccountPayload() == null
+        confirmButton.setDisable(getSellersPaymentAccountPayloadOfOffersRail() == null
                 || !trade.confirmPermitted());
     }
 
@@ -549,7 +565,17 @@ public class BuyerStep2View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onPaymentStarted() {
+        if (trade.hasFailed()) {
+            new Popup().warning(Res.get("portfolio.pending.step2_buyer.tradeHasError", trade.getErrorMessage())).show();
+            return;
+        }
+
         if (!model.dataModel.isBootstrappedOrShowPopup()) {
+            return;
+        }
+
+        if (trade.hasMismatchedSellerPaymentRail()) {
+            // The button is disabled in that case
             return;
         }
 
@@ -675,24 +701,48 @@ public class BuyerStep2View extends TradeStepView {
     }
 
     private void confirmPaymentStarted() {
-        busyAnimation.play();
-        statusLabel.setText(Res.get("shared.sendingConfirmation"));
+        // A retry leaves the state of the trade as it is, for example while the message was sent and the seller has
+        // not acknowledged it, so the timeout must not wait for a change of the state.
+        showSendingConfirmation();
 
-        //TODO seems this was a hack to enable repeated confirm???
-        if (trade.isFiatSent()) {
-            trade.setState(Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
-            model.dataModel.getTradeManager().requestPersistence();
-        }
-
-        model.dataModel.onPaymentStarted(() -> {
+        model.dataModel.onPaymentStarted(trade, () -> {
         }, errorMessage -> {
-            busyAnimation.stop();
+            // The confirmation was refused, so the view must not offer to send it again
+            stopSendingTimeout();
+            showStatus(false, "");
             new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
     }
 
+    // Without an answer of the seller within 10 seconds, the user can send the confirmation again
+    private void showSendingConfirmation() {
+        stopSendingTimeout();
+        showStatus(true, Res.get("shared.sendingConfirmation"));
+        timeoutTimer = UserThread.runAfter(() -> showStatus(false, Res.get("shared.sendingConfirmationAgain")), 10);
+    }
+
+    private void stopSendingTimeout() {
+        if (timeoutTimer != null)
+            timeoutTimer.stop();
+    }
+
+    @VisibleForTesting
+    void showStatus(boolean isBusy, String text) {
+        if (isBusy) {
+            busyAnimation.play();
+        } else {
+            busyAnimation.stop();
+        }
+        statusLabel.setText(text);
+    }
+
+    @Nullable
+    private PaymentAccountPayload getSellersPaymentAccountPayloadOfOffersRail() {
+        return trade.hasMismatchedSellerPaymentRail() ? null : model.dataModel.getSellersPaymentAccountPayload();
+    }
+
     private void showPopup() {
-        PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
+        PaymentAccountPayload paymentAccountPayload = getSellersPaymentAccountPayloadOfOffersRail();
         if (paymentAccountPayload != null) {
             String message = Res.get("portfolio.pending.step2.confReached");
             String refTextWarn = Res.get("portfolio.pending.step2_buyer.refTextWarn");
@@ -703,6 +753,12 @@ public class BuyerStep2View extends TradeStepView {
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",
                         getCurrencyName(trade),
                         amount);
+            } else if (paymentAccountPayload instanceof StableCoinAccountPayload && findStableCoin(trade).isPresent()) {
+                StableCoin stableCoin = findStableCoin(trade).get();
+                message += Res.get("portfolio.pending.step2_buyer.stablecoin",
+                        model.getFiatVolume(),
+                        StableCoinForm.getNetworkDisplayString(stableCoin),
+                        StableCoinForm.getCoinDisplayString(stableCoin));
             } else if (paymentAccountPayload instanceof CashDepositAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.cash",
                         amount) +
@@ -740,6 +796,9 @@ public class BuyerStep2View extends TradeStepView {
                         Res.get("portfolio.pending.step2_buyer.fees.swift");
             } else if (paymentAccountPayload instanceof SbpAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.sbp", amount);
+            } else if (paymentAccountPayload instanceof CustomPaymentMethodAccountPayload) {
+                message += Res.get("portfolio.pending.step2_buyer.custom", amount) +
+                        refTextWarn;
             } else {
                 message += Res.get("portfolio.pending.step2_buyer.pay", amount) +
                         refTextWarn + "\n\n" +

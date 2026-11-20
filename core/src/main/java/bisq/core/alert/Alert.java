@@ -71,7 +71,7 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
     private PublicKey ownerPubKey;
 
     @Nullable
-    private final TreeMap<String, String> extraDataMap;
+    private TreeMap<String, String> extraDataMap;
 
     public Alert(String message,
                  boolean isUpdateInfo,
@@ -234,6 +234,20 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
         ownerPubKeyBytes = Sig.getPublicKeyBytes(ownerPubKey);
     }
 
+    void setAlertSignature(String alertSignature) {
+        TreeMap<String, String> newExtraDataMap = extraDataMap == null ?
+                new TreeMap<>() :
+                new TreeMap<>(extraDataMap);
+        newExtraDataMap.put(AlertSignature.EXTRA_DATA_KEY, alertSignature);
+        ExtraDataMapValidator.validate(newExtraDataMap);
+        extraDataMap = newExtraDataMap;
+    }
+
+    @Nullable
+    String getAlertSignature() {
+        return extraDataMap == null ? null : extraDataMap.get(AlertSignature.EXTRA_DATA_KEY);
+    }
+
     public boolean isNewVersion(Preferences preferences) {
         // regular release: always notify user
         // pre-release: if user has set preference to receive pre-release notification
@@ -246,6 +260,11 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
 
     public boolean isSoftwareUpdateNotification() {
         return (isUpdateInfo || isPreReleaseInfo);
+    }
+
+    // An update notification is compared with the own version, so it needs a valid version
+    public boolean hasValidVersion() {
+        return !isSoftwareUpdateNotification() || Version.isValid(version);
     }
 
     public boolean canShowPopup(Preferences preferences) {

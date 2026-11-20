@@ -374,6 +374,22 @@ public class FileUtil {
         }
     }
 
+    /**
+     * Gives the path the POSIX permissions, for example {@code rwx------} to make a directory owner-only. A file system
+     * without POSIX permissions, such as the one of Windows, keeps its own rules. A failure, for example for a path
+     * that another user owns, is only logged, so that the caller works on as before.
+     */
+    public static void restrictToOwner(Path path, String posixPermissions) {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            return;
+        }
+        try {
+            java.nio.file.Files.setPosixFilePermissions(path, PosixFilePermissions.fromString(posixPermissions));
+        } catch (IOException | UnsupportedOperationException e) {
+            log.warn("Could not make {} accessible to its owner only: {}", path, e.toString());
+        }
+    }
+
     // No attribute on a file system without POSIX permissions, such as the one of Windows
     private static FileAttribute<?>[] ownerOnly(String posixPermissions) {
         if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {

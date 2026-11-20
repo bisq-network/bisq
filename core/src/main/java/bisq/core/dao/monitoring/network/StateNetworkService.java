@@ -36,16 +36,19 @@ import bisq.common.proto.network.NetworkEnvelope;
 
 import javax.inject.Inject;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -74,6 +77,14 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage<StH>,
 
         void onFault();
     }
+
+    // The DAO state hashes of all blocks since the genesis block do not fit into one message (12 MB in 2026, with a
+    // limit of 10 MB), and a peer drops a message above its limit. A response has at most this many (about 1.5 MB),
+    // those of the highest heights, as the requester does not request the others. A hash covers the hash of the
+    // previous block, so the recent hashes show an earlier conflict as well, and a requester that takes over the
+    // hashes continues its hash chain from the last one.
+    @VisibleForTesting
+    static final int MAX_STATE_HASHES_PER_RESPONSE = 50_000;
 
     protected final NetworkNode networkNode;
     protected final PeerManager peerManager;
@@ -171,9 +182,15 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage<StH>,
     }
 
     public void sendGetStateHashesResponse(Connection connection, int nonce, List<StH> stateHashes) {
-        Res getStateHashesResponse = getGetStateHashesResponse(nonce, stateHashes);
-        log.info("Send {} with {} stateHashes to peer {}", getStateHashesResponse.getClass().getSimpleName(),
-                stateHashes.size(), connection.getPeersNodeAddressOptional());
+        List<StH> stateHashesForResponse = stateHashes.size() > MAX_STATE_HASHES_PER_RESPONSE ?
+                stateHashes.stream()
+                        .sorted(Comparator.comparingInt(StateHash::getHeight))
+                        .skip(stateHashes.size() - MAX_STATE_HASHES_PER_RESPONSE)
+                        .collect(Collectors.toList()) :
+                stateHashes;
+        Res getStateHashesResponse = getGetStateHashesResponse(nonce, stateHashesForResponse);
+        log.info("Send {} with {} of {} stateHashes to peer {}", getStateHashesResponse.getClass().getSimpleName(),
+                stateHashesForResponse.size(), stateHashes.size(), connection.getPeersNodeAddressOptional());
         SettableFuture<Connection> future = networkNode.sendMessage(connection, getStateHashesResponse);
         Futures.addCallback(future, new FutureCallback<>() {
             @Override

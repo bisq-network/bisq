@@ -23,10 +23,12 @@ import bisq.common.UserThread;
 import bisq.common.config.Config;
 
 import io.grpc.Server;
-import io.grpc.ServerBuilder;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import java.net.InetSocketAddress;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -59,7 +61,12 @@ public class GrpcServer {
                       GrpcVersionService versionService,
                       GrpcTradesService tradesService,
                       GrpcWalletsService walletsService) {
-        this.server = ServerBuilder.forPort(config.apiPort)
+        InetSocketAddress listenAddress = new InetSocketAddress(config.apiHost, config.apiPort);
+        if (!listenAddress.isUnresolved() && !listenAddress.getAddress().isLoopbackAddress()) {
+            log.warn("The gRPC API listens on {} without TLS. Other hosts can reach it and can read the API " +
+                    "password on the network.", listenAddress);
+        }
+        this.server = NettyServerBuilder.forAddress(listenAddress)
                 .executor(UserThread.getExecutor())
                 .addService(interceptForward(daoService, daoService.interceptors()))
                 .addService(interceptForward(disputeAgentsService, disputeAgentsService.interceptors()))
@@ -79,7 +86,7 @@ public class GrpcServer {
     public void start() {
         try {
             server.start();
-            log.info("listening on port {}", server.getPort());
+            log.info("listening on {}", server.getListenSockets());
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }

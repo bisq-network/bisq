@@ -60,6 +60,8 @@ public class CoreNetworkCapabilities {
         } else {
             // A lite node has the capability to receive bsq blocks. We do not want to send BSQ blocks to full nodes
             // as they ignore them anyway.
+            // Compatibility with v1.10.11 and earlier: full nodes of v1.10.4 to v1.10.11 send signed blocks only to
+            // requesters with SIGNED_DAO_BLOCK. Once no full node runs these releases, it need not be announced.
             Capabilities.app.addAll(Capability.RECEIVE_BSQ_BLOCK, Capability.SIGNED_DAO_BLOCK);
         }
     }
