@@ -68,12 +68,21 @@ public class DaoTestUtils {
      * The target height is read from bitcoind directly — reading {@code alice.getCycleInfo()}
      * here races the daemon's block-notification handler and would let
      * {@link #awaitChainHeight} return before Bisq actually finished parsing the new blocks.
+     *
+     * <p>A batch ends at the first block of the next phase, so no DAO break is left without
+     * {@link #awaitGovernanceDataBeforeLeavingBreak}.
      */
     public void generateBlocks(int n) {
-        if (n <= 0) return;
-        int target = mine(n);
-        awaitChainHeight(alice, target, "alice");
-        awaitChainHeight(bob, target, "bob");
+        int remaining = n;
+        while (remaining > 0) {
+            GetCycleInfoReply ci = alice.getCycleInfo();
+            awaitGovernanceDataBeforeLeavingBreak(ci);
+            int batch = Math.min(remaining, ci.getBlocksRemainingInPhase() + 1);
+            int target = mine(batch);
+            awaitChainHeight(alice, target, "alice");
+            awaitChainHeight(bob, target, "bob");
+            remaining -= batch;
+        }
     }
 
     /**
@@ -142,6 +151,41 @@ public class DaoTestUtils {
         }
         throw new IllegalStateException("cycle did not advance after 20 hops");
     }
+
+    /**
+     * The breaks are the P2P propagation windows of a cycle. In BREAK1 each node publishes the proposals it holds as
+     * append-only data, and each node hashes its proposal list at the first BLIND_VOTE block and its blind votes at
+     * the first VOTE_REVEAL block. On mainnet a break lasts many blocks, here it is mined in milliseconds. The seed
+     * node has no API and the DAO tests do not query arb: in VoteResultAfterRestartTest both got the proposals 1.6 s
+     * after the first BLIND_VOTE block, and their DAO state split from alice and bob. The P2P layer sends broadcasts
+     * in bundles every 2 s (Broadcaster.BROADCAST_INTERVAL_MS), so a payload reaches every direct peer within
+     * GOVERNANCE_DATA_BROADCAST_MS.
+     */
+    private void awaitGovernanceDataBeforeLeavingBreak(GetCycleInfoReply aliceCycleInfo) {
+        boolean breakWithGovernanceData;
+        if (aliceCycleInfo.getPhase() == DaoPhaseEnum.DAO_PHASE_BREAK1) {
+            breakWithGovernanceData = aliceCycleInfo.getNumProposalsInCurrentCycle() > 0
+                    || bob.getCycleInfo().getNumProposalsInCurrentCycle() > 0;
+        } else if (aliceCycleInfo.getPhase() == DaoPhaseEnum.DAO_PHASE_BREAK2) {
+            breakWithGovernanceData = aliceCycleInfo.getNumBlindVotesInCurrentCycle() > 0
+                    || bob.getCycleInfo().getNumBlindVotesInCurrentCycle() > 0;
+        } else {
+            breakWithGovernanceData = false;
+        }
+        if (!breakWithGovernanceData) {
+            return;
+        }
+        log.info("Waiting {} ms in {} until the governance data reached every node",
+                GOVERNANCE_DATA_BROADCAST_MS, aliceCycleInfo.getPhase());
+        try {
+            Thread.sleep(GOVERNANCE_DATA_BROADCAST_MS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("interrupted while waiting for the governance data broadcast", e);
+        }
+    }
+
+    private static final long GOVERNANCE_DATA_BROADCAST_MS = 5_000;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Polling
