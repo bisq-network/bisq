@@ -24,6 +24,8 @@ import bisq.asset.coins.Ether;
 
 import bisq.common.config.BaseCurrencyNetwork;
 
+import java.lang.reflect.Field;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -60,6 +62,36 @@ public class CurrencyUtilTest {
         assertTrue(euro.isPresent());
         assertTrue(naira.isPresent());
         assertFalse(fake.isPresent(), "Fake currency shouldn't exist");
+    }
+
+    // Trade statistics of peers can name any currency, so the caches of the lookups are bounded. A lookup gives the
+    // same result after its entry was evicted.
+    @Test
+    public void lookupCachesAreBoundedAndLookupsStayCorrect() throws ReflectiveOperationException {
+        assertTrue(CurrencyUtil.isFiatCurrency("EUR"));
+        assertFalse(CurrencyUtil.isCryptoCurrency("EUR"));
+        assertTrue(CurrencyUtil.isCryptoCurrency("BTC"));
+
+        int maxCachedCurrencies = (int) privateStaticField("MAX_CACHED_CURRENCIES");
+        for (int i = 0; i < 3 * maxCachedCurrencies; i++) {
+            String inventedCode = "INVENTED" + i;
+            assertTrue(CurrencyUtil.isCryptoCurrency(inventedCode));
+            assertFalse(CurrencyUtil.isFiatCurrency(inventedCode));
+        }
+
+        for (String cache : List.of("isFiatCurrencyMap", "isCryptoCurrencyMap")) {
+            int size = ((Map<?, ?>) privateStaticField(cache)).size();
+            assertTrue(size <= maxCachedCurrencies, cache + " has " + size + " entries");
+        }
+        assertTrue(CurrencyUtil.isFiatCurrency("EUR"));
+        assertFalse(CurrencyUtil.isCryptoCurrency("EUR"));
+        assertTrue(CurrencyUtil.isCryptoCurrency("BTC"));
+    }
+
+    private static Object privateStaticField(String name) throws ReflectiveOperationException {
+        Field field = CurrencyUtil.class.getDeclaredField(name);
+        field.setAccessible(true);
+        return field.get(null);
     }
 
     @Test

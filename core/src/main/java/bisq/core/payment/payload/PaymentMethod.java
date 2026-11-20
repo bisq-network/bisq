@@ -21,12 +21,16 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.TradeLimits;
+import bisq.core.payment.stablecoin.StableCoinPaymentRail;
 
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;
 
+import com.google.common.annotations.VisibleForTesting;
+
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +46,8 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nullable;
 
 @EqualsAndHashCode(exclude = {"maxTradePeriod", "maxTradeLimit"})
 @ToString
@@ -69,6 +75,11 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     private static final Coin DEFAULT_TRADE_LIMIT_LOW_RISK = Coin.parseCoin("0.5");
     private static final Coin DEFAULT_TRADE_LIMIT_MID_RISK = Coin.parseCoin("0.25");
     private static final Coin DEFAULT_TRADE_LIMIT_HIGH_RISK = Coin.parseCoin("0.125");
+
+    // Bisq does not know a custom payment method, so its trade limit is that of the highest risk category and at
+    // most this value. Unlike the default trade limits, it is not adjusted to the DAO param.
+    @VisibleForTesting
+    static final Coin CUSTOM_MAX_TRADE_LIMIT = Coin.parseCoin("0.01");
 
     public static final String UPHOLD_ID = "UPHOLD";
     public static final String MONEY_BEAM_ID = "MONEY_BEAM";
@@ -131,6 +142,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String BSQ_SWAP_ID = "BSQ_SWAP";
     public static final String MERCADO_PAGO_ID = "MERCADO_PAGO";
     public static final String SBP_ID = "SBP";
+    // A payment method which Bisq does not cover. Its name is a free text of the user.
+    public static final String CUSTOM_ID = "CUSTOM";
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -139,6 +152,10 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String CASH_APP_ID = "CASH_APP"; // Removed due too high chargeback risk
     @Deprecated
     public static final String VENMO_ID = "VENMO";  // Removed due too high chargeback risk
+
+    // The removed payment methods. They are not in the list of payment methods.
+    @SuppressWarnings("deprecation")
+    public static final List<String> REMOVED_PAYMENT_METHOD_IDS = List.of(OK_PAY_ID, CASH_APP_ID, VENMO_ID, CHASE_QUICK_PAY_ID);
 
     public static PaymentMethod UPHOLD;
     public static PaymentMethod MONEY_BEAM;
@@ -198,6 +215,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod BSQ_SWAP;
     public static PaymentMethod MERCADO_PAGO;
     public static PaymentMethod SBP;
+    public static PaymentMethod CUSTOM;
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -209,7 +227,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
     // The limit and duration assignment must not be changed as that could break old offers (if amount would be higher
     // than new trade limit) and violate the maker expectation when he created the offer (duration).
-    private static final List<PaymentMethod> PAYMENT_METHODS = Stream.of(
+    private static final List<PaymentMethod> PAYMENT_METHODS = Stream.concat(Stream.of(
             // EUR
             SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             SEPA_INSTANT = new PaymentMethod(SEPA_INSTANT_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
@@ -241,6 +259,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             HAL_CASH = new PaymentMethod(HAL_CASH_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
             F2F = new PaymentMethod(F2F_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
             AMAZON_GIFT_CARD = new PaymentMethod(AMAZON_GIFT_CARD_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+            // The trade limit is also capped by CUSTOM_MAX_TRADE_LIMIT
+            CUSTOM = new PaymentMethod(CUSTOM_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
             // Trans national
             UPHOLD = new PaymentMethod(UPHOLD_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
@@ -296,6 +316,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             BLOCK_CHAINS_INSTANT = new PaymentMethod(BLOCK_CHAINS_INSTANT_ID, TimeUnit.HOURS.toMillis(1), DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
             // BsqSwap
             BSQ_SWAP = new PaymentMethod(BSQ_SWAP_ID, 1, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK)
+    ), getStableCoinPaymentMethods()
     ).sorted(Comparator.comparing(
             m -> m.id.equals(CLEAR_X_CHANGE_ID) ? "ZELLE" : m.id)
     ).collect(Collectors.toUnmodifiableList());
@@ -305,6 +326,13 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
     public static List<PaymentMethod> getPaymentMethods() {
         return PAYMENT_METHODS;
+    }
+
+    // One payment method per stablecoin rail, with the name of the rail as ID. A transfer on a blockchain cannot be
+    // charged back, so the trade limit and the trade period are those of the altcoin payment methods.
+    private static Stream<PaymentMethod> getStableCoinPaymentMethods() {
+        return Arrays.stream(StableCoinPaymentRail.values())
+                .map(rail -> new PaymentMethod(rail.name(), DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK));
     }
 
     public static PaymentMethod getDummyPaymentMethod(String id) {
@@ -393,13 +421,17 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     // We leave currencyCode as param for being flexible if we need custom handling of a currency in future
     // again (as we had in the past)
     public Coin getMaxTradeLimitAsCoin(String currencyCode) {
+        return getMaxTradeLimitAsCoin(TradeLimits.getINSTANCE());
+    }
+
+    @VisibleForTesting
+    Coin getMaxTradeLimitAsCoin(@Nullable TradeLimits tradeLimits) {
         // We adjust the custom trade limits with the factor of the change of the DAO param. Initially it was set to 2 BTC.
         long initialTradeLimit = 200000000;
-        TradeLimits tradeLimits = TradeLimits.getINSTANCE();
         if (tradeLimits == null) {
             // is null in some tests...
             log.warn("tradeLimits was null");
-            return TradeLimits.clamp(Coin.valueOf(initialTradeLimit));
+            return clamp(Coin.valueOf(initialTradeLimit));
         }
         long maxTradeLimitFromDaoParam = tradeLimits.getMaxTradeLimitFromDaoParam().value;
 
@@ -407,7 +439,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
         if (id.equals(NEFT_ID) || id.equals(UPI_ID) || id.equals(PAYTM_ID) || id.equals(BIZUM_ID) || id.equals(TIKKIE_ID)) {
             double factor = maxTradeLimitFromDaoParam / (double) initialTradeLimit;
             long value = MathUtils.roundDoubleToLong(Coin.valueOf(maxTradeLimit).getValue() * factor);
-            return TradeLimits.clamp(Coin.valueOf(value));
+            return clamp(Coin.valueOf(value));
         }
 
         // We use the class field maxTradeLimit only for mapping the risk factor.
@@ -428,7 +460,12 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
         }
 
         Coin limit = Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimitFromDaoParam, riskFactor));
-        return TradeLimits.clamp(limit);
+        return clamp(limit);
+    }
+
+    private Coin clamp(Coin limit) {
+        Coin clamped = TradeLimits.clamp(limit);
+        return isCustom() && clamped.isGreaterThan(CUSTOM_MAX_TRADE_LIMIT) ? CUSTOM_MAX_TRADE_LIMIT : clamped;
     }
 
     public String getShortName() {
@@ -453,6 +490,10 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
         return Res.get(id);
     }
 
+    public boolean isCustom() {
+        return id.equals(CUSTOM_ID);
+    }
+
     public boolean isFiat() {
         return !isAltcoin();
     }
@@ -468,6 +509,12 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
     public boolean isBsqSwap() {
         return this.equals(BSQ_SWAP);
+    }
+
+    // A stablecoin payment method is a payment method of the currency the coin is pegged to, so it is a fiat payment
+    // method and not an altcoin one.
+    public boolean isStableCoin() {
+        return StableCoinPaymentRail.find(id).isPresent();
     }
 
     public static boolean hasChargebackRisk(PaymentMethod paymentMethod, List<TradeCurrency> tradeCurrencies) {

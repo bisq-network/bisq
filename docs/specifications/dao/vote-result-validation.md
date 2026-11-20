@@ -4,8 +4,9 @@
 
 This specification defines how a DAO vote result consumes the untrusted vote data revealed from a
 blind vote. It covers validation that can occur only after decryption, the failure boundary for a
-malformed voter, majority blind-vote-list reconstruction, and compatibility with results evaluated
-before a rule activates. Merit-claim validity is specified separately in [`merit.md`](merit.md).
+malformed voter, majority blind-vote-list reconstruction, which proposals a result records, and
+compatibility with results evaluated before a rule activates. Merit-claim validity is specified
+separately in [`merit.md`](merit.md).
 
 ## Trust boundary
 
@@ -111,13 +112,60 @@ Before the respective activation, historical behavior is preserved:
 These behaviors are retained only for deterministic replay of old cycles; they are not the desired
 validation or failure boundaries.
 
+## Proposals without counted votes
+
+Each entry of a decrypted vote list names a proposal with an accept vote, a reject vote, or no vote.
+Only accept and reject votes are counted; a valid proposal that a voter's list does not name counts
+as a reject vote from that voter. A proposal that gets no accept or reject vote in the cycle
+produces no evaluated proposal: it is not accepted, and the result contains no entry for it. If the
+issuance of the accepted proposals exceeds the issuance limit of the cycle, the cycle is invalid and
+the result contains only the proposals that would have been accepted, all as rejected.
+
+The evaluated proposals are part of the hashed DAO state. The recorded set must therefore depend
+only on chain data, the matched blind-vote data and the valid ballot universe defined by
+[`proposal-validation.md`](proposal-validation.md). It must not depend on presentation state such as
+proposal lists kept for display, or on whether the node processed the result block while running or
+while parsing during startup or a resync.
+
+From the first block of the RESULT phase of its cycle, the vote result view and its JSON export show
+such a proposal as not accepted with no counted votes if the node has the vote result of the cycle:
+the decrypted ballots of the cycle are in the DAO state, or the cycle had no vote reveal transaction
+in its vote reveal phase. A node without the result, for example one that did not have the blind
+votes of the majority, shows no outcome for such a proposal. A proposal with accept or reject votes
+is not shown this way, also if the issuance limit left it out of the result. The view derives these
+entries for display from the validated proposals of the cycle that the node has. They never enter
+the DAO state. The API returns the evaluated proposals only, so a proposal without counted votes is
+absent there. A node that does not have the proposal's payload cannot show it, and the proposals
+view of the current cycle shows no result for it.
+
+Earlier versions recorded such a proposal as rejected with zero accept and reject votes when it was
+in a proposal list kept for display. That list is not refreshed per block during initial parsing, so
+a running node recorded the proposal while a node that parsed the result block during startup or a
+resync usually did not. The two groups computed different DAO state hashes from that block on.
+
+This rule has no activation height. The bundled mainnet resources through height `976 481`, which
+include the RESULT blocks `969 537` and `974 217`, contain no evaluated proposal without an accept or
+reject vote, so replaying them gives the same results.
+The first known result in which running nodes recorded such a proposal is the RESULT block
+`969 537`, where one reimbursement request got no accept or reject vote. Nodes that did not record
+it already match this rule; nodes that recorded it must rebuild their DAO state. Nodes on an earlier
+version still record such a proposal when they process a RESULT block while running, so they can
+diverge again in a later cycle.
+
+A node is in conflict with the seed nodes as soon as one seed node reports a different hash, see
+[`seed-node-state-hashes.md`](seed-node-state-hashes.md). All seed nodes therefore need the DAO
+state without the entry at `969 537` and must run this rule before the next RESULT block. A seed
+node on an earlier version that records such a proposal would put every node with this rule that
+compares hashes with it in conflict, and a resync of those nodes would not resolve it.
+
 ## Historical compatibility audit
 
 The opt-in `BundledDaoStateAuditTest` makes the bundled-history claims executable. It reads every
 payload in `BlindVoteStore_BTC_MAINNET`, rejects duplicate blind-vote transaction IDs, resolves each
 VOTE_REVEAL transaction from the complete bundled block history, extracts the on-chain secret key,
 decrypts both ciphertexts with the production routines, and checks proposal transaction-ID
-uniqueness in every decrypted vote list. Run it with:
+uniqueness in every decrypted vote list. It also checks that the bundled DAO state contains no
+evaluated proposal without an accept or reject vote. Run it with:
 
 ```bash
 ./gradlew --no-daemon --max-workers=2 :core:test --rerun \
@@ -125,18 +173,21 @@ uniqueness in every decrypted vote list. Run it with:
   -PrunResourceAudits=true --console=plain
 ```
 
-For the bundled mainnet resources through height `971 800`, all 963 stored payloads have distinct
-transaction IDs. Exactly 951 have an on-chain reveal and decrypt successfully; none contains a
+For the bundled mainnet resources through height `976 481`, all 971 stored payloads have distinct
+transaction IDs. Exactly 959 have an on-chain reveal and decrypt successfully; none contains a
 duplicate proposal transaction ID and none has a merit-list decryption failure. The 12 payloads
-without a reveal cannot enter a vote result and their encrypted contents cannot be audited. Of the 16
+without a reveal cannot enter a vote result and their encrypted contents cannot be audited. They are
+older payloads whose vote-reveal phases have ended; none was added after height `971 800`. Of the 24
 payloads added after the pre-activation audit at `963 120`, five were cast in the blind-vote phase of
-the cycle that started at height `960 187`; all five were revealed and decrypt. The other 11 were cast
+the cycle that started at height `960 187`; all five were revealed and decrypt. Eleven were cast
 between heights `968 645` and `968 922` in the blind-vote phase of the cycle that started at height
 `964 867`; all 11 were revealed and decrypt. Ten of them were revealed in that cycle's vote-reveal
 phase (heights `969 077` to `969 527`). The last one was revealed at height `970 486`, after the
 cycle's RESULT phase (heights `969 537` to `969 546`). `TxParser` accepts such a late reveal as a
 valid BSQ transaction, so the audit decrypts it, but `VoteResultService` ignores reveals outside the
-vote-reveal phase.
+vote-reveal phase. The last 8 were cast between heights `973 306` and `973 610` in the blind-vote
+phase of the cycle that started at height `969 547`; all 8 were revealed in that cycle's vote-reveal
+phase (heights `973 758` to `973 831`) and decrypt.
 
 This audit supports deployment confidence but does not replace the explicit height gates. Between the
 pre-activation audit at `963 120` and the mainnet activation height `963 350`, the network was in the

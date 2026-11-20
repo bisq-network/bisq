@@ -55,20 +55,23 @@ files of the bundle in the torrc, and points `OPENSSL_CONF` to an empty file in 
 otherwise read its configuration there and could load modules from it.
 
 The node logs the version which the running Tor reports. The commands, replies and events of the control connection
-are logged at debug level only, because they contain onion addresses. Tor writes its own log to its standard output,
-which the node writes to `tor-stdout.log` in the Tor directory; above 10 MiB it moves the log to `tor-stdout.log.1`
-before the next start. The standard error of Tor, where sandy also reports why it did not start Tor, goes to
-`tor-stderr.log`. "Zip log files" of the desktop application adds these three files, if they exist, to the logs of
+are logged at debug level only, because they contain onion addresses. Tor writes its own log to its standard output.
+The node writes the standard output and the standard error of Tor, where sandy also reports why it did not start Tor,
+in the order in which they were written to `tor.log` in the Tor directory; above 10 MiB it moves the log to
+`tor.log.1` before the next start. At every start it deletes `tor-stdout.log`, `tor-stdout.log.1` and
+`tor-stderr.log`, which versions up to 1.10.11 wrote. "Zip log files" of the desktop application adds these two files,
+if they exist, to the logs of
 the node, because warnings of Tor, for example about the clock or the bridges, are only there. Tor names relays and
 bridges in its log by fingerprint, nickname, ed25519 identity and address, also at its notice level, for example a
-bridge which it cannot reach, so the zip gets these three files without them, and without the arguments of a bridge
+bridge which it cannot reach, so the zip gets these two files without them, and without the arguments of a bridge
 line which name the bridge, such as `cert` and `url`, which Tor does not log today. An IPv6 address is removed with
 or without brackets; Tor writes the host of a bootstrap warning without them. Tor also logs the messages of a
 pluggable transport (`Managed proxy "...": ...`), where lyrebird names the host of a webtunnel bridge, the URL and
 front of a meek bridge, and hosts in errors, so these lines lose their URLs and host names. The versions of Tor and
 loopback addresses, which name no relay or bridge, stay. The logs of the node in the zip lose the relay or bridge of a
-bootstrap warning (`HOSTID`, `HOSTADDR`), which the Tor library logs with the event. The files on disk keep
-everything; only the zip is redacted.
+bootstrap warning (`HOSTID`, `HOSTADDR`), which the Tor library logs with the event. The zip omits the excerpt of
+`tor.log` quoted in a node startup exception because it can begin in the middle of a bridge identity. The original
+files on disk keep the full diagnostics.
 
 The Tor directory has the parts `bin/` (the installed bundle), `data/` (the data directory of Tor) and `sandy/` (the
 sandbox program and its status record, see "Sandbox"). The torrc, the logs, `external_tor.config`, the record
@@ -158,6 +161,18 @@ alone controls its Tor: `ControlSocket`, `ControlSocketsGroupWritable`, `CookieA
 this rule. An entry for another key which the node sets, such as `Log`, replaces the value of the node in any case of
 the name and as an abbreviation which Tor accepts, for example `AvoidDiskWrite` for `AvoidDiskWrites`. An entry for a
 longer option which only starts like such a key, such as `LogTimeGranularity`, replaces nothing.
+
+The node starts Tor only with all entries of the user, because an entry such as `ExcludeNodes` restricts the relays
+which Tor uses, and a user who relies on it would not notice that it is missing. `--torrcOptions` is a list of entries
+separated by commas, each a key, whitespace and a value. An empty part, for example after a comma which follows the
+last entry, contains no entry and is skipped. Any other part which is no entry stops the start of Tor. The message
+names the position of the part, not its text, which may contain a password. A file of `--torrcFile` which the node
+cannot read as UTF-8 text when it starts Tor stops the start as well. In the file, as in a torrc of Tor, a space or a
+tab separates the key from the value. Lines which start with `#`, lines of at most five characters and lines without
+whitespace hold no entry and are skipped, as netlayer did. Earlier versions also skipped a line with a tab as the only
+separator and started Tor without that entry. Only ASCII whitespace separates the key from the value. A line whose key
+and value are separated by another character, for example a no-break space from a copied web page, holds no entry
+either, and Tor starts without it.
 
 An entry which makes Tor start a program or load a library, `ClientTransportPlugin`, `ServerTransportPlugin`,
 `AccelName` or `AccelDir` in any case of the name and as an abbreviation which Tor accepts, is accepted only if the
@@ -271,8 +286,10 @@ between, the node starts once more with new ports; a second refusal fails the st
 are not retried.
 
 The error of a failed sandboxed start names first what the node knows itself, the status record, the exit status and
-on Windows the hint about the session, and quotes the standard error of sandy and Tor last, labeled as written by sandy
-and by Tor in its sandbox and not verified by the node, because a sandboxed Tor can write that file.
+on Windows the hint about the session, and quotes last the part of `tor.log` which this start wrote, labeled as
+written by sandy and by Tor in its sandbox and not verified by the node, because a sandboxed Tor can write that file.
+The quote holds the reason which Tor logs to its standard output and the reason which sandy writes to its standard
+error.
 
 The data directory of Tor, `data/`, is the only path which a sandboxed Tor may write. The node records in `data-mode` of
 the Tor directory, outside the paths which Tor may write, whether the Tor of a start ran in the sandbox. Before Tor
@@ -289,7 +306,18 @@ sandbox, without the details of this section, which may change with the sandbox,
 to use no bridges and shut down, or to open the Tor network settings, which is also what closing it does, because the
 node has nothing else to do without Tor. Its text replaces the confirmation of the switch. Where the switch is disabled,
 on Windows and while the option is given on the command line, the popup has no button which allows them and names the
-option instead.
+option instead. On Windows, where only turning the sandbox off makes these bridges work, the popup offers to turn off
+the sandbox and shut down instead, as the popup of an unusable sandbox below does, unless `--useTorSandbox` is given on
+the command line.
+
+When the start fails because Tor cannot run in the sandbox on this system, which the node knows only from its own checks
+and the refusals of sandy, never from an exit of a sandboxed Tor, the desktop application shows the failure in a popup
+which offers to shut down, to turn the sandbox off and shut down, which writes `useTorSandbox=false` into the config
+file, or to close it. Shutting down is the default, because the failure also covers causes which can pass or which the
+user can fix while keeping the sandbox, for example torrc overrides or a refusal of sandy which a later start may not
+repeat. The failure already says what Tor without the sandbox risks, so the button asks for no confirmation. If the
+config file cannot be written, the popup says so and Bisq does not shut down. While `--useTorSandbox` is given on the
+command line, which overrides the config file, the popup offers only to shut down or to close it.
 
 A running Tor, including the Tor of Whonix, runs without the sandbox of the node. The sandbox never touches
 `hiddenservice`: the node sends the key of the onion service to Tor over the control connection.

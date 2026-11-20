@@ -40,6 +40,8 @@ import org.bitcoinj.store.ChainFileLockedException;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
@@ -276,9 +278,10 @@ public class WalletAppSetup {
         });
     }
 
-    private String getBtcNetworkAsString() {
+    @VisibleForTesting
+    String getBtcNetworkAsString() {
         String postFix;
-        if (config.ignoreLocalBtcNode)
+        if (walletsSetup.usesLocalBitcoinNode())
             postFix = " " + Res.get("mainView.footer.localhostBitcoinNode");
         else if (preferences.getUseTorForBitcoinJ())
             postFix = " " + Res.get("mainView.footer.usingTor");

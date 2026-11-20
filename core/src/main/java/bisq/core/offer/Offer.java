@@ -19,15 +19,18 @@ package bisq.core.offer;
 
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.offer.availability.AvailabilityResult;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.offer.availability.OfferAvailabilityProtocol;
 import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap;
 import bisq.core.offer.bsq_swap.BsqSwapOfferPayload;
+import bisq.core.payment.CustomPaymentMethodUtil;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
@@ -105,6 +108,11 @@ public class Offer implements NetworkPayload, PersistablePayload {
     @JsonExclude
     @Nullable
     transient private OfferAvailabilityProtocol availabilityProtocol;
+    // The maker's answer that produced the current state, so a NOT_AVAILABLE state can
+    // be explained. Cleared by every state change that is not such an answer.
+    @JsonExclude
+    @Nullable
+    transient private AvailabilityResult availabilityResult;
     @JsonExclude
     @Getter
     final transient private StringProperty errorMessageProperty = new SimpleStringProperty();
@@ -295,7 +303,14 @@ public class Offer implements NetworkPayload, PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setState(Offer.State state) {
+        if (state != State.AVAILABLE && state != State.NOT_AVAILABLE)
+            availabilityResult = null;
         stateProperty().set(state);
+    }
+
+    // Set before the matching AVAILABLE / NOT_AVAILABLE state, so a state listener can read it.
+    public void setAvailabilityResult(@Nullable AvailabilityResult availabilityResult) {
+        this.availabilityResult = availabilityResult;
     }
 
     public ObjectProperty<Offer.State> stateProperty() {
@@ -406,6 +421,14 @@ public class Offer implements NetworkPayload, PersistablePayload {
             return "";
     }
 
+    // The name of the custom payment method of the offer. It is a free text of the maker. It is empty if the offer
+    // has no name or a name which breaks the rules for such a name.
+    public String getCustomPaymentMethodName() {
+        OfferPayloadExtraDataMap extraDataMap = getOfferPayloadExtraDataMap();
+        String name = extraDataMap != null ? extraDataMap.get(CUSTOM_PAYMENT_METHOD_NAME) : null;
+        return getPaymentMethod().isCustom() && CustomPaymentMethodUtil.isValidName(name) ? name : "";
+    }
+
     public String getExtraInfo() {
         if (getOfferPayloadExtraDataMap() != null && getOfferPayloadExtraDataMap().containsKey(F2F_EXTRA_INFO))
             return getOfferPayloadExtraDataMap().get(F2F_EXTRA_INFO);
@@ -415,8 +438,26 @@ public class Offer implements NetworkPayload, PersistablePayload {
             return "";
     }
 
+    // A custom payment method is shown with its name, as "Custom: M-Pesa". The prefix tells that the name is a
+    // text of the maker and no payment method of Bisq.
+    public String getPaymentMethodDisplayString() {
+        return withCustomPaymentMethodName(getPaymentMethod().getDisplayString());
+    }
+
+    public String getPaymentMethodShortName() {
+        return withCustomPaymentMethodName(getPaymentMethod().getShortName());
+    }
+
+    private String withCustomPaymentMethodName(String paymentMethodName) {
+        if (!getPaymentMethod().isCustom()) {
+            return paymentMethodName;
+        }
+        String customName = getCustomPaymentMethodName();
+        return paymentMethodName + ": " + (customName.isEmpty() ? Res.get("shared.na") : customName);
+    }
+
     public String getPaymentMethodNameWithCountryCode() {
-        String method = this.getPaymentMethod().getShortName();
+        String method = getPaymentMethodShortName();
         String methodCountryCode = this.getCountryCode();
         if (methodCountryCode != null)
             method = method + " (" + methodCountryCode + ")";
@@ -426,6 +467,11 @@ public class Offer implements NetworkPayload, PersistablePayload {
     // domain properties
     public Offer.State getState() {
         return stateProperty.get();
+    }
+
+    @Nullable
+    public AvailabilityResult getAvailabilityResult() {
+        return availabilityResult;
     }
 
     public ReadOnlyStringProperty errorMessageProperty() {

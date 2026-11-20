@@ -126,26 +126,16 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
 
     @Override
     protected void put(P2PDataStorage.ByteArray hash, PersistableNetworkPayload payload) {
-        if (containsKey(hash)) {
-            return;
-        }
-
-        getMapOfLiveData().put(hash, payload);
-        requestPersistence();
+        addIfAbsent(hash, payload);
     }
 
     @Override
-    protected PersistableNetworkPayload putIfAbsent(P2PDataStorage.ByteArray hash, PersistableNetworkPayload payload) {
-        if (containsKey(hash)) {
-            return null;
+    protected boolean addIfAbsent(P2PDataStorage.ByteArray hash, PersistableNetworkPayload payload) {
+        if (allHistoricalPayloads.containsKey(hash) || getMapOfLiveData().putIfAbsent(hash, payload) != null) {
+            return false;
         }
-
-        // We do not return the value from getMapOfLiveData().put as we checked before that it does not contain any value.
-        // So it will be always null. We still keep the return type as we override the method from MapStoreService which
-        // follow the Map.putIfAbsent signature.
-        getMapOfLiveData().put(hash, payload);
         requestPersistence();
-        return null;
+        return true;
     }
 
 

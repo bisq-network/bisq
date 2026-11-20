@@ -73,7 +73,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,6 +113,9 @@ public class WalletConfig extends AbstractIdleService {
 
     private static final int TOR_SOCKET_TIMEOUT = 120 * 1000;  // 1 sec used in bitcoinj, but since bisq uses Tor we allow more.
     private static final int TOR_VERSION_EXCHANGE_TIMEOUT = 125 * 1000;  // 5 sec used in bitcoinj, but since bisq uses Tor we allow more.
+    // Part of the wallet shutdown timeout in WalletsSetup given to the PeerGroup stop. The rest is left for saving the
+    // wallets and closing the SPV file.
+    static final long PEER_GROUP_STOP_TIMEOUT_SEC = 2;
 
     protected static final Logger log = LoggerFactory.getLogger(WalletConfig.class);
 
@@ -144,6 +149,10 @@ public class WalletConfig extends AbstractIdleService {
     @Getter
     @Setter
     private int minBroadcastConnections;
+    // Set by WalletsSetup.restoreSeedWords: the new WalletConfig opens the same wallet and SPV files right after this
+    // one terminated, so the PeerGroup has to be stopped completely.
+    @Setter
+    private volatile boolean stopPeerGroupWithoutTimeout;
     @Getter
     private BooleanProperty migratedWalletToBtcSegwit = new SimpleBooleanProperty(false);
     @Getter
@@ -497,8 +506,46 @@ public class WalletConfig extends AbstractIdleService {
     @Override
     protected void shutDown() throws Exception {
         // Runs in a separate thread.
+        boolean interrupted = false;
+        Exception peerGroupStopFailure = null;
         try {
             Context.propagate(context);
+
+            // We stop the PeerGroup first so that no further block is written to the SPV file or applied to the
+            // wallets while we save the wallets and close the SPV file. PeerGroup.stop has no timeout and can take
+            // very long (10 sec. in a test), so we wait only for PEER_GROUP_STOP_TIMEOUT_SEC, unless
+            // stopPeerGroupWithoutTimeout was set. After a timeout a block can still arrive until the PeerGroup has
+            // stopped and then hits the closed SPV file, as it did before for every shutdown. If the stop without
+            // timeout fails, we re-throw after closing the SPV file, so that this service fails and
+            // WalletsSetup.restoreSeedWords does not open the same files again.
+            try {
+                if (vPeerGroup != null && vPeerGroup.isRunning()) {
+                    if (stopPeerGroupWithoutTimeout) {
+                        vPeerGroup.stop();
+                    } else {
+                        vPeerGroup.stopAsync().get(PEER_GROUP_STOP_TIMEOUT_SEC, TimeUnit.SECONDS);
+                    }
+                    log.info("PeerGroup stopped");
+                } else {
+                    log.info("PeerGroup not stopped because it was not running");
+                }
+            } catch (TimeoutException e) {
+                log.warn("PeerGroup not stopped after {} sec. We save the wallets and close the SPV file anyway.",
+                        PEER_GROUP_STOP_TIMEOUT_SEC);
+            } catch (ExecutionException | RuntimeException e) {
+                log.warn("PeerGroup stop failed. We save the wallets and close the SPV file anyway.", e);
+                if (stopPeerGroupWithoutTimeout) {
+                    if (e.getCause() instanceof InterruptedException) {
+                        // PeerGroup.stop wraps the InterruptedException and does not restore the interrupt flag.
+                        interrupted = true;
+                    }
+                    peerGroupStopFailure = e;
+                }
+            } catch (InterruptedException e) {
+                // We still save and close, and restore the interrupt flag afterwards.
+                interrupted = true;
+                log.warn("Interrupted while waiting for the PeerGroup to stop. We save the wallets and close the SPV file anyway.");
+            }
 
             vBtcWallet.saveToFile(vBtcWalletFile);
             vBtcWallet = null;
@@ -515,18 +562,17 @@ public class WalletConfig extends AbstractIdleService {
             log.info("SPV file closed");
 
             vChain = null;
-
-            // vPeerGroup.stop has no timeout and can take very long (10 sec. in my test). So we call it at the end.
-            // We might get likely interrupted by the parent call timeout.
-            if (vPeerGroup.isRunning()) {
-                vPeerGroup.stop();
-                log.info("PeerGroup stopped");
-            } else {
-                log.info("PeerGroup not stopped because it was not running");
-            }
             vPeerGroup = null;
+
+            if (peerGroupStopFailure != null) {
+                throw peerGroupStopFailure;
+            }
         } catch (BlockStoreException e) {
             throw new IOException(e);
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 

@@ -18,6 +18,7 @@
 package bisq.desktop.main.offer.bisq_v1.takeoffer;
 
 import bisq.desktop.Navigation;
+import bisq.desktop.main.offer.OfferViewUtil;
 import bisq.desktop.main.offer.bisq_v1.OfferDataModel;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -56,6 +57,7 @@ import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
@@ -186,7 +188,10 @@ class TakeOfferDataModel extends OfferDataModel {
                     false,
                     () -> {
                     },
-                    errorMessage -> new Popup().warning(errorMessage).show());
+                    errorMessage -> {
+                        if (!OfferViewUtil.isReportedByOfferState(offer))
+                            new Popup().warning(errorMessage).show();
+                    });
         }
     }
 
@@ -306,7 +311,8 @@ class TakeOfferDataModel extends OfferDataModel {
 
     // errorMessageHandler is used only in the check availability phase. As soon we have a trade we write the error msg in the trade object as we want to
     // have it persisted as well.
-    void onTakeOffer(TradeResultHandler<Trade> tradeResultHandler) {
+    // A refusal before a trade exists goes to the errorMessageHandler, so the view can end the take offer attempt
+    void onTakeOffer(TradeResultHandler<Trade> tradeResultHandler, ErrorMessageHandler errorMessageHandler) {
         checkNotNull(txFeeFromFeeService, "txFeeFromFeeService must not be null");
         checkNotNull(getTakerFee(), "takerFee must not be null");
 
@@ -315,17 +321,17 @@ class TakeOfferDataModel extends OfferDataModel {
             fundsNeededForTrade = fundsNeededForTrade.add(amount.get());
 
         if (filterPolicyService.isCurrencyBanned(offer.getCurrencyCode())) {
-            new Popup().warning(Res.get("offerbook.warning.currencyBanned")).show();
+            errorMessageHandler.handleErrorMessage(Res.get("offerbook.warning.currencyBanned"));
         } else if (filterPolicyService.isPaymentMethodBanned(offer.getPaymentMethod())) {
-            new Popup().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
+            errorMessageHandler.handleErrorMessage(Res.get("offerbook.warning.paymentMethodBanned"));
         } else if (filterPolicyService.isOfferIdBanned(offer.getId())) {
-            new Popup().warning(Res.get("offerbook.warning.offerBlocked")).show();
+            errorMessageHandler.handleErrorMessage(Res.get("offerbook.warning.offerBlocked"));
         } else if (filterPolicyService.isNodeAddressBanned(offer.getMakerNodeAddress())) {
-            new Popup().warning(Res.get("offerbook.warning.nodeBlocked")).show();
+            errorMessageHandler.handleErrorMessage(Res.get("offerbook.warning.nodeBlocked"));
         } else if (filterPolicyService.requireUpdateToNewVersionForTrading()) {
-            new Popup().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
+            errorMessageHandler.handleErrorMessage(Res.get("offerbook.warning.requireUpdateToNewVersion"));
         } else if (tradeManager.wasOfferAlreadyUsedInTrade(offer.getId())) {
-            new Popup().warning(Res.get("offerbook.warning.offerWasAlreadyUsedInTrade")).show();
+            errorMessageHandler.handleErrorMessage(Res.get("offerbook.warning.offerWasAlreadyUsedInTrade"));
         } else {
             tradeManager.onTakeOffer(amount.get(),
                     txFeeFromFeeService,
@@ -340,7 +346,8 @@ class TakeOfferDataModel extends OfferDataModel {
                     tradeResultHandler,
                     errorMessage -> {
                         log.warn(errorMessage);
-                        new Popup().warning(errorMessage).show();
+                        if (!OfferViewUtil.isReportedByOfferState(offer))
+                            errorMessageHandler.handleErrorMessage(errorMessage);
                     }
             );
         }

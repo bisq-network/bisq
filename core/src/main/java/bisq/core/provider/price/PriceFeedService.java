@@ -92,6 +92,9 @@ public class PriceFeedService {
     private Timer retryWithNewProviderTime;
     @Nullable
     private PriceRequest priceRequest;
+    // After shutDown a callback queued before it can still schedule a retry and callers can still ask for prices,
+    // so request checks it.
+    private volatile boolean shutDownRequested;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -118,6 +121,7 @@ public class PriceFeedService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void shutDown() {
+        shutDownRequested = true;
         if (requestTimer != null) {
             requestTimer.stop();
             requestTimer = null;
@@ -139,8 +143,8 @@ public class PriceFeedService {
         }
     }
 
-    public void initialRequestPriceFeed() {
-        request(false);
+    public void startRequestingPrices() {
+        request(true);
     }
 
     public boolean hasPrices() {
@@ -159,6 +163,9 @@ public class PriceFeedService {
     }
 
     private void request(boolean repeatRequests) {
+        if (shutDownRequested)
+            return;
+
         if (requestTs == 0)
             log.debug("request from provider {}",
                     priceFeedNodeAddressProvider.getBaseUrl());
@@ -268,8 +275,14 @@ public class PriceFeedService {
         return cache.getOrDefault(currencyCode, null);
     }
 
-    public void setBisqMarketPrice(String currencyCode, Price price) {
-        if (applyPriceToCache(currencyCode, price)) {
+    // Notifies the listeners once for all prices. A node can receive many trade statistics at once, and a listener
+    // can be costly, as the pass of the offer book over all offers.
+    public void setBisqMarketPrices(Map<String, Price> priceByCurrencyCode) {
+        boolean applied = false;
+        for (Map.Entry<String, Price> entry : priceByCurrencyCode.entrySet()) {
+            applied |= applyPriceToCache(entry.getKey(), entry.getValue());
+        }
+        if (applied) {
             updateCounter.set(updateCounter.get() + 1);
         }
     }

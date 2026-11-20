@@ -103,7 +103,8 @@ final class OnionServiceKeyStorage {
         if (supportsPosixPermissions) {
             Files.setPosixFilePermissions(hiddenServiceDirPath, PosixFilePermissions.fromString("rwx------"));
         }
-        // In netlayer's format, so that an earlier version of Bisq can still use the key.
+        // Compatibility with v1.10.11 and earlier: in netlayer's format, so that releases before v1.10.11, which use
+        // netlayer, can still use the key after a downgrade. Reading this format must stay for existing keys.
         writeAtomically(privateKeyPath, toNetlayerFormat(onionServiceKey.getBase64SecretScalar()));
         writeAtomically(hostnamePath, onionServiceKey.getOnionAddress());
         return onionServiceKey;

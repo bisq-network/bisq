@@ -132,6 +132,9 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
     private boolean isBootstrapped;
     private boolean allServicesInitialized;
     private boolean initAfterBootstrapped;
+    // Set once the mailbox messages in the P2P data at startup have been handled
+    private boolean startupMessagesHandled;
+    private final List<Runnable> startupMessagesHandledHandlers = new ArrayList<>();
 
     @Inject
     public MailboxMessageService(NetworkNode networkNode,
@@ -263,7 +266,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
             // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
             // after the hidden service was ready.
             addHashMapChangedListener();
-            onAdded(p2PDataStorage.getMap().values());
+            processMailboxEntries(p2PDataStorage.getMap().values(), this::onStartupMessagesHandled);
             maybeRepublishMailBoxMessages();
         }
     }
@@ -407,6 +410,16 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
         decryptedMailboxListeners.add(listener);
     }
 
+    // Runs the handler on the user thread once the mailbox messages in the P2P data at startup have been decrypted and
+    // given to the listeners, or at once if that has happened already. Decrypting many messages takes a while.
+    public void runOnceStartupMessagesHandled(Runnable handler) {
+        if (startupMessagesHandled) {
+            handler.run();
+        } else {
+            startupMessagesHandledHandlers.add(handler);
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // HashMapChangedListener implementation for ProtectedStorageEntry items
@@ -415,16 +428,8 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
     @Override
     public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
         log.trace("## onAdded");
-        Collection<ProtectedMailboxStorageEntry> entries = protectedStorageEntries.stream()
-                .filter(e -> e instanceof ProtectedMailboxStorageEntry)
-                .map(e -> (ProtectedMailboxStorageEntry) e)
-                .filter(e -> networkNode.getNodeAddress() != null)
-                .collect(Collectors.toSet());
-        if (entries.size() > 1) {
-            threadedBatchProcessMailboxEntries(entries);
-        } else if (entries.size() == 1) {
-            processSingleMailboxEntry(entries);
-        }
+        processMailboxEntries(protectedStorageEntries, () -> {
+        });
     }
 
     @Override
@@ -450,6 +455,38 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
         p2PDataStorage.addHashMapChangedListener(this);
     }
 
+    private void onStartupMessagesHandled() {
+        startupMessagesHandled = true;
+        List<Runnable> handlers = new ArrayList<>(startupMessagesHandledHandlers);
+        startupMessagesHandledHandlers.clear();
+        // A failing handler must not keep the others from running
+        handlers.forEach(handler -> {
+            try {
+                handler.run();
+            } catch (Throwable t) {
+                log.error("A handler for the startup mailbox messages failed", t);
+            }
+        });
+    }
+
+    // The completeHandler runs on the user thread after the entries have been handled
+    private void processMailboxEntries(Collection<ProtectedStorageEntry> protectedStorageEntries,
+                                       Runnable completeHandler) {
+        Collection<ProtectedMailboxStorageEntry> entries = protectedStorageEntries.stream()
+                .filter(e -> e instanceof ProtectedMailboxStorageEntry)
+                .map(e -> (ProtectedMailboxStorageEntry) e)
+                .filter(e -> networkNode.getNodeAddress() != null)
+                .collect(Collectors.toSet());
+        if (entries.size() > 1) {
+            threadedBatchProcessMailboxEntries(entries, completeHandler);
+        } else {
+            if (entries.size() == 1) {
+                processSingleMailboxEntry(entries);
+            }
+            completeHandler.run();
+        }
+    }
+
     private void processSingleMailboxEntry(Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries) {
         checkArgument(protectedMailboxStorageEntries.size() == 1);
         var mailboxItems = new ArrayList<>(getMailboxItems(protectedMailboxStorageEntries));
@@ -460,7 +497,9 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
 
     // We run the batch processing of all mailbox messages we have received at startup in a thread to not block the UI.
     // For about 1000 messages decryption takes about 1 sec.
-    private void threadedBatchProcessMailboxEntries(Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries) {
+    private void threadedBatchProcessMailboxEntries(
+            Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries,
+            Runnable completeHandler) {
         long ts = System.currentTimeMillis();
         SettableFuture<Set<MailboxItem>> future = SettableFuture.create();
 
@@ -479,9 +518,13 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
 
         Futures.addCallback(future, new FutureCallback<>() {
             public void onSuccess(Set<MailboxItem> decryptedMailboxMessageWithEntries) {
-                UserThread.execute(() -> decryptedMailboxMessageWithEntries.forEach(e -> handleMailboxItem(e)));
+                UserThread.execute(() -> {
+                    decryptedMailboxMessageWithEntries.forEach(e -> handleMailboxItem(e));
+                    completeHandler.run();
+                });
             }
 
+            // The entries are not handled then, so the completeHandler does not run
             public void onFailure(@NotNull Throwable throwable) {
                 log.error(throwable.toString());
             }
@@ -502,7 +545,13 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
                 .getPrefixedSealedAndSignedMessage();
         SealedAndSigned sealedAndSigned = prefixedSealedAndSignedMessage.getSealedAndSigned();
         String uid = prefixedSealedAndSignedMessage.getUid();
-        if (ignoredMailboxService.isIgnored(uid)) {
+        // We key the ignore list by the hash of the mailbox payload, not by the sender-chosen uid. A peer can publish
+        // a second entry with the uid of our pending entry but with garbage ciphertext; keyed by uid it would fail to
+        // decrypt first and put the uid on the ignore list, so our genuine entry is skipped before we try it. The
+        // payload hash commits to the ciphertext, so such a decoy cannot mark our entry as ignored.
+        String ignoreKey = P2PDataStorage.get32ByteHashAsByteArray(
+                protectedMailboxStorageEntry.getProtectedStoragePayload()).getHex();
+        if (ignoredMailboxService.isIgnored(ignoreKey)) {
             // We had persisted a past failed decryption attempt on that message so we don't try again and return early
             return new MailboxItem(protectedMailboxStorageEntry, null);
         }
@@ -512,13 +561,13 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
         } catch (CryptoException ignore) {
             // Expected if message was not intended for us
             // We persist those entries so at the next startup we do not need to try to decrypt it anymore
-            ignoredMailboxService.ignore(uid, protectedMailboxStorageEntry.getCreationTimeStamp());
+            ignoredMailboxService.ignore(ignoreKey, protectedMailboxStorageEntry.getCreationTimeStamp());
         } catch (ProtobufferException e) {
             log.warn("Protobuf parsing failed for mailbox entry uid={}. Ignoring entry.", uid, e);
-            ignoredMailboxService.ignore(uid, protectedMailboxStorageEntry.getCreationTimeStamp());
+            ignoredMailboxService.ignore(ignoreKey, protectedMailboxStorageEntry.getCreationTimeStamp());
         } catch (Exception e) {
             log.error("Unexpected runtime failure decrypting mailbox entry uid={}. Ignoring entry.", uid, e);
-            ignoredMailboxService.ignore(uid, protectedMailboxStorageEntry.getCreationTimeStamp());
+            ignoredMailboxService.ignore(ignoreKey, protectedMailboxStorageEntry.getCreationTimeStamp());
         }
         return new MailboxItem(protectedMailboxStorageEntry, null);
     }

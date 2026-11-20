@@ -1,10 +1,11 @@
 package bisq.gradle.docker.image_builder
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
@@ -13,8 +14,8 @@ abstract class CreateDockerfileTask : DefaultTask() {
     @get:Input
     abstract val archiveFileName: Property<String>
 
-    @get:Input
-    abstract val classpathFileNames: ListProperty<String>
+    @get:InputDirectory
+    abstract val libDirectory: DirectoryProperty
 
     @get:Input
     abstract val mainClassName: Property<String>
@@ -24,8 +25,9 @@ abstract class CreateDockerfileTask : DefaultTask() {
 
     @TaskAction
     fun create() {
-        val classpath = classpathFileNames.get()
-            .joinToString(":") { "/seednode/lib/$it" }
+        val classpath = libDirectory.asFile.get().listFiles()!!
+            .sortedBy { it.name }
+            .joinToString(":") { "/seednode/lib/${it.name}" }
 
         val dockerFileContent: String = readDockerFileTemplate()
             .replace("'{{ ARCHIVE_PATH }}'", archiveFileName.get())

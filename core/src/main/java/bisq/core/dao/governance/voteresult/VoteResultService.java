@@ -29,7 +29,6 @@ import bisq.core.dao.governance.merit.MeritConsensus;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.IssuanceProposal;
-import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.voteresult.issuance.IssuanceService;
 import bisq.core.dao.governance.votereveal.VoteRevealConsensus;
 import bisq.core.dao.state.DaoStateListener;
@@ -105,7 +104,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public class VoteResultService implements DaoStateListener, DaoSetupService {
-    private final ProposalListPresentation proposalListPresentation;
     private final DaoStateService daoStateService;
     private final PeriodService periodService;
     private final BallotListService ballotListService;
@@ -123,14 +121,12 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public VoteResultService(ProposalListPresentation proposalListPresentation,
-                             DaoStateService daoStateService,
+    public VoteResultService(DaoStateService daoStateService,
                              PeriodService periodService,
                              BallotListService ballotListService,
                              BlindVoteListService blindVoteListService,
                              IssuanceService issuanceService,
                              MissingDataRequestService missingDataRequestService) {
-        this.proposalListPresentation = proposalListPresentation;
         this.daoStateService = daoStateService;
         this.periodService = periodService;
         this.ballotListService = ballotListService;
@@ -743,21 +739,8 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             }
         });
 
-        Map<String, EvaluatedProposal> evaluatedProposalsByTxIdMap = new HashMap<>();
-        evaluatedProposals.forEach(evaluatedProposal -> evaluatedProposalsByTxIdMap.put(evaluatedProposal.getProposalTxId(), evaluatedProposal));
-
-        // Proposals which did not get any vote need to be set as failed.
-        // TODO We should not use proposalListPresentation here
-        proposalListPresentation.getActiveOrMyUnconfirmedProposals().stream()
-                .filter(proposal -> periodService.isTxInCorrectCycle(proposal.getTxId(), chainHeight))
-                .filter(proposal -> !evaluatedProposalsByTxIdMap.containsKey(proposal.getTxId()))
-                .forEach(proposal -> {
-                    ProposalVoteResult proposalVoteResult = new ProposalVoteResult(proposal, 0,
-                            0, 0, 0, decryptedBallotsWithMeritsSet.size());
-                    EvaluatedProposal evaluatedProposal = new EvaluatedProposal(false, proposalVoteResult);
-                    evaluatedProposals.add(evaluatedProposal);
-                    log.info("Proposal ignored by all voters: {}", evaluatedProposal);
-                });
+        // A proposal without any accept or reject vote gets no evaluated proposal. The result must not depend on
+        // proposal lists kept for display (see dao/vote-result-validation.md in the specs).
 
         // Check if our issuance sum is not exceeding the limit
         long sumIssuance = getSumIssuance(evaluatedProposals, chainHeight);

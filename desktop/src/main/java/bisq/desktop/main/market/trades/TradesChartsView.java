@@ -113,6 +113,7 @@ import org.jetbrains.annotations.NotNull;
 
 import static bisq.desktop.main.market.trades.TradesChartsViewModel.MAX_TICKS;
 import static bisq.desktop.util.FormBuilder.addTopLabelAutocompleteComboBox;
+import static bisq.desktop.util.FormBuilder.addTopLabelComboBox;
 import static bisq.desktop.util.FormBuilder.getTopLabelWithVBox;
 
 @FxmlView
@@ -153,6 +154,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private VolumeChart volumeChart, volumeInUsdChart;
     private CandleStickChart priceChart;
     private AutocompleteComboBox<CurrencyListItem> currencyComboBox;
+    private VBox paymentMethodGroupBox;
+    private ComboBox<TradesChartsViewModel.PaymentMethodGroup> paymentMethodGroupComboBox;
     private TableView<TradeStatistics3ListItem> tableView;
     private Hyperlink exportLink;
     private HBox toolBox;
@@ -262,6 +265,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         currencySelectionBinding = EasyBind.combine(
                 model.showAllTradeCurrenciesProperty, model.selectedTradeCurrencyProperty,
                 (showAll, selectedTradeCurrency) -> {
+                    boolean isPaymentMethodGroupAvailable = model.isPaymentMethodGroupAvailable();
+                    paymentMethodGroupBox.setVisible(isPaymentMethodGroupAvailable);
+                    paymentMethodGroupBox.setManaged(isPaymentMethodGroupAvailable);
+                    paymentMethodGroupComboBox.getSelectionModel().select(model.paymentMethodGroupProperty.get());
+
                     priceChart.setVisible(!showAll);
                     priceChart.setManaged(!showAll);
                     priceColumn.setSortable(!showAll);
@@ -324,6 +332,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             }
         });
 
+        paymentMethodGroupComboBox.setOnAction(e ->
+                model.onSetPaymentMethodGroup(paymentMethodGroupComboBox.getSelectionModel().getSelectedItem()));
+
         toggleGroup.getToggles().get(model.tickUnit.ordinal()).setSelected(true);
 
         model.priceItems.addListener(itemsChangeListener);
@@ -376,6 +387,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceAxisY.widthProperty().removeListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().removeListener(volumeAxisYWidthListener);
         model.tradeStatisticsByCurrency.removeListener(tradeStatisticsByCurrencyListener);
+        paymentMethodGroupComboBox.setOnAction(null);
 
         priceAxisY.labelProperty().unbind();
         priceColumnLabel.removeListener(priceColumnLabelListener);
@@ -769,6 +781,26 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         currencyComboBox.setCellFactory(GUIUtil.getCurrencyListItemCellFactory(Res.get("shared.trade"),
                 Res.get("shared.trades"), model.preferences));
 
+        // Shown only for a currency which has stablecoins
+        Tuple3<VBox, Label, ComboBox<TradesChartsViewModel.PaymentMethodGroup>> paymentMethodGroupTuple =
+                addTopLabelComboBox(Res.get("market.trades.paymentMethods"), "");
+        paymentMethodGroupBox = paymentMethodGroupTuple.first;
+        HBox.setMargin(paymentMethodGroupBox, new Insets(0, 0, 0, 15));
+        paymentMethodGroupComboBox = paymentMethodGroupTuple.third;
+        paymentMethodGroupComboBox.getItems().setAll(TradesChartsViewModel.PaymentMethodGroup.values());
+        paymentMethodGroupComboBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(TradesChartsViewModel.PaymentMethodGroup paymentMethodGroup) {
+                return paymentMethodGroup != null ?
+                        Res.get("market.trades.paymentMethodGroup." + paymentMethodGroup.name()) : "";
+            }
+
+            @Override
+            public TradesChartsViewModel.PaymentMethodGroup fromString(String string) {
+                return null;
+            }
+        });
+
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
@@ -790,7 +822,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         HBox hBox = new HBox();
         hBox.setSpacing(0);
         hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.getChildren().addAll(currencyComboBoxTuple.first, spacer, topLabelWithVBox.second);
+        hBox.getChildren().addAll(currencyComboBoxTuple.first, paymentMethodGroupBox, spacer, topLabelWithVBox.second);
         return hBox;
     }
 

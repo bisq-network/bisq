@@ -47,9 +47,13 @@ import bisq.common.util.Utilities;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Enums;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+
+import java.time.Clock;
+import java.time.Duration;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -59,8 +63,16 @@ import java.lang.management.ManagementFactory;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 @Slf4j
 public class GetInventoryRequestHandler implements MessageListener {
+    // Counting the data objects goes through all data on the user thread, and any peer can request the inventory. So
+    // we count at most once in this interval and answer the requests in between with the last counts, also a request
+    // of another version. The inventory monitor requests every two minutes.
+    @VisibleForTesting
+    static final Duration DATA_OBJECTS_COUNT_INTERVAL = Duration.ofSeconds(10);
+
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
     private final P2PDataStorage p2PDataStorage;
@@ -69,7 +81,11 @@ public class GetInventoryRequestHandler implements MessageListener {
     private final ProposalStateMonitoringService proposalStateMonitoringService;
     private final BlindVoteStateMonitoringService blindVoteStateMonitoringService;
     private final FilterManager filterManager;
+    private final Clock clock;
     private final int maxConnections;
+    @Nullable
+    private Map<InventoryItem, Integer> dataObjects;
+    private long dataObjectsCountedAt;
 
     @Inject
     public GetInventoryRequestHandler(NetworkNode networkNode,
@@ -80,6 +96,7 @@ public class GetInventoryRequestHandler implements MessageListener {
                                       ProposalStateMonitoringService proposalStateMonitoringService,
                                       BlindVoteStateMonitoringService blindVoteStateMonitoringService,
                                       FilterManager filterManager,
+                                      Clock clock,
                                       @Named(Config.MAX_CONNECTIONS) int maxConnections) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
@@ -89,6 +106,7 @@ public class GetInventoryRequestHandler implements MessageListener {
         this.proposalStateMonitoringService = proposalStateMonitoringService;
         this.blindVoteStateMonitoringService = blindVoteStateMonitoringService;
         this.filterManager = filterManager;
+        this.clock = clock;
         this.maxConnections = maxConnections;
 
         this.networkNode.addMessageListener(this);
@@ -99,16 +117,9 @@ public class GetInventoryRequestHandler implements MessageListener {
         if (networkEnvelope instanceof GetInventoryRequest) {
             // Data
             GetInventoryRequest getInventoryRequest = (GetInventoryRequest) networkEnvelope;
-            Map<InventoryItem, Integer> dataObjects = new HashMap<>();
-            p2PDataStorage.getMapForDataResponse(getInventoryRequest.getVersion()).values().stream()
-                    .map(e -> e.getClass().getSimpleName())
-                    .forEach(className -> addClassNameToMap(dataObjects, className));
-            p2PDataStorage.getMap().values().stream()
-                    .map(ProtectedStorageEntry::getProtectedStoragePayload)
-                    .map(e -> e.getClass().getSimpleName())
-                    .forEach(className -> addClassNameToMap(dataObjects, className));
             Map<InventoryItem, String> inventory = new HashMap<>();
-            dataObjects.forEach((key, value) -> inventory.put(key, String.valueOf(value)));
+            getDataObjects(getInventoryRequest.getVersion())
+                    .forEach((key, value) -> inventory.put(key, String.valueOf(value)));
 
             // DAO
             int numBsqBlocks = daoStateService.getBlocks().size();
@@ -140,7 +151,6 @@ public class GetInventoryRequestHandler implements MessageListener {
             inventory.put(InventoryItem.numConnections, String.valueOf(networkNode.getAllConnections().size()));
             inventory.put(InventoryItem.peakNumConnections, String.valueOf(peerManager.getPeakNumConnections()));
             inventory.put(InventoryItem.numAllConnectionsLostEvents, String.valueOf(peerManager.getNumAllConnectionsLostEvents()));
-            peerManager.maybeResetNumAllConnectionsLostEvents();
             inventory.put(InventoryItem.sentBytes, String.valueOf(Statistic.totalSentBytesProperty().get()));
             inventory.put(InventoryItem.sentBytesPerSec, String.valueOf(Statistic.totalSentBytesPerSecProperty().get()));
             inventory.put(InventoryItem.receivedBytes, String.valueOf(Statistic.totalReceivedBytesProperty().get()));
@@ -167,6 +177,29 @@ public class GetInventoryRequestHandler implements MessageListener {
 
     public void shutDown() {
         networkNode.removeMessageListener(this);
+    }
+
+    private Map<InventoryItem, Integer> getDataObjects(String requestersVersion) {
+        long now = clock.millis();
+        if (dataObjects == null ||
+                now < dataObjectsCountedAt ||
+                now - dataObjectsCountedAt >= DATA_OBJECTS_COUNT_INTERVAL.toMillis()) {
+            dataObjects = countDataObjects(requestersVersion);
+            dataObjectsCountedAt = now;
+        }
+        return dataObjects;
+    }
+
+    private Map<InventoryItem, Integer> countDataObjects(String requestersVersion) {
+        Map<InventoryItem, Integer> dataObjects = new HashMap<>();
+        p2PDataStorage.getMapForDataResponse(requestersVersion).values().stream()
+                .map(e -> e.getClass().getSimpleName())
+                .forEach(className -> addClassNameToMap(dataObjects, className));
+        p2PDataStorage.getMap().values().stream()
+                .map(ProtectedStorageEntry::getProtectedStoragePayload)
+                .map(e -> e.getClass().getSimpleName())
+                .forEach(className -> addClassNameToMap(dataObjects, className));
+        return dataObjects;
     }
 
     private void addClassNameToMap(Map<InventoryItem, Integer> dataObjects, String className) {

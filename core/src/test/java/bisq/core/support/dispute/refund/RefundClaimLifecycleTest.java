@@ -52,7 +52,6 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.persistence.PersistenceManager;
-import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
@@ -70,9 +69,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.mockito.ArgumentCaptor;
 
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -338,7 +335,6 @@ class RefundClaimLifecycleTest {
         Dispute peer = data.signed(false, OPENING_DATE + 1);
         disputes.getDisputeList().add(selected);
         receive(peer);
-        assertFalse(manager.requiresLegacyRefundClaimVerification(selected));
         assertDoesNotThrow(() -> manager.verifyRefundClaimForPayout(selected, Coin.ZERO, Coin.valueOf(1_000)));
         assertThrows(IllegalArgumentException.class,
                 () -> manager.verifyRefundClaimForPayout(selected, Coin.valueOf(1_000), Coin.ZERO));
@@ -434,45 +430,16 @@ class RefundClaimLifecycleTest {
     }
 
     @Test
-    void legacyGracePeriodEndsExactlyAtCutoffAndRequiresAnExistingUnsignedRow() throws Exception {
-        Instant cutoff = Utilities.getUTCDate(2026, GregorianCalendar.NOVEMBER, 1).toInstant();
-        Dispute legacy = data.unsigned(true, OPENING_DATE);
-        assertFalse(manager.requiresLegacyRefundClaimVerification(legacy, cutoff.minusMillis(1)));
-        disputes.getDisputeList().add(legacy);
-        assertTrue(manager.requiresLegacyRefundClaimVerification(legacy, cutoff.minusMillis(1)));
-        assertFalse(manager.requiresLegacyRefundClaimVerification(legacy, cutoff));
-        assertFalse(manager.requiresLegacyRefundClaimVerification(legacy, cutoff.plusSeconds(1)));
-        Dispute copy = RefundClaimTestData.restore(legacy.toProtoMessage());
-        assertFalse(manager.requiresLegacyRefundClaimVerification(copy, cutoff.minusMillis(1)));
-        legacy.setRefundClaimSignature("malformed");
-        assertFalse(manager.requiresLegacyRefundClaimVerification(legacy, cutoff.minusMillis(1)));
-        legacy.setRefundClaimSignature(" ");
-        assertFalse(manager.requiresLegacyRefundClaimVerification(legacy, cutoff.minusMillis(1)));
-        legacy.setRefundClaimSignature(null);
-        legacy.setRefundClaimOpeningDate(OPENING_DATE);
-        assertFalse(manager.requiresLegacyRefundClaimVerification(legacy, cutoff.minusMillis(1)));
-    }
-
-    @Test
-    void legacyMissingProofAllowsCloseDuringGraceButNotAfterItOrForNewIntake() throws Exception {
-        Instant cutoff = Utilities.getUTCDate(2026, GregorianCalendar.NOVEMBER, 1).toInstant();
-        Dispute legacy = data.unsigned(true, OPENING_DATE);
-        disputes.getDisputeList().add(legacy);
-        try (MockedStatic<Instant> time = mockStatic(Instant.class, CALLS_REAL_METHODS)) {
-            time.when(Instant::now).thenReturn(cutoff.minusSeconds(1));
-            assertDoesNotThrow(() -> manager.verifyRefundClaimForPayout(legacy, Coin.ZERO, Coin.valueOf(1_000)));
-            assertDoesNotThrow(() -> manager.verifyRefundClaimForPayout(legacy, Coin.ZERO, Coin.ZERO));
-            assertThrows(IllegalArgumentException.class,
-                    () -> manager.verifyRefundClaimForPayout(legacy, Coin.valueOf(-1), Coin.valueOf(1_000)));
-            receive(data.unsigned(false, OPENING_DATE + 1));
-            assertEquals(1, manager.getValidationExceptions().size());
-            assertEquals(1, disputes.getDisputeList().size());
-            time.when(Instant::now).thenReturn(cutoff);
-            assertThrows(IllegalArgumentException.class,
-                    () -> manager.verifyRefundClaimForPayout(legacy, Coin.ZERO, Coin.valueOf(1_000)));
-            assertThrows(IllegalArgumentException.class,
-                    () -> manager.verifyRefundClaimForPayout(legacy, Coin.ZERO, Coin.ZERO));
-        }
+    void storedDisputeWithoutProofCannotBeClosedAndNewUnsignedIntakeIsRejected() throws Exception {
+        Dispute stored = data.unsigned(true, OPENING_DATE);
+        disputes.getDisputeList().add(stored);
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.verifyRefundClaimForPayout(stored, Coin.ZERO, Coin.valueOf(1_000)));
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.verifyRefundClaimForPayout(stored, Coin.ZERO, Coin.ZERO));
+        receive(data.unsigned(false, OPENING_DATE + 1));
+        assertEquals(1, manager.getValidationExceptions().size());
+        assertEquals(1, disputes.getDisputeList().size());
     }
 
     @Test

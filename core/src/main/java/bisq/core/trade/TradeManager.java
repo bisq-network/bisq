@@ -25,6 +25,7 @@ import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
+import bisq.core.offer.OfferFilterService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.availability.OfferAvailabilityModel;
@@ -96,6 +97,7 @@ import org.bitcoinj.core.TransactionConfidence;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 
 import javafx.beans.property.BooleanProperty;
@@ -118,6 +120,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -133,6 +136,8 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 
 import static bisq.core.trade.validation.InputsForDepositTxRequestValidation.checkInputsForDepositTxRequest;
+import static bisq.core.trade.validation.MinerFeeValidation.MIN_TRADE_TX_FEE_SAT;
+import static bisq.core.trade.validation.MinerFeeValidation.checkOwnTradeTxFeeIsInTolerance;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -145,6 +150,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
     private final OpenOfferManager openOfferManager;
+    private final OfferFilterService offerFilterService;
     private final ClosedTradableManager closedTradableManager;
     private final BsqSwapTradeManager bsqSwapTradeManager;
     private final FailedTradesManager failedTradesManager;
@@ -196,6 +202,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         BtcWalletService btcWalletService,
                         BsqWalletService bsqWalletService,
                         OpenOfferManager openOfferManager,
+                        OfferFilterService offerFilterService,
                         ClosedTradableManager closedTradableManager,
                         BsqSwapTradeManager bsqSwapTradeManager,
                         FailedTradesManager failedTradesManager,
@@ -217,6 +224,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.openOfferManager = openOfferManager;
+        this.offerFilterService = offerFilterService;
         this.closedTradableManager = closedTradableManager;
         this.bsqSwapTradeManager = bsqSwapTradeManager;
         this.failedTradesManager = failedTradesManager;
@@ -239,6 +247,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         p2PService.addDecryptedDirectMessageListener(this);
 
         failedTradesManager.setUnFailTradeCallback(this::unFailTrade);
+        openOfferManager.setTakeOfferHandshakePending(this::isTakeOfferHandshakePending);
     }
 
 
@@ -292,6 +301,14 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         OpenOffer openOffer = openOfferOptional.get();
         if (openOffer.getState() != OpenOffer.State.AVAILABLE) {
             log.info("OpenOffer with offerId {} is not available", tradeId);
+            return;
+        }
+        // The reservation of the offer ends earlier than the handshake of the request which reserved it. The taker of
+        // that request may already have published its taker fee tx. A trade for another request would get the same
+        // trade ID, and the protocol of the first trade would be reset.
+        if (isTakeOfferHandshakePending(tradeId)) {
+            log.warn("We ignore the take offer request for offerId {} as the handshake of an earlier take offer " +
+                    "request for that offer is still pending", tradeId);
             return;
         }
         Offer offer = openOffer.getOffer();
@@ -387,7 +404,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         Coin amount = Coin.valueOf(request.getTradeAmount());
         BsqSwapProtocolModel bsqSwapProtocolModel = new BsqSwapProtocolModel(keyRing.getPubKeyRing());
         if (request instanceof BuyersBsqSwapRequest) {
-            checkArgument(!offer.isBuyOffer(),
+            checkArgument(offer.isSellOffer(),
                     "offer is expected to be a sell offer at handleBsqSwapRequest");
             bsqSwapTrade = new BsqSwapSellerAsMakerTrade(
                     offer,
@@ -550,7 +567,25 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             return;
         }
 
-        offer.checkOfferAvailability(getOfferAvailabilityModel(offer, isTakerApiUser), resultHandler, errorMessageHandler);
+        checkAvailability(offer, getOfferAvailabilityModel(offer, isTakerApiUser), resultHandler, errorMessageHandler);
+    }
+
+    // Every take path asks through here, so the maker's answer is recorded once for all of
+    // them: USER_IGNORED closes the maker's other offers to us as well, AVAILABLE reopens
+    // them. The answer is on the offer when either handler runs.
+    private void checkAvailability(Offer offer,
+                                   OfferAvailabilityModel model,
+                                   ResultHandler resultHandler,
+                                   ErrorMessageHandler errorMessageHandler) {
+        offer.checkOfferAvailability(model,
+                () -> {
+                    offerFilterService.onAvailabilityAnswer(offer, offer.getAvailabilityResult());
+                    resultHandler.handleResult();
+                },
+                errorMessage -> {
+                    offerFilterService.onAvailabilityAnswer(offer, offer.getAvailabilityResult());
+                    errorMessageHandler.handleErrorMessage(errorMessage);
+                });
     }
 
     // First we check if offer is still available then we create the trade with the protocol
@@ -569,8 +604,21 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
         checkArgument(!wasOfferAlreadyUsedInTrade(offer.getId()));
 
+        // Makers drop a request with a trade tx fee outside their tolerance without a reply.
+        // Compatibility with v1.10.11 and earlier: we use the tolerance of these makers, see
+        // MinerFeeValidation.MAX_OWN_FEE_DEVIATION_FACTOR.
+        try {
+            checkOwnTradeTxFeeIsInTolerance(txFee, provider.getFeeService());
+        } catch (IllegalArgumentException e) {
+            log.warn("Trade tx fee {} would not be accepted by the maker. {}", txFee.value, e.getMessage());
+            errorMessageHandler.handleErrorMessage(Res.get(isAboveTradeTxFeeRange(txFee) ?
+                    "takeOffer.failed.tradeTxFeeTooHigh" :
+                    "takeOffer.failed.tradeTxFeeTooLow"));
+            return;
+        }
+
         OfferAvailabilityModel model = getOfferAvailabilityModel(offer, isTakerApiUser);
-        offer.checkOfferAvailability(model,
+        checkAvailability(offer, model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE) {
                         Trade trade;
@@ -621,6 +669,15 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         requestPersistence();
     }
 
+    // Above the range, a fragmented wallet or a dropped fee rate is the cause. Below it, including the absolute
+    // minimum, the fee rate has risen or is very low.
+    private boolean isAboveTradeTxFeeRange(Coin txFee) {
+        Coin txFeePerVbyte = provider.getFeeService().getTxFeePerVbyte();
+        return txFee.value >= MIN_TRADE_TX_FEE_SAT &&
+                txFeePerVbyte.isPositive() &&
+                txFee.isGreaterThan(TradeFeeFactory.getTradeTxFee(txFeePerVbyte));
+    }
+
     public void onTakeBsqSwapOffer(Offer offer,
                                    Coin amount,
                                    long txFeePerVbyte,
@@ -633,7 +690,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         checkArgument(!wasOfferAlreadyUsedInTrade(offer.getId()));
 
         OfferAvailabilityModel model = getOfferAvailabilityModel(offer, isTakerApiUser);
-        offer.checkOfferAvailability(model,
+        checkAvailability(offer, model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE) {
                         BsqSwapTrade bsqSwapTrade;
@@ -952,6 +1009,29 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 closedTradableManager.getObservableList().stream());
 
         return combinedStream.anyMatch(t -> t.getOffer().getId().equals(offerId));
+    }
+
+    // We have started a trade for a take offer request of that offer and still wait for the taker's next message,
+    // with which we remove the offer: the trade has no error, and the timeout of the handshake has not passed since
+    // the request. A trade which failed or timed out stays in the list, so a trade for the offer must not block the
+    // offer for longer than that. A request later than now means that the clock was set back. Up to the timeout later,
+    // the handshake stays pending, as the timer of the protocol need not follow the clock (it does not on the
+    // desktop). A request even later does not count, as it would otherwise block the offer for as long as the clock
+    // was set back.
+    public boolean isTakeOfferHandshakePending(String offerId) {
+        long timeout = TimeUnit.SECONDS.toMillis(MakerProtocol.TAKE_OFFER_HANDSHAKE_TIMEOUT_SEC);
+        long now = now();
+        return tradableList.stream()
+                .filter(trade -> trade.getId().equals(offerId))
+                .anyMatch(trade -> {
+                    long age = now - trade.getTakeOfferDate();
+                    return !trade.hasFailed() && -timeout < age && age < timeout;
+                });
+    }
+
+    @VisibleForTesting
+    protected long now() {
+        return System.currentTimeMillis();
     }
 
     public boolean isBuyer(Offer offer) {

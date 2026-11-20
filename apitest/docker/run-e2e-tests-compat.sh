@@ -5,6 +5,10 @@
 # rest (seednode, arb, alice) run the current working tree. Local mirror of
 # .github/workflows/e2e-tests-compat.yml — same images, same override, same suite.
 #
+# With RELEASE_PEER=alice the release runs on alice instead, the maker of the trade
+# tests (old maker, new taker). Then only the trade tests with alice as maker run
+# (compat-alice-tests.txt); the other tests check current-tree behaviour on alice.
+#
 # Requires a running docker daemon, JDK 21, and a clean git tree with tags
 # fetched. Builds two source trees (current + the release tag), so the first run
 # is slow.
@@ -16,8 +20,9 @@
 #   apitest/docker/run-e2e-tests-compat.sh v1.10.0 --tests 'bisq.apitest.dao.*'
 #
 # Env overrides:
-#   RELEASE_REF    release ref for the bob peer (default: latest tag); a leading
+#   RELEASE_REF    release ref for the release peer (default: latest tag); a leading
 #                  non-dash positional arg takes precedence.
+#   RELEASE_PEER   bob (default, release taker) or alice (release maker)
 #   GRADLE         gradle wrapper for the current tree (default: ./gradlew)
 
 set -euo pipefail
@@ -25,7 +30,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 COMPOSE_FILE="${SCRIPT_DIR}/dao-compose.yml"
-OVERRIDE_FILE="${SCRIPT_DIR}/dao-compose.compat.yml"
+RELEASE_PEER="${RELEASE_PEER:-bob}"
+case "${RELEASE_PEER}" in
+  bob)   OVERRIDE_FILE="${SCRIPT_DIR}/dao-compose.compat.yml" ;;
+  alice) OVERRIDE_FILE="${SCRIPT_DIR}/dao-compose.compat-alice.yml" ;;
+  *)     printf '[ERROR] RELEASE_PEER must be bob or alice, not %s\n' "${RELEASE_PEER}" >&2; exit 2 ;;
+esac
 RELEASE_DIST="${SCRIPT_DIR}/.release-dist"
 GRADLE="${GRADLE:-${REPO_ROOT}/gradlew}"
 
@@ -61,7 +71,7 @@ if [[ -z "${RELEASE_REF}" ]]; then
 fi
 git rev-parse --verify --quiet "${RELEASE_REF}^{commit}" >/dev/null \
   || fatal "unknown release ref '${RELEASE_REF}' (run 'git fetch --tags'?)"
-log "Release peer (bob) ref: ${RELEASE_REF}"
+log "Release peer (${RELEASE_PEER}) ref: ${RELEASE_REF}"
 
 # Detached worktree for the release build; removed on exit.
 WORKTREE="$(mktemp -d)/src"
@@ -118,11 +128,25 @@ docker build \
 ###############################################################################
 # 5. Run the suite with the compat override (skip builds — done above).
 ###############################################################################
-step "Running e2e suite (bob=${RELEASE_REF}, rest=current tree)"
+step "Running e2e suite (${RELEASE_PEER}=${RELEASE_REF}, rest=current tree)"
 # Skip the deny-list policy phase: it injects the master-only --denyListResource
 # daemon flag via BISQ_EXTRA_ARGS, which an older release peer (bob) does not
 # recognize and exits on. It tests a single-node master feature, not cross-version
 # compatibility, so it has no meaning in this mixed-version run.
+# With alice on the release, run only the alice-maker trade classes (an explicit
+# FRESH_STACK_TESTS wins) and skip the shared-stack phase.
+if [[ "${RELEASE_PEER}" == "alice" ]]; then
+  # Both would be ignored silently: --tests selects shared-stack tests and the class
+  # list replaces the long-running discovery.
+  [[ " ${RUNNER_ARGS[*]-} " != *" --tests "* ]] \
+    || fatal "--tests is not supported with RELEASE_PEER=alice; set FRESH_STACK_TESTS"
+  [[ "${RUN_LONG_RUNNING_TESTS:-false}" != "true" ]] \
+    || fatal "RUN_LONG_RUNNING_TESTS=true is not supported with RELEASE_PEER=alice"
+  # The runner splits FRESH_STACK_TESTS with `read`, so it must stay on one line.
+  ALICE_RELEASE_TESTS="$(grep -v '^#' "${SCRIPT_DIR}/compat-alice-tests.txt" | tr '\n' ' ')"
+  export FRESH_STACK_TESTS="${FRESH_STACK_TESTS:-${ALICE_RELEASE_TESTS}}"
+  export RUN_SHARED_STACK_TESTS=false
+fi
 COMPOSE_OVERRIDE_FILE="${OVERRIDE_FILE}" \
 RUN_POLICY_E2E_TESTS=false \
   "${SCRIPT_DIR}/run-e2e-tests.sh" --skip-build --skip-docker-build "${RUNNER_ARGS[@]}"

@@ -102,6 +102,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 @Slf4j
 abstract class OfferBookViewModel extends ActivatableViewModel implements DaoStateListener {
     private final OpenOfferManager openOfferManager;
@@ -115,7 +117,7 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
     private final BsqSwapTradeManager bsqSwapTradeManager;
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
-    private final PriceUtil priceUtil;
+    final PriceUtil priceUtil;
     final OfferFilterService offerFilterService;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
@@ -127,6 +129,7 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
     private final SortedList<OfferBookListItem> sortedItems;
     private final ListChangeListener<TradeCurrency> tradeCurrencyListChangeListener;
     private final ListChangeListener<OfferBookListItem> filterItemsListener;
+    private final ListChangeListener<OfferBookListItem> offerBookListItemsListener;
     private TradeCurrency selectedTradeCurrency;
     @Getter
     private final ObservableList<TradeCurrency> tradeCurrencies = FXCollections.observableArrayList();
@@ -152,6 +155,11 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
     final IntegerProperty maxPlacesForMarketPriceMargin = new SimpleIntegerProperty();
     boolean showAllPaymentMethods = true;
     boolean useOffersMatchingMyAccountsFilter;
+    // True while the tab is selected and offers pass all filters but none is within the price range of the market
+    final BooleanProperty allOffersOutsidePriceRange = new SimpleBooleanProperty();
+    private Predicate<OfferBookListItem> predicateWithoutPriceRange = item -> true;
+    @Nullable
+    private Predicate<OfferBookListItem> priceRangePredicate;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -234,6 +242,8 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
 
             highestMarketPriceMarginOffer.ifPresent(offerBookListItem -> maxPlacesForMarketPriceMargin.set(formatMarketPriceMargin(offerBookListItem.getOffer()).length()));
         };
+
+        offerBookListItemsListener = c -> updateAllOffersOutsidePriceRange();
     }
 
 
@@ -256,6 +266,7 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
         fillCurrencies();
         updateSelectedTradeCurrency();
         preferences.getTradeCurrenciesAsObservable().addListener(tradeCurrencyListChangeListener);
+        offerBook.getOfferBookListItems().addListener(offerBookListItemsListener);
         offerBook.fillOfferBookListItems();
         filterOffers();
         setMarketPriceFeedCurrency();
@@ -268,6 +279,7 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
     protected void deactivate() {
         filteredItems.removeListener(filterItemsListener);
         preferences.getTradeCurrenciesAsObservable().removeListener(tradeCurrencyListChangeListener);
+        offerBook.getOfferBookListItems().removeListener(offerBookListItemsListener);
         daoStateService.removeDaoStateListener(this);
     }
 
@@ -288,6 +300,8 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
             updateSelectedTradeCurrency();
             filterOffers();
             updateMatchingAccountToggleState();
+        } else {
+            allOffersOutsidePriceRange.set(false);
         }
     }
 
@@ -396,8 +410,17 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
         list = filterPaymentMethods(list, selectedTradeCurrency);
 
         list.sort(Comparator.naturalOrder());
-        list.add(0, getShowAllEntryForPaymentMethod());
+        addFilterEntries(list);
         return list;
+    }
+
+    // Adds the entries which select a group of payment methods at the top. The entry for the stablecoins is only
+    // added if there are stablecoins (only for USD so far).
+    static void addFilterEntries(List<PaymentMethod> paymentMethods) {
+        if (paymentMethods.stream().anyMatch(PaymentMethod::isStableCoin)) {
+            paymentMethods.add(0, PaymentMethod.getDummyPaymentMethod(GUIUtil.STABLECOINS_ONLY_FLAG));
+        }
+        paymentMethods.add(0, PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG));
     }
 
     protected abstract ObservableList<PaymentMethod> filterPaymentMethods(ObservableList<PaymentMethod> list,
@@ -483,6 +506,8 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
             String methodCountryCode = offer.getCountryCode();
             if (isF2F(offer)) {
                 result = method + " (" + methodCountryCode + ", " + offer.getF2FCity() + ")";
+            } else if (offer.getPaymentMethod().isCustom()) {
+                result = offer.getPaymentMethodShortName();
             } else {
                 if (methodCountryCode != null)
                     result = method + " (" + methodCountryCode + ")";
@@ -499,6 +524,12 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
         if (item != null) {
             Offer offer = item.getOffer();
             result = Res.getWithCol("shared.paymentMethod") + " " + Res.get(offer.getPaymentMethod().getId());
+            if (offer.getPaymentMethod().isCustom()) {
+                String name = offer.getCustomPaymentMethodName();
+                result += "\n" + Res.get("payment.custom.offerbook.tooltip.name",
+                        name.isEmpty() ? Res.get("shared.na") : name);
+                result += "\n" + Res.get("payment.custom.offerbook.tooltip.risk");
+            }
             result += "\n" + Res.getWithCol("shared.currency") + " " + CurrencyUtil.getNameAndCode(offer.getCurrencyCode());
 
             if (offer.isXmr()) {
@@ -624,11 +655,51 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
                 getCurrencyAndMethodPredicate(direction, selectedTradeCurrency);
 
         Predicate<OfferBookListItem> predicate2 = item -> !OfferUtil.doesOfferAmountExceedTradeLimit(item.getOffer());
-        filteredItems.setPredicate(predicate1.and(predicate2));
+        predicateWithoutPriceRange = predicate1.and(predicate2);
+        priceRangePredicate = getPriceRangePredicate();
+        filteredItems.setPredicate(priceRangePredicate != null ?
+                predicateWithoutPriceRange.and(priceRangePredicate) :
+                predicateWithoutPriceRange);
+        updateAllOffersOutsidePriceRange();
     }
 
     abstract Predicate<OfferBookListItem> getCurrencyAndMethodPredicate(OfferDirection direction,
                                                                         TradeCurrency selectedTradeCurrency);
+
+    boolean isMatchingSelectedPaymentMethod(Offer offer) {
+        if (showAllPaymentMethods) {
+            return true;
+        }
+        if (selectedPaymentMethod.getId().equals(GUIUtil.STABLECOINS_ONLY_FLAG)) {
+            return offer.getPaymentMethod().isStableCoin();
+        }
+        return offer.getPaymentMethod().equals(selectedPaymentMethod);
+    }
+
+    // The offers within the price range of the market. Null if the market has no price range.
+    @Nullable
+    Predicate<OfferBookListItem> getPriceRangePredicate() {
+        return null;
+    }
+
+    private void updateAllOffersOutsidePriceRange() {
+        if (!isTabSelected || priceRangePredicate == null) {
+            allOffersOutsidePriceRange.set(false);
+            return;
+        }
+
+        boolean isAnyOfferOutsidePriceRange = false;
+        for (OfferBookListItem item : offerBook.getOfferBookListItems()) {
+            if (predicateWithoutPriceRange.test(item)) {
+                if (priceRangePredicate.test(item)) {
+                    allOffersOutsidePriceRange.set(false);
+                    return;
+                }
+                isAnyOfferOutsidePriceRange = true;
+            }
+        }
+        allOffersOutsidePriceRange.set(isAnyOfferOutsidePriceRange);
+    }
 
     private Predicate<OfferBookListItem> getOffersMatchingMyAccountsPredicate() {
         // This code duplicates code in the view at the button column. We need there the different results for

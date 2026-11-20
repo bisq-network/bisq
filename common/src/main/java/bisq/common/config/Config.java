@@ -152,6 +152,7 @@ public class Config {
     public static final String DUMP_DELAYED_PAYOUT_TXS = "dumpDelayedPayoutTxs";
     public static final String ALLOW_FAULTY_DELAYED_TXS = "allowFaultyDelayedTxs";
     public static final String API_PASSWORD = "apiPassword";
+    public static final String API_HOST = "apiHost";
     public static final String API_PORT = "apiPort";
     public static final String BRIDGE_PORT = "bridgePort";
     public static final String PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE = "preventPeriodicShutdownAtSeedNode";
@@ -250,7 +251,8 @@ public class Config {
     public final boolean torStreamIsolation;
     public final boolean useTorSandbox;
     public final boolean allowPluggableTransportsInTorSandbox;
-    // The command line overrides the config file, which the Tor network settings write
+    // The command line overrides the config file, which the Tor network settings and popups write
+    public final boolean useTorSandboxSetOnCommandLine;
     public final boolean allowPluggableTransportsInTorSandboxSetOnCommandLine;
     public final int msgThrottlePerSec;
     public final int msgThrottlePer10Sec;
@@ -285,6 +287,7 @@ public class Config {
     public final boolean dumpDelayedPayoutTxs;
     public final boolean allowFaultyDelayedTxs;
     public final String apiPassword;
+    public final String apiHost;
     public final int apiPort;
     public final int bridgePort;
     public final boolean preventPeriodicShutdownAtSeedNode;
@@ -558,7 +561,7 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<Boolean> skipBsqBlockProvidersSignatureVerificationOpt =
                 parser.accepts(SKIP_BSQ_BLOCK_PROVIDERS_SIGNATURE_VERIFICATION,
-                                "Override the requirement for BSQ block provider signatures. If true, unsigned DAO blocks are accepted; provided signatures are still verified.")
+                                "If true, the signatures of BSQ block providers are not verified. DAO blocks must still be signed.")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
@@ -879,6 +882,12 @@ public class Config {
                         .withRequiredArg()
                         .defaultsTo("");
 
+        ArgumentAcceptingOptionSpec<String> apiHostOpt =
+                parser.accepts(API_HOST, "gRPC API bind address. The API has no TLS, " +
+                                "so a non-loopback address exposes the password on the network")
+                        .withRequiredArg()
+                        .defaultsTo("127.0.0.1");
+
         ArgumentAcceptingOptionSpec<Integer> apiPortOpt =
                 parser.accepts(API_PORT, "gRPC API port")
                         .withRequiredArg()
@@ -1038,6 +1047,7 @@ public class Config {
                     .collect(toList());
             this.torStreamIsolation = options.has(torStreamIsolationOpt);
             this.useTorSandbox = options.valueOf(useTorSandboxOpt);
+            this.useTorSandboxSetOnCommandLine = cliOpts.has(useTorSandboxOpt);
             this.allowPluggableTransportsInTorSandbox = options.valueOf(allowPluggableTransportsInTorSandboxOpt);
             this.allowPluggableTransportsInTorSandboxSetOnCommandLine =
                     cliOpts.has(allowPluggableTransportsInTorSandboxOpt);
@@ -1105,6 +1115,7 @@ public class Config {
             this.dumpDelayedPayoutTxs = options.valueOf(dumpDelayedPayoutTxsOpt);
             this.allowFaultyDelayedTxs = options.valueOf(allowFaultyDelayedTxsOpt);
             this.apiPassword = options.valueOf(apiPasswordOpt);
+            this.apiHost = options.valueOf(apiHostOpt);
             this.apiPort = options.valueOf(apiPortOpt);
             this.bridgePort = options.valueOf(bridgePortOpt);
             this.preventPeriodicShutdownAtSeedNode = options.valueOf(preventPeriodicShutdownAtSeedNodeOpt);

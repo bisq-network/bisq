@@ -22,7 +22,9 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.payload.StableCoinAccountPayload;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.dispute.refund.RefundResultState;
@@ -66,6 +68,7 @@ import javafx.collections.ObservableList;
 
 import java.util.Date;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -76,7 +79,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-import static bisq.core.trade.validation.MinerFeeValidation.checkTradeTxFee;
+import static bisq.core.trade.validation.MinerFeeValidation.checkStoredTradeTxFee;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -260,6 +263,15 @@ public abstract class Trade extends TradeModel {
                     this == Trade.DisputeState.REFUND_REQUESTED ||
                     this == Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER ||
                     this == Trade.DisputeState.REFUND_REQUEST_CLOSED;
+        }
+
+        // A refund request means that the delayed payout tx is published, which spends the deposit output of the
+        // mediated payout. Only a confirmed mediated payout shows that it spent the output first, for example if the
+        // peer published it before the delayed payout tx. isArbitrated also covers the legacy arbitration, which has no
+        // mediated payout.
+        // The peer's MediatedPayoutTxPublishedMessage and the payout seen in the wallet both follow this rule.
+        public boolean acceptsMediatedPayout(BooleanSupplier isPayoutConfirmed) {
+            return !isArbitrated() || isPayoutConfirmed.getAsBoolean();
         }
     }
 
@@ -457,7 +469,8 @@ public abstract class Trade extends TradeModel {
                     ProcessModel processModel,
                     String uid) {
         super(uid, offer);
-        this.tradeTxFee = checkTradeTxFee(tradeTxFee);
+        // Also used when the trade is loaded from disk, see MIN_STORED_TRADE_TX_FEE_SAT.
+        this.tradeTxFee = checkStoredTradeTxFee(tradeTxFee);
         this.takerFee = takerFee;
         this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
@@ -963,12 +976,8 @@ public abstract class Trade extends TradeModel {
 
         // Legacy arbitration is not handled anymore as not used anymore.
 
-        // In mediation case we check for the mediationResultState. As there are multiple sub-states we use ordinal.
-        if (disputeState == DisputeState.MEDIATION_CLOSED) {
-            if (mediationResultState != null &&
-                    mediationResultState.ordinal() >= MediationResultState.PAYOUT_TX_PUBLISHED.ordinal()) {
-                return false;
-            }
+        if (isMediatedPayoutPublished()) {
+            return false;
         }
 
         // In refund agent case the funds are spent anyway with the time locked payout. We do not consider that as
@@ -992,6 +1001,26 @@ public abstract class Trade extends TradeModel {
 
     public boolean isPayoutPublished() {
         return getTradePhase().ordinal() >= Phase.PAYOUT_PUBLISHED.ordinal() || isWithdrawn();
+    }
+
+    // Trades loaded from disk can contain details received before the buyer checked the payload type.
+    public boolean hasMismatchedSellerPaymentRail() {
+        PaymentAccountPayload sellerAccount = contract == null ? null : contract.getSellerPaymentAccountPayload();
+        return sellerAccount != null && StableCoinAccountPayload.isOfAnotherPaymentMethod(
+                checkNotNull(getOffer()).getPaymentMethod(), sellerAccount);
+    }
+
+    public boolean isMediatedPayoutPublished() {
+        // In mediation case we check for the mediationResultState. As there are multiple sub-states we use ordinal.
+        return disputeState == DisputeState.MEDIATION_CLOSED &&
+                mediationResultState != null &&
+                mediationResultState.ordinal() >= MediationResultState.PAYOUT_TX_PUBLISHED.ordinal();
+    }
+
+    // With both signatures our node can publish the mediated payout, so it is the agreed result
+    public boolean isMediatedPayoutSignedByBothTraders() {
+        return processModel.getMediatedPayoutTxSignature() != null &&
+                processModel.getTradePeer().getMediatedPayoutTxSignature() != null;
     }
 
     public boolean isWithdrawn() {

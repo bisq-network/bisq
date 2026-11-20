@@ -24,10 +24,12 @@ For a fiat trade, the buyer must reveal the payment-account payload committed to
 Before the seller records that reveal as validated, the seller must verify all of the following:
 
 1. the revealed payload hashes to the buyer payload commitment in the contract;
-2. the peer and revealed payment-account data pass the current trade filters;
-3. the account-age witness is derived from the revealed payload and the buyer's trade public key;
-4. the buyer's signature over the trade challenge is valid; and
-5. the witness-derived trade limit at trade time is at least the negotiated trade amount.
+2. the revealed payload is of the payment method the buyer stated in the contract (see
+   [`revealed-payment-account-payment-method.md`](revealed-payment-account-payment-method.md));
+3. the peer and revealed payment-account data pass the current trade filters;
+4. the account-age witness is derived from the revealed payload and the buyer's trade public key;
+5. the buyer's signature over the trade challenge is valid; and
+6. the witness-derived trade limit at trade time is at least the negotiated trade amount.
 
 Successful validation is persisted. Merely receiving or persisting a payment-account payload is not
 equivalent to successful validation because a later filter or witness check may fail.
@@ -63,9 +65,13 @@ idempotently re-evaluate publication. A stored buyer-account reveal must be proc
 same validation path as a directly delivered reveal. Restart recovery must not depend on the buyer
 resending a reveal that the seller already received.
 
-The buyer receives a fully signed deposit transaction as part of this exchange and can broadcast it
-with a modified client. The seller therefore must also enforce the validation state at settlement;
-delayed seller publication alone is defense in depth, not the complete authorization boundary.
+The buyer receives a fully signed deposit transaction as part of this exchange. A modified client can
+broadcast it at any time. An unmodified client broadcasts it too: the buyer adds it to its wallet as a
+pending transaction when it processes the message, and the wallet broadcasts its pending transactions
+when it connects at the next start of the application. A seller which refuses the buyer's account
+therefore does not keep the deposit from being published (`trade-buyer-pending-deposit-rebroadcast`).
+The seller therefore must also enforce the validation state at settlement; delayed seller
+publication alone is defense in depth, not the complete authorization boundary.
 
 ## Settlement gates
 

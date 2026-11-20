@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.bisq_v1;
 
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.FluentProtocol;
 import bisq.core.trade.protocol.TradeMessage;
@@ -44,10 +45,21 @@ import bisq.core.trade.protocol.bisq_v1.tasks.mediation.SignMediatedPayoutTx;
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.UserThread;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.listeners.NewBestBlockListener;
+
+import com.google.common.annotations.VisibleForTesting;
+
+import javafx.beans.value.ChangeListener;
+
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 import static bisq.core.trade.validation.TradeValidation.checkTradeId;
 
@@ -56,12 +68,29 @@ public class DisputeProtocol extends TradeProtocol {
 
     protected Trade trade;
     protected final ProcessModel processModel;
+    // Set while a peer's signature of the mediated payout waits for our mediation result
+    @Nullable
+    private ChangeListener<Trade.DisputeState> mediationResultListener;
+    // Set while the publication of the mediated payout waits for the wallet
+    @Nullable
+    private NewBestBlockListener walletReadyListener;
 
     enum DisputeEvent implements FluentProtocol.Event {
+        STARTUP,
         MEDIATION_RESULT_ACCEPTED,
         MEDIATION_RESULT_REJECTED,
         ARBITRATION_REQUESTED
     }
+
+    // Phases in which a trader accepts the MediatedPayoutTxPublishedMessage. Both traders can publish the
+    // mediated payout, so the message can arrive after our own payout was published. We keep our payout then.
+    @VisibleForTesting
+    public static final Trade.Phase[] MEDIATED_PAYOUT_TX_PUBLISHED_MSG_PHASES = {
+            Trade.Phase.DEPOSIT_CONFIRMED,
+            Trade.Phase.FIAT_SENT,
+            Trade.Phase.FIAT_RECEIVED,
+            Trade.Phase.PAYOUT_PUBLISHED
+    };
 
     public DisputeProtocol(Trade trade) {
         super(trade);
@@ -73,6 +102,21 @@ public class DisputeProtocol extends TradeProtocol {
     protected void onInitialized() {
         super.onInitialized();
         processModel.applyPaymentAccount(trade);
+
+        // A trader who has accepted the mediation result also detects the peer's payout in the wallet, as the
+        // MediatedPayoutTxPublishedMessage can be lost. The listener is set up at the acceptance and again at startup.
+        given(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED,
+                Trade.Phase.FIAT_SENT,
+                Trade.Phase.FIAT_RECEIVED)
+                .with(DisputeEvent.STARTUP)
+                .preCondition(processModel.getMediatedPayoutTxSignature() != null))
+                .setup(tasks(SetupMediatedPayoutTxListener.class))
+                .executeTasks();
+    }
+
+    @Override
+    protected void onStartupMailboxMessagesHandled() {
+        maybeFinalizeMediatedPayout();
     }
 
 
@@ -134,6 +178,13 @@ public class DisputeProtocol extends TradeProtocol {
 
     // Trader has already received the peer's signature and has clicked the accept button as well.
     public void onFinalizeMediationResultPayout(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        finalizeMediatedPayout(resultHandler, errorMessageHandler, true);
+    }
+
+    // Without tradeErrorOnFailure, for a publication that the trader did not start, a failed task is only logged
+    private void finalizeMediatedPayout(ResultHandler resultHandler,
+                                        ErrorMessageHandler errorMessageHandler,
+                                        boolean tradeErrorOnFailure) {
         DisputeEvent event = DisputeEvent.MEDIATION_RESULT_ACCEPTED;
         expect(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED,
                 Trade.Phase.FIAT_SENT,
@@ -154,7 +205,8 @@ public class DisputeProtocol extends TradeProtocol {
                                 errorMessage -> {
                                     errorMessageHandler.handleErrorMessage(errorMessage);
                                     handleTaskRunnerFault(event, errorMessage);
-                                })))
+                                },
+                                tradeErrorOnFailure)))
                 .executeTasks();
     }
 
@@ -164,23 +216,172 @@ public class DisputeProtocol extends TradeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void handle(MediatedPayoutTxSignatureMessage message, NodeAddress peer) {
+        if (isBeforeMediationResult()) {
+            handleOnceMediationResultIsApplied(message, peer);
+            return;
+        }
+
         expect(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED,
                 Trade.Phase.FIAT_SENT,
                 Trade.Phase.FIAT_RECEIVED)
                 .with(message)
                 .from(peer))
-                .setup(tasks(ProcessMediatedPayoutSignatureMessage.class))
+                .setup(tasks(ProcessMediatedPayoutSignatureMessage.class)
+                        .using(new TradeTaskRunner(trade,
+                                () -> {
+                                    handleTaskRunnerSuccess(message);
+                                    maybeFinalizeMediatedPayout();
+                                },
+                                errorMessage -> handleTaskRunnerFault(message, errorMessage))))
                 .executeTasks();
     }
 
     protected void handle(MediatedPayoutTxPublishedMessage message, NodeAddress peer) {
-        expect(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED,
-                Trade.Phase.FIAT_SENT,
-                Trade.Phase.FIAT_RECEIVED)
+        expect(anyPhase(MEDIATED_PAYOUT_TX_PUBLISHED_MSG_PHASES)
                 .with(message)
-                .from(peer))
+                .from(peer)
+                // In PAYOUT_PUBLISHED only if we have our own payout. Without it, the trade was closed otherwise, for
+                // example by the refund agent, or the wallet does not know our payout yet, and the message must not
+                // set a payout.
+                .preCondition(trade.getTradePhase() != Trade.Phase.PAYOUT_PUBLISHED || trade.getPayoutTx() != null)
+                // During a refund request only a payout that our wallet has as confirmed
+                .preCondition(trade.getDisputeState().acceptsMediatedPayout(
+                        () -> isConfirmedInWallet(message.getPayoutTx()))))
                 .setup(tasks(ProcessMediatedPayoutTxPublishedMessage.class))
                 .executeTasks();
+    }
+
+    private boolean isConfirmedInWallet(byte[] serializedTx) {
+        try {
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
+            Transaction tx = btcWalletService.getTxFromSerializedTx(serializedTx);
+            TransactionConfidence confidence = btcWalletService.getConfidenceForTxId(tx.getTxId().toString());
+            return confidence != null &&
+                    confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING;
+        } catch (RuntimeException e) {
+            log.warn("The payout tx in the MediatedPayoutTxPublishedMessage is invalid. tradeId={}, error={}",
+                    trade.getId(), e.toString());
+            return false;
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Mediation: peer's signature before our mediation result
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // No dispute yet, or a mediation without result: the peer's signature cannot be checked yet.
+    private boolean isBeforeMediationResult() {
+        Trade.DisputeState disputeState = trade.getDisputeState();
+        return disputeState == Trade.DisputeState.NO_DISPUTE ||
+                disputeState == Trade.DisputeState.MEDIATION_REQUESTED ||
+                disputeState == Trade.DisputeState.MEDIATION_STARTED_BY_PEER;
+    }
+
+    // Our copy of the mediation result can arrive after the peer's signature: the mediator sends it to each trader
+    // separately, and at startup our mailbox messages can be handled first. As the signature is checked against
+    // the result, we keep the message until the result is applied. A newer message replaces it.
+    private void handleOnceMediationResultIsApplied(MediatedPayoutTxSignatureMessage message, NodeAddress peer) {
+        log.info("We received the MediatedPayoutTxSignatureMessage before the mediation result and handle it " +
+                "once the result is applied. tradeId={}", trade.getId());
+        if (mediationResultListener != null) {
+            trade.disputeStateProperty().removeListener(mediationResultListener);
+        }
+        mediationResultListener = (observable, oldValue, newValue) -> {
+            if (newValue == Trade.DisputeState.MEDIATION_CLOSED) {
+                trade.disputeStateProperty().removeListener(mediationResultListener);
+                mediationResultListener = null;
+                // We handle the message after the mediation result has been processed completely
+                UserThread.execute(() -> handleKeptMessage(message, peer));
+            }
+        };
+        trade.disputeStateProperty().addListener(mediationResultListener);
+    }
+
+    // A newer signature can be handled before the kept one. Once a signature of the peer has passed the check and is
+    // stored, the kept message is not needed anymore.
+    private void handleKeptMessage(MediatedPayoutTxSignatureMessage message, NodeAddress peer) {
+        if (processModel.getTradePeer().getMediatedPayoutTxSignature() != null) {
+            log.info("We drop the kept MediatedPayoutTxSignatureMessage as we have stored a signature of the peer " +
+                    "already. tradeId={}", trade.getId());
+            removeMailboxMessageAfterProcessing(message);
+            return;
+        }
+
+        handle(message, peer);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Mediation: both traders have signed
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // A trader who has signed the mediated payout and has the peer's signature publishes it. The peer's
+    // signature can arrive after our own acceptance, and a trade can be in that state at startup. The
+    // check runs after the current event is handled, at startup after the mailbox messages of the trade.
+    private void maybeFinalizeMediatedPayout() {
+        UserThread.execute(() -> {
+            if (!isMediatedPayoutReadyToFinalize(trade)) {
+                return;
+            }
+
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
+            // The dispute managers apply their messages, such as a refund request of the peer, only with this
+            // wallet state (SupportManager.isReady). Before, the deposit tx can also be missing, for example after
+            // a resync.
+            if (!btcWalletService.isDownloadComplete() || !btcWalletService.hasSufficientPeersForBroadcast()) {
+                log.info("We have both signatures of the mediated payout and publish it once the wallet is synced. " +
+                        "tradeId={}", trade.getId());
+                checkAgainAtNextBlock(btcWalletService);
+                return;
+            }
+
+            if (isDelayedPayoutTxPublished(btcWalletService)) {
+                log.warn("We have both signatures of the mediated payout, but do not publish it as the delayed " +
+                        "payout tx is published. tradeId={}", trade.getId());
+                return;
+            }
+
+            log.info("We have both signatures of the mediated payout and publish it. tradeId={}", trade.getId());
+            // The trader did not start this, so a failure is no error of the trade
+            finalizeMediatedPayout(() -> {
+                        if (trade.getPayoutTx() != null) {
+                            processModel.getTradeManager().closeDisputedTrade(trade.getId(),
+                                    Trade.DisputeState.MEDIATION_CLOSED);
+                        }
+                    },
+                    errorMessage -> log.warn("Publishing the mediated payout without a click failed. tradeId={}, " +
+                            "errorMessage={}", trade.getId(), errorMessage),
+                    false);
+        });
+    }
+
+    private void checkAgainAtNextBlock(BtcWalletService btcWalletService) {
+        if (walletReadyListener != null) {
+            return;
+        }
+
+        // The trade protocols are initialized after the wallet, so the chain for the listener is there
+        walletReadyListener = block -> {
+            btcWalletService.removeNewBestBlockListener(walletReadyListener);
+            walletReadyListener = null;
+            maybeFinalizeMediatedPayout();
+        };
+        btcWalletService.addNewBestBlockListener(walletReadyListener);
+    }
+
+    // The wallet gets the delayed payout tx only once it is published: by us, or by the peer, who sends it to us
+    // with the PeerPublishedDelayedPayoutTxMessage.
+    private boolean isDelayedPayoutTxPublished(BtcWalletService btcWalletService) {
+        Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
+        return delayedPayoutTx != null &&
+                btcWalletService.getConfidenceForTxId(delayedPayoutTx.getTxId().toString()) != null;
+    }
+
+    @VisibleForTesting
+    public static boolean isMediatedPayoutReadyToFinalize(Trade trade) {
+        return trade.getDisputeState() == Trade.DisputeState.MEDIATION_CLOSED &&
+                !trade.isPayoutPublished() &&
+                trade.getPayoutTx() == null &&
+                trade.isMediatedPayoutSignedByBothTraders();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

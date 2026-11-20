@@ -20,6 +20,7 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
     companion object {
         const val SOURCE_DATE_EPOCH = "SOURCE_DATE_EPOCH"
         const val DEFAULT_SOURCE_DATE_EPOCH = "0"
+        const val APP_NAME = "Bisq"
 
         fun createCommonArguments(appConfig: JPackageAppConfig, jPackageConfig: JPackageConfig): List<String> {
             val currentYear = Instant.ofEpochSecond(sourceDateEpochSeconds())
@@ -30,7 +31,7 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
                 "--temp", jPackageConfig.jPackageTempDirPath.toAbsolutePath().toString(),
                 "--dest", jPackageConfig.outputDirPath.toAbsolutePath().toString(),
 
-                "--name", "Bisq",
+                "--name", APP_NAME,
                 "--description", "A decentralized bitcoin exchange network.",
                 "--copyright", "Copyright © 2013-$currentYear - The Bisq developers",
                 "--vendor", "Bisq",

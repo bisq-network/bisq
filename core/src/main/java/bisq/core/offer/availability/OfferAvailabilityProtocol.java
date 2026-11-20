@@ -72,7 +72,15 @@ public class OfferAvailabilityProtocol {
                 if (networkEnvelope instanceof OfferAvailabilityResponse
                         && model.getOffer().getId().equals(offerMessage.offerId)
                         && peersNodeAddress.equals(model.getPeerNodeAddress())) {
-                    handleOfferAvailabilityResponse((OfferAvailabilityResponse) networkEnvelope, peersNodeAddress);
+                    // The sender chooses the address of an inbound connection, so only the signature key of
+                    // the offer shows that the answer comes from the maker
+                    if (decryptedMessageWithPubKey.getSignaturePubKey().equals(
+                            model.getOffer().getPubKeyRing().getSignaturePubKey())) {
+                        handleOfferAvailabilityResponse((OfferAvailabilityResponse) networkEnvelope, peersNodeAddress);
+                    } else {
+                        log.warn("Ignoring an OfferAvailabilityResponse for offer {} from {} that is not signed " +
+                                "with the key of the offer", offerMessage.offerId, peersNodeAddress);
+                    }
                 }
             }
         };

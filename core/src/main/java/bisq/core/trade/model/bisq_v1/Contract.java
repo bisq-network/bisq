@@ -44,8 +44,6 @@ import com.google.gson.JsonParser;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -63,11 +61,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode
 public final class Contract implements NetworkPayload {
     public static final int VERSION_WITH_DISPUTE_AGENT_PUB_KEYS = 2;
-
-    // We enforce the version when released, thus in new trades we do require the new pub keys.
-    // Only for persisted trades we use the trade date, and if after DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE we also require the new pub keys.
-    public static final Date DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE =
-            Utilities.getUTCDate(2026, GregorianCalendar.AUGUST, 1);
 
     private final OfferPayload offerPayload;
     private final long tradeAmount;
@@ -463,6 +456,16 @@ public final class Contract implements NetworkPayload {
         return makerPaymentMethodId != null ? makerPaymentMethodId : Objects.requireNonNull(getOfferPayload()).getPaymentMethodId();
     }
 
+    // The payment method which the peer has set for its payment account. It is not always the one of the offer: a
+    // taker of a SEPA offer can use a SEPA Instant account.
+    public String getPeersPaymentMethodId(PubKeyRing myPubKeyRing) {
+        String peersPaymentMethodId = isMyRoleMaker(myPubKeyRing) ? takerPaymentMethodId : makerPaymentMethodId;
+        // Either the payment method ID of the peer is set or available in offerPayload
+        return peersPaymentMethodId != null ?
+                peersPaymentMethodId :
+                Objects.requireNonNull(getOfferPayload()).getPaymentMethodId();
+    }
+
     public Coin getTradeAmount() {
         return Coin.valueOf(tradeAmount);
     }
@@ -495,19 +498,6 @@ public final class Contract implements NetworkPayload {
         return object.has("mediatorPubKeyRing") ||
                 object.has("refundAgentPubKeyRing") ||
                 object.has("contractVersion");
-    }
-
-
-    public static boolean requiresDisputeAgentPubKeyVersion(Date now, @Nullable Date tradeDate) {
-        return requiresDisputeAgentPubKeyVersion(now, tradeDate == null ? 0 : tradeDate.getTime());
-    }
-
-    public static boolean requiresDisputeAgentPubKeyVersion(Date now, long tradeDate) {
-        if (!now.after(DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE)) {
-            return false;
-        }
-
-        return tradeDate <= 0 || !new Date(tradeDate).before(DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE);
     }
 
     public Price getTradePrice() {

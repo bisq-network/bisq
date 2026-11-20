@@ -271,7 +271,8 @@ public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewM
                     },
                     errorMessage -> {
                         log.error(errorMessage);
-                        new Popup().warning(errorMessage).show();
+                        if (!OfferViewUtil.isReportedByOfferState(model.offer))
+                            new Popup().warning(errorMessage).show();
                     });
             // BisqJfxComboBox causes a bug with requesting focus. Not clear why that happens but requesting a focus
             // on our view here avoids that the currency List overlay gets displayed.
@@ -294,7 +295,8 @@ public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewM
                     },
                     errorMessage -> {
                         log.error(errorMessage);
-                        new Popup().warning(errorMessage).show();
+                        if (!OfferViewUtil.isReportedByOfferState(model.offer))
+                            new Popup().warning(errorMessage).show();
                     });
             requestFocus();
         }).show(model.offer, model.dataModel.getBtcAmount().get(), model.dataModel.getPrice().get());

@@ -17,6 +17,7 @@
 
 package bisq.core.trade.statistics;
 
+import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.HistoricalDataStoreService;
 
@@ -71,6 +72,17 @@ public class TradeStatistics3StorageService extends HistoricalDataStoreService<T
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected synchronized boolean addIfAbsent(P2PDataStorage.ByteArray hash, PersistableNetworkPayload payload) {
+        TradeStatistics3 statistic = (TradeStatistics3) payload;
+        if (getMapOfLiveData().size() >= TradeStatistics3Store.MAX_ITEMS ||
+                !statistic.isValidForStorage() ||
+                statistic.toProtoTradeStatistics3().getSerializedSize() > TradeStatistics3.MAX_SERIALIZED_BYTES) {
+            return false;
+        }
+        return super.addIfAbsent(hash, payload);
+    }
 
     @Override
     protected TradeStatistics3Store createStore() {

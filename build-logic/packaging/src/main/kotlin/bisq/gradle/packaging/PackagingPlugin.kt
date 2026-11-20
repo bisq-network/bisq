@@ -8,6 +8,7 @@ import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.bundling.Tar
 import org.gradle.jvm.tasks.Jar
 import org.gradle.jvm.toolchain.JavaToolchainService
 import org.gradle.kotlin.dsl.findByType
@@ -19,7 +20,7 @@ import javax.inject.Inject
 class PackagingPlugin @Inject constructor(private val javaToolchainService: JavaToolchainService) : Plugin<Project> {
 
     companion object {
-        const val APP_VERSION = "1.10.11"
+        const val APP_VERSION = "1.10.12"
     }
 
     override fun apply(project: Project) {
@@ -31,9 +32,18 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
 
         val jPackageTaskConfiguration = jPackageTaskConfiguration(installDistTask, jarTask, javaApplicationExtension)
 
-        project.tasks.register<JPackageTask>("generateInstallers", jPackageTaskConfiguration)
-        project.tasks.register<DebJpackageTask>("deb", jPackageTaskConfiguration)
-        project.tasks.register<RpmJpackageTask>("rpm", jPackageTaskConfiguration)
+        val debTask = project.tasks.register<DebJpackageTask>("deb", jPackageTaskConfiguration)
+        val rpmTask = project.tasks.register<RpmJpackageTask>("rpm", jPackageTaskConfiguration)
+        if (getOS() == OS.LINUX) {
+            // On Linux the deb and rpm tasks build the packages, so generateInstallers runs both
+            project.tasks.register("generateInstallers") {
+                group = "distribution"
+                description = "Builds the DEB and RPM packages."
+                dependsOn(debTask, rpmTask)
+            }
+        } else {
+            project.tasks.register<JPackageTask>("generateInstallers", jPackageTaskConfiguration)
+        }
 
         project.tasks.register<DebReproducibleTask>("reproducibleDeb") {
             appVersion.set(APP_VERSION)
@@ -41,6 +51,13 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             outputDirectory.set(project.layout.buildDirectory.dir("packaging"))
         }
 
+        val distTarTask: TaskProvider<Tar> = project.tasks.named("distTar", Tar::class.java)
+        project.tasks.register<RpmReproducibleTask>("reproducibleRpm") {
+            appVersion.set(APP_VERSION)
+            tarballPath.set(distTarTask.flatMap { it.archiveFile })
+            distDirFile.set(installDistTask.map { it.destinationDir })
+            outputDirectory.set(project.layout.buildDirectory.dir("packaging"))
+        }
     }
 
     private fun jPackageTaskConfiguration(

@@ -4,8 +4,10 @@
 
 Accepting or rejecting a displayed mediation result must apply only while that result
 remains the current result for the dispute. Receiving another authenticated mediator result
-replaces the current result; an action from an older display must not accept or reject the
-replacement, initiate payout signing, or persist either decision.
+with the same payout replaces the current result; an action from an older display must not
+accept or reject the replacement, initiate payout signing, or persist either decision. A
+result with another payout does not replace the current result: the node refuses it
+([`mediation-payout-finality.md`](mediation-payout-finality.md)).
 
 Check this when the trader clicks Accept or Reject. The old display may remain open after
 a replacement arrives. On a stale action, close that display and explain that the mediator
@@ -18,9 +20,9 @@ If that result is replaced again before the next action, fail that action in the
 Repeated callbacks from the old popup must not create multiple error/reopen sequences or
 dismiss a newer popup. Leaving the view or entering arbitration cancels pending reopening.
 
-A newly received result invalidates the previous display even if its payout amounts are
-identical. This conservative behavior avoids guessing whether a replacement is meaningful.
-An unchanged result retains the existing acceptance and rejection behavior.
+A newly received result invalidates the previous display, although its payout is the same.
+This conservative behavior avoids guessing whether a replacement is meaningful. An unchanged
+result retains the existing acceptance and rejection behavior.
 
 ## Scope and compatibility
 
@@ -29,3 +31,6 @@ mediator authentication, payout allocation rules, arbitration actions, network m
 persisted formats, or existing signatures. Validation and the decision must execute together
 without deferring the decision beyond the validation. Incoming results replace the result
 object; this rule does not introduce an in-place result-editing mechanism.
+
+A payout that both traders signed is published without a click
+([`../trade/mediated-payout-finalization.md`](../trade/mediated-payout-finalization.md)).

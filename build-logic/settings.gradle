@@ -8,7 +8,7 @@ dependencyResolutionManagement {
 
 include 'app-start-plugin'
 include 'commons'
-include 'deb-packager'
 include 'docker-image-builder'
+include 'linux-packager'
 include 'packaging'
 include 'regtest'

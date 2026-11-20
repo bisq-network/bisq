@@ -130,7 +130,10 @@ class GrpcTradesService extends TradesImplBase {
                         });
             }
         } catch (Throwable cause) {
-            exceptionHandler.handleException(log, cause, responseObserver);
+            // The error handler can answer the call before the core api returns, as for a refused trade tx fee, and
+            // then throws. A second answer fails on the closed call.
+            if (!errorMessageHandler.isErrorHandled())
+                exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 

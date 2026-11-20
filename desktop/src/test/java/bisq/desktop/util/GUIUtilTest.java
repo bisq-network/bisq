@@ -17,21 +17,28 @@
 
 package bisq.desktop.util;
 
+import bisq.desktop.Navigation;
+import bisq.desktop.main.presentation.DaoPresentationTestUtil;
+
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
+import bisq.core.user.User;
 import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.CoinMaker;
+
+import javafx.beans.property.SimpleObjectProperty;
 
 import javafx.util.StringConverter;
 
@@ -43,6 +50,7 @@ import java.util.Map;
 
 import org.mockito.MockedStatic;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -84,6 +92,30 @@ public class GUIUtilTest {
         bsqTxUrlPrefix = "https://mempool.space/bisq/tx/";
         addressUrlPrefix = "https://blockstream.info/address/";
         bsqAddressUrlPrefix = "https://mempool.space/bisq/address/";
+    }
+
+    @AfterEach
+    public void tearDown() {
+        GUIUtil.setDaoPresentation(null);
+    }
+
+    @Test
+    public void canCreateOrTakeOfferIsBlockedWhileDaoStateNeedsResync() {
+        // A user who passes all other checks
+        User user = mock(User.class);
+        when(user.hasAcceptedRefundAgents()).thenReturn(true);
+        when(user.hasAcceptedMediators()).thenReturn(true);
+        when(user.currentPaymentAccountProperty()).thenReturn(new SimpleObjectProperty<>(mock(PaymentAccount.class)));
+        Navigation navigation = mock(Navigation.class);
+
+        GUIUtil.setDaoPresentation(DaoPresentationTestUtil.daoPresentation(false));
+        assertTrue(GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation, GUIUtil.BSQ));
+        assertTrue(GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation, euro));
+
+        // BSQ offers need no trading account or agents, but they depend on the DAO state most.
+        GUIUtil.setDaoPresentation(DaoPresentationTestUtil.daoPresentation(true));
+        assertFalse(GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation, GUIUtil.BSQ));
+        assertFalse(GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation, euro));
     }
 
     @Test

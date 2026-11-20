@@ -12,7 +12,6 @@ import bisq.common.crypto.Encryption;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 
-import java.util.Date;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -82,40 +81,86 @@ class ContractTest {
                 () -> Contract.fromProto(protoWithoutRefundAgent, mock(CoreProtoResolver.class)));
     }
 
+    // A taker of a SEPA offer can use a SEPA Instant account, so the payment method of the peer is the one of its
+    // role and not always the one of the offer
     @Test
-    void requiresDisputeAgentPubKeyVersionHonorsActivationAndTradeDate() {
-        long activation = Contract.DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE.getTime();
-        Date beforeActivation = new Date(activation - 1);
-        Date atActivation = Contract.DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE;
-        Date afterActivation = new Date(activation + 1);
+    void peersPaymentMethodIdIsTheOneOfThePeersRole() {
+        PubKeyRing makerPubKeyRing = pubKeyRing();
+        PubKeyRing takerPubKeyRing = pubKeyRing();
+        for (boolean isBuyerMakerAndSellerTaker : new boolean[]{true, false}) {
+            Contract contract = contract(makerPubKeyRing,
+                    takerPubKeyRing,
+                    isBuyerMakerAndSellerTaker,
+                    PaymentMethod.SEPA_ID,
+                    PaymentMethod.SEPA_INSTANT_ID);
 
-        assertFalse(Contract.requiresDisputeAgentPubKeyVersion(beforeActivation, 0));
-        assertFalse(Contract.requiresDisputeAgentPubKeyVersion(atActivation, activation));
-        assertFalse(Contract.requiresDisputeAgentPubKeyVersion(afterActivation, activation - 1));
-        assertTrue(Contract.requiresDisputeAgentPubKeyVersion(afterActivation, activation));
-        assertTrue(Contract.requiresDisputeAgentPubKeyVersion(afterActivation, activation + 1));
-        assertTrue(Contract.requiresDisputeAgentPubKeyVersion(afterActivation, 0));
+            assertEquals(PaymentMethod.SEPA_INSTANT_ID, contract.getPeersPaymentMethodId(makerPubKeyRing));
+            assertEquals(PaymentMethod.SEPA_ID, contract.getPeersPaymentMethodId(takerPubKeyRing));
+            assertEquals(PaymentMethod.SEPA_ID, contract.getPaymentMethodId());
+        }
+    }
+
+    @Test
+    void peersPaymentMethodIdOfContractWithoutPaymentMethodIdsIsTheOneOfTheOffer() {
+        PubKeyRing makerPubKeyRing = pubKeyRing();
+        PubKeyRing takerPubKeyRing = pubKeyRing();
+        for (boolean isBuyerMakerAndSellerTaker : new boolean[]{true, false}) {
+            Contract contract = contract(makerPubKeyRing, takerPubKeyRing, isBuyerMakerAndSellerTaker, null, null);
+
+            assertEquals(PaymentMethod.SEPA_ID, contract.getPeersPaymentMethodId(makerPubKeyRing));
+            assertEquals(PaymentMethod.SEPA_ID, contract.getPeersPaymentMethodId(takerPubKeyRing));
+        }
     }
 
     private static Contract contract(PubKeyRing buyerPubKeyRing,
                                      PubKeyRing sellerPubKeyRing,
                                      PubKeyRing mediatorPubKeyRing,
                                      PubKeyRing refundAgentPubKeyRing) {
+        return contract(buyerPubKeyRing,
+                sellerPubKeyRing,
+                true,
+                PaymentMethod.SEPA_ID,
+                PaymentMethod.SEPA_ID,
+                mediatorPubKeyRing,
+                refundAgentPubKeyRing);
+    }
+
+    private static Contract contract(PubKeyRing makerPubKeyRing,
+                                     PubKeyRing takerPubKeyRing,
+                                     boolean isBuyerMakerAndSellerTaker,
+                                     String makerPaymentMethodId,
+                                     String takerPaymentMethodId) {
+        return contract(makerPubKeyRing,
+                takerPubKeyRing,
+                isBuyerMakerAndSellerTaker,
+                makerPaymentMethodId,
+                takerPaymentMethodId,
+                null,
+                null);
+    }
+
+    private static Contract contract(PubKeyRing makerPubKeyRing,
+                                     PubKeyRing takerPubKeyRing,
+                                     boolean isBuyerMakerAndSellerTaker,
+                                     String makerPaymentMethodId,
+                                     String takerPaymentMethodId,
+                                     PubKeyRing mediatorPubKeyRing,
+                                     PubKeyRing refundAgentPubKeyRing) {
         return new Contract(
-                offerPayload(buyerPubKeyRing),
+                offerPayload(makerPubKeyRing),
                 1_000_000L,
                 50_000_000L,
                 "takerFeeTxId",
                 BUYER_NODE_ADDRESS,
                 SELLER_NODE_ADDRESS,
                 MEDIATOR_NODE_ADDRESS,
-                true,
+                isBuyerMakerAndSellerTaker,
                 "makerAccountId",
                 "takerAccountId",
                 null,
                 null,
-                buyerPubKeyRing,
-                sellerPubKeyRing,
+                makerPubKeyRing,
+                takerPubKeyRing,
                 "makerPayoutAddress",
                 "takerPayoutAddress",
                 new byte[33],
@@ -124,8 +169,8 @@ class ContractTest {
                 REFUND_AGENT_NODE_ADDRESS,
                 null,
                 null,
-                PaymentMethod.SEPA_ID,
-                PaymentMethod.SEPA_ID,
+                makerPaymentMethodId,
+                takerPaymentMethodId,
                 0,
                 mediatorPubKeyRing,
                 refundAgentPubKeyRing);

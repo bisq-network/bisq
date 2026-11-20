@@ -65,6 +65,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -93,6 +94,21 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     @JsonExclude
     @VisibleForTesting
     static final long HISTORICAL_MAX_TRADE_AMOUNT = Coin.COIN.multiply(2).value;
+    // A statistic carries the date of its trade, so it is ahead of the receiver's clock only by a clock difference
+    @JsonExclude
+    @VisibleForTesting
+    static final long FUTURE_DATE_TOLERANCE = TimeUnit.DAYS.toMillis(1);
+    // Far above the price of any trade (the bundled statistics reach 2.5 * 10^13). Prices derived from a statistic,
+    // such as the market price taken from the newest one, stay in the long range when they are converted.
+    @JsonExclude
+    @VisibleForTesting
+    static final long MAX_PRICE = 1_000_000_000_000_000_000L;
+
+    // Shipped historical records are at most 76 bytes. Includes the optional fields. The store applies the limit
+    // when it adds a statistic and when it is loaded, not fromProto: nodes up to v1.10.11 have no limit and relay
+    // a larger statistic, and a received statistic which fails to parse counts as a rule violation of the relay.
+    @JsonExclude
+    static final int MAX_SERIALIZED_BYTES = 256;
 
     public static TradeStatistics3 from(Trade trade,
                                         @Nullable String referralId,
@@ -135,7 +151,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         return new TradeStatistics3(offer.getCurrencyCode(),
                 bsqSwapTrade.getPrice().getValue(),
                 bsqSwapTrade.getAmountAsLong(),
-                offer.getPaymentMethod().getId(),
+                toStoredPaymentMethod(offer.getPaymentMethod().getId()),
                 bsqSwapTrade.getTakeOfferDate(),
                 null,
                 null,
@@ -146,7 +162,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     // This enum must not change the order as we use the ordinal for storage to reduce data size.
     // The payment method string can be quite long and would consume 15% more space.
     // When we get a new payment method we can add it to the enum at the end. Old users would add it as string if not
-    // recognized.
+    // recognized. A new entry changes only the statistics which this node creates, see toReceivedPaymentMethod.
     @VisibleForTesting
     enum PaymentMethodMapper {
         OK_PAY,
@@ -205,7 +221,26 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         TRANSFERWISE_USD,
         ACH_TRANSFER,
         DOMESTIC_WIRE_TRANSFER,
-        SBP;
+        SBP,
+        CUSTOM,
+        USDT_ERC20,
+        USDT_TRC20,
+        USDT_BEP20,
+        USDT_SPL,
+        USDC_ERC20,
+        USDC_SPL,
+        USDC_BEP20,
+        USDS_ERC20,
+        USDE_ERC20,
+        DAI_ERC20,
+        RLUSD_ERC20,
+        USDG_ERC20,
+        USDG_SPL,
+        PYUSD_ERC20,
+        PYUSD_SPL,
+        U_ERC20,
+        U_BEP20,
+        USDF_ERC20;
 
         private static final PaymentMethodMapper[] values = values(); // cache for perf gain
     }
@@ -264,12 +299,37 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         this(currency,
                 price,
                 amount,
-                paymentMethod,
+                toStoredPaymentMethod(paymentMethod),
                 date,
                 mediator,
                 refundAgent,
                 extraDataMap,
                 null);
+    }
+
+    // A statistic which this node creates stores the position of a payment method which this node knows
+    private static String toStoredPaymentMethod(String paymentMethodId) {
+        try {
+            return String.valueOf(PaymentMethodMapper.valueOf(paymentMethodId).ordinal());
+        } catch (IllegalArgumentException e) {
+            return paymentMethodId;
+        }
+    }
+
+    // Nodes since v1.10.4 check the hash of a received statistic over its payment method with the names up to SBP
+    // replaced by their positions, and count a statistic which fails the check as a rule violation of the peer which
+    // relayed it. A received statistic is checked the same way, so that nodes of all these versions accept and relay
+    // the same statistics: a name appended later is kept as received, a name up to SBP spelled out fails on all of
+    // them. This must not grow with later appends to the mapper.
+    private static String toReceivedPaymentMethod(String paymentMethod) {
+        try {
+            PaymentMethodMapper mapped = PaymentMethodMapper.valueOf(paymentMethod);
+            return mapped.ordinal() <= PaymentMethodMapper.SBP.ordinal() ?
+                    String.valueOf(mapped.ordinal()) :
+                    paymentMethod;
+        } catch (IllegalArgumentException e) {
+            return paymentMethod;
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -289,13 +349,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         this.currency = currency;
         this.price = price;
         this.amount = amount;
-        String tempPaymentMethod;
-        try {
-            tempPaymentMethod = String.valueOf(PaymentMethodMapper.valueOf(paymentMethod).ordinal());
-        } catch (IllegalArgumentException e) {
-            tempPaymentMethod = paymentMethod;
-        }
-        this.paymentMethod = tempPaymentMethod;
+        this.paymentMethod = toReceivedPaymentMethod(paymentMethod);
         this.date = date;
         this.mediator = mediator;
         this.refundAgent = refundAgent;
@@ -436,23 +490,30 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     public Volume getTradeVolume() {
         Volume volume = this.volume;
         if (volume == null) {
-            Price price = getTradePrice();
-            this.volume = volume = price.getMonetary() instanceof Altcoin
-                    ? price.getVolumeByAmount(getTradeAmount())
-                    : VolumeUtil.getRoundedFiatVolume(price.getVolumeByAmount(getTradeAmount()));
+            this.volume = volume = computeTradeVolume(getTradePrice());
         }
         return volume;
     }
 
+    private Volume computeTradeVolume(Price price) {
+        return price.getMonetary() instanceof Altcoin
+                ? price.getVolumeByAmount(getTradeAmount())
+                : VolumeUtil.getRoundedFiatVolume(price.getVolumeByAmount(getTradeAmount()));
+    }
+
     public boolean isValid() {
+        return isValidForStorage() && isCurrencyKnown();
+    }
+
+    // The rules of isValid which do not depend on the currency list of this version. A node stores and relays a
+    // statistic of a currency which a later version adds, so that nodes of all versions hold the same statistics.
+    public boolean isValidForStorage() {
         if (currency == null) {
             return false;
         }
 
         boolean validHistoricalTradeAmount = true;
-        boolean currencyFound = true;
-        // We had historically higher trade limits and assets which are not in the currency list anymore, so we apply
-        // the filter only for data after STRICT_FILTER_DATE.
+        // We had historically higher trade limits, so we apply the filter only for data after STRICT_FILTER_DATE.
         if (date > STRICT_FILTER_DATE) {
             // Trade statistics are historical facts. Do not validate them against the
             // current payment-method or DAO trade limit: those limits can be lowered after
@@ -460,19 +521,36 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
             // storage, charts and republishing. Keep only a stable sanity cap based on the
             // historical global trade limit.
             validHistoricalTradeAmount = amount <= HISTORICAL_MAX_TRADE_AMOUNT;
-
-            currencyFound = CurrencyUtil.getCryptoCurrency(currency).isPresent() ||
-                    CurrencyUtil.getFiatCurrency(currency).isPresent();
         }
 
         return amount > 0 &&
                 validHistoricalTradeAmount &&
                 price > 0 &&
+                price <= MAX_PRICE &&
                 date > 0 &&
+                date <= System.currentTimeMillis() + FUTURE_DATE_TOLERANCE &&
                 paymentMethod != null &&
                 !paymentMethod.isEmpty() &&
                 !currency.isEmpty() &&
-                currencyFound;
+                hasPositiveTradeVolume();
+    }
+
+    // We had historically assets which are not in the currency list anymore, so we apply the filter only for data
+    // after STRICT_FILTER_DATE.
+    private boolean isCurrencyKnown() {
+        return date <= STRICT_FILTER_DATE ||
+                CurrencyUtil.getCryptoCurrency(currency).isPresent() ||
+                CurrencyUtil.getFiatCurrency(currency).isPresent();
+    }
+
+    // Consumers compute the volume from the price and the amount and divide by it. For values which no trade can have,
+    // the computation fails or gives zero. Nothing is cached here, as this runs for every stored statistic at startup.
+    private boolean hasPositiveTradeVolume() {
+        try {
+            return computeTradeVolume(Price.valueOf(currency, price)).getValue() > 0;
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
 
     private static <T extends Comparable<? super T>> int nullsFirstCompare(T a, T b) {

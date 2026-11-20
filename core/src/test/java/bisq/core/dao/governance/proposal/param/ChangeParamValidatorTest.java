@@ -17,19 +17,37 @@
 
 package bisq.core.dao.governance.proposal.param;
 
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.governance.param.Param;
+import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.util.coin.BsqFormatter;
 
+import org.bitcoinj.core.Coin;
+
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Locale;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class ChangeParamValidatorTest {
+    private Locale previousLocale;
+
     @BeforeEach
     public void setup() {
+        previousLocale = GlobalSettings.getLocale();
+        GlobalSettings.setLocale(Locale.US);
+        Res.setup();
+    }
+
+    @AfterEach
+    public void tearDown() {
+        GlobalSettings.setLocale(previousLocale);
         Res.setup();
     }
 
@@ -77,5 +95,29 @@ public class ChangeParamValidatorTest {
         changeParamValidator.validationChange(0, -1, 0, 0, Param.UNDEFINED);
         changeParamValidator.validationChange(-1, 0, 0, 0, Param.UNDEFINED);
         changeParamValidator.validationChange(1, 0, 0, 0, Param.UNDEFINED);
+    }
+
+    @Test
+    public void testValidateBtcValueBelowDust() {
+        BsqFormatter bsqFormatter = new BsqFormatter();
+        ChangeParamValidator changeParamValidator = new ChangeParamValidator(null, null, bsqFormatter);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                changeParamValidator.validateBtcValue(Coin.valueOf(100_000), Coin.ZERO, Param.DEFAULT_MAKER_FEE_BTC));
+        String expectedMessage = Res.get("validation.amountBelowDust",
+                bsqFormatter.formatBTCWithCode(Restrictions.getMinNonDustOutput()));
+        assertEquals(expectedMessage, exception.getMessage());
+        assertEquals("An amount below the dust limit of 0.00000546 BTC is not allowed.", exception.getMessage());
+    }
+
+    @Test
+    public void testValidateBsqValueBelowDust() {
+        BsqFormatter bsqFormatter = new BsqFormatter();
+        ChangeParamValidator changeParamValidator = new ChangeParamValidator(null, null, bsqFormatter);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                changeParamValidator.validateBsqValue(Coin.valueOf(100_000), Coin.ZERO, Param.REIMBURSEMENT_MAX_AMOUNT));
+        String expectedMessage = Res.get("validation.amountBelowDust",
+                bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput()));
+        assertEquals(expectedMessage, exception.getMessage());
+        assertEquals("An amount below the dust limit of 5.46 BSQ is not allowed.", exception.getMessage());
     }
 }

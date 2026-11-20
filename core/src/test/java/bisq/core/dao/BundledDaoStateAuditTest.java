@@ -83,9 +83,9 @@ class BundledDaoStateAuditTest {
     private static final String BLIND_VOTE_RESOURCE = "/BlindVoteStore_BTC_MAINNET";
     private static final String BLOCK_RESOURCE_DIR = "/BsqBlocks_BTC_MAINNET/";
     private static final int MAINNET_GENESIS_HEIGHT = 571_747;
-    private static final int PREVIOUS_BOND_AUDIT_HEIGHT = 968_341;
-    private static final int EXPECTED_BLIND_VOTE_COUNT = 963;
-    private static final int EXPECTED_REVEALED_BLIND_VOTE_COUNT = 951;
+    private static final int PREVIOUS_BOND_AUDIT_HEIGHT = 971_800;
+    private static final int EXPECTED_BLIND_VOTE_COUNT = 971;
+    private static final int EXPECTED_REVEALED_BLIND_VOTE_COUNT = 959;
 
     @Test
     void bundledBlockHistoryAndRevealedBlindVotesAreInternallyConsistent() throws IOException {
@@ -140,8 +140,13 @@ class BundledDaoStateAuditTest {
         int evaluatedRoleProposals = 0;
         int acceptedRoleProposals = 0;
         int roleProposalsWithMismatchedTerms = 0;
+        int evaluatedProposalsWithoutCountedVotes = 0;
         for (protobuf.EvaluatedProposal evaluatedProposal : daoState.getEvaluatedProposalListList()) {
-            protobuf.Proposal proposal = evaluatedProposal.getProposalVoteResult().getProposal();
+            protobuf.ProposalVoteResult proposalVoteResult = evaluatedProposal.getProposalVoteResult();
+            if (proposalVoteResult.getNumAcceptedVotes() == 0 && proposalVoteResult.getNumRejectedVotes() == 0) {
+                evaluatedProposalsWithoutCountedVotes++;
+            }
+            protobuf.Proposal proposal = proposalVoteResult.getProposal();
             if (!proposal.hasRoleProposal()) {
                 continue;
             }
@@ -158,6 +163,11 @@ class BundledDaoStateAuditTest {
                 roleProposalsWithMismatchedTerms++;
             }
         }
+
+        // Vote results record no evaluated proposal without any accept or reject vote. The bundled history must
+        // contain none, otherwise that rule changed a historical result.
+        assertEquals(0, evaluatedProposalsWithoutCountedVotes,
+                "bundled history contains an evaluated proposal without counted votes");
 
         Map<String, LockupRecord> lockupsByOutputKey = new HashMap<>();
         Map<String, String> spenderTxIdByLockupOutputKey = new HashMap<>();
@@ -372,11 +382,13 @@ class BundledDaoStateAuditTest {
 
     @Test
     void refreshedBundledStoresAreReadableAndInternallyNonEmpty() throws IOException {
+        List<String> versionTags = Version.HISTORICAL_RESOURCE_FILE_VERSION_TAGS;
+        String latestVersionTag = versionTags.get(versionTags.size() - 1);
         protobuf.PersistableEnvelope accountAge =
-                readDelimitedEnvelope("/AccountAgeWitnessStore_1.10.5_BTC_MAINNET");
+                readDelimitedEnvelope("/AccountAgeWitnessStore_" + latestVersionTag + "_BTC_MAINNET");
         protobuf.PersistableEnvelope signedWitness = readDelimitedEnvelope("/SignedWitnessStore_BTC_MAINNET");
         protobuf.PersistableEnvelope tradeStatistics =
-                readDelimitedEnvelope("/TradeStatistics3Store_1.10.5_BTC_MAINNET");
+                readDelimitedEnvelope("/TradeStatistics3Store_" + latestVersionTag + "_BTC_MAINNET");
         protobuf.PersistableEnvelope blindVotes = readDelimitedEnvelope(BLIND_VOTE_RESOURCE);
         protobuf.PersistableEnvelope proposals = readDelimitedEnvelope("/ProposalStore_BTC_MAINNET");
         protobuf.PersistableEnvelope accounting =
@@ -431,7 +443,7 @@ class BundledDaoStateAuditTest {
                         .map(protobuf.AccountAgeWitness::getHash)
                         .distinct()
                         .count(),
-                "duplicate account-age witness hashes in the 1.10.5 store");
+                "duplicate account-age witness hashes in the " + latestVersionTag + " store");
         Set<protobuf.SignedWitness> uniqueSignedWitnesses = new HashSet<>();
         Set<ByteString> signedAccountAgeHashes = new HashSet<>();
         signedWitness.getSignedWitnessStore().getItemsList().forEach(witness -> {
@@ -504,14 +516,14 @@ class BundledDaoStateAuditTest {
                 addressListService.getAddressList(addressListService.getLatestVersion());
 
         System.out.println("Refreshed bundled P2P store audit"
-                + "\n  account-age witnesses in 1.10.5 store=" + accountAgeCount
+                + "\n  account-age witnesses in " + latestVersionTag + " store=" + accountAgeCount
                 + "\n  account-age historical stores=" + accountAgeStoreCount
                 + " (records=" + accountAgeRecordsAcrossStores + ", unique hashes=" + accountAgeDateByHash.size() + ")"
                 + "\n  signed witnesses=" + signedWitnessCount
                 + " (account hashes=" + signedAccountAgeHashes.size() + ")"
                 + "\n  signed-witness account hashes absent from all bundled account-age stores="
                 + signedAccountAgeHashesMissingFromAccountStores.size()
-                + "\n  trade statistics=" + tradeStatisticsCount
+                + "\n  trade statistics in " + latestVersionTag + " store=" + tradeStatisticsCount
                 + "\n  blind votes=" + blindVoteCount
                 + "\n  append-only proposals=" + proposalCount
                 + " (role proposals=" + proposalRoleCount + ", role-term mismatches="

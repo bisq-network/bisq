@@ -22,6 +22,8 @@ import bisq.desktop.components.chart.ChartDataModel;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
+import com.google.common.math.LongMath;
+
 import javax.inject.Inject;
 
 import java.time.Instant;
@@ -60,14 +62,12 @@ public class VolumeChartDataModel extends ChartDataModel {
 
     long getUsdVolume() {
         return getUsdVolumeByInterval().values().stream()
-                .mapToLong(e -> e)
-                .sum();
+                .reduce(0L, LongMath::saturatedAdd);
     }
 
     long getBtcVolume() {
         return getBtcVolumeByInterval().values().stream()
-                .mapToLong(e -> e)
-                .sum();
+                .reduce(0L, LongMath::saturatedAdd);
     }
 
 
@@ -124,8 +124,9 @@ public class VolumeChartDataModel extends ChartDataModel {
         return (long) (sumBtcFromAllTrades * averageUsdPrice);
     }
 
+    // Saturates instead of wrapping, as statistics dated before 2021-11-01 have no amount cap
     private static long getVolumeInBtc(List<TradeStatistics3> list) {
-        return list.stream().mapToLong(TradeStatistics3::getAmount).sum();
+        return list.stream().map(TradeStatistics3::getAmount).reduce(0L, LongMath::saturatedAdd);
     }
 
 

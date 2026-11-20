@@ -18,6 +18,7 @@
 package bisq.desktop.main.offer.bsq_swap.take_offer;
 
 import bisq.desktop.Navigation;
+import bisq.desktop.main.offer.OfferViewUtil;
 import bisq.desktop.main.offer.bsq_swap.BsqSwapOfferViewModel;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.DisplayUtils;
@@ -343,10 +344,7 @@ class BsqSwapTakeOfferViewModel extends BsqSwapOfferViewModel<BsqSwapTakeOfferDa
                 updateButtonDisableState();
                 break;
             case NOT_AVAILABLE:
-                if (takeOfferRequested)
-                    offerWarning.set(Res.get("takeOffer.failed.offerNotAvailable"));
-                else
-                    offerWarning.set(Res.get("takeOffer.failed.offerTaken"));
+                offerWarning.set(OfferViewUtil.getNotAvailableWarning(offer.getAvailabilityResult(), takeOfferRequested));
                 break;
             case REMOVED:
                 if (!takeOfferRequested)

@@ -51,6 +51,23 @@ class ReceiptPredicates {
         return arePaymentMethodsEqual;
     }
 
+    boolean isCustomPaymentMethod(Offer offer) {
+        return offer.getPaymentMethod().isCustom();
+    }
+
+    // All custom payment methods share one payment method ID, so the name tells which one an offer and an account
+    // are for. An account which was imported has not passed the account form: with account data which is not valid
+    // the peer would refuse it in the trade, after the trade fee is paid.
+    boolean isMatchingCustomPaymentMethodAccount(Offer offer, PaymentAccount account) {
+        if (!(account instanceof CustomPaymentMethodAccount)) {
+            return false;
+        }
+        CustomPaymentMethodAccount customPaymentMethodAccount = (CustomPaymentMethodAccount) account;
+        return CustomPaymentMethodUtil.isSameName(offer.getCustomPaymentMethodName(),
+                customPaymentMethodAccount.getPaymentMethodName()) &&
+                CustomPaymentMethodUtil.isValidAccountData(customPaymentMethodAccount.getAccountData());
+    }
+
     boolean isOfferRequireSameOrSpecificBank(Offer offer, PaymentAccount account) {
         PaymentMethod paymentMethod = offer.getPaymentMethod();
         boolean isSameOrSpecificBank = paymentMethod.equals(PaymentMethod.SAME_BANK)

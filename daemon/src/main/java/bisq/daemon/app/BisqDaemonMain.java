@@ -23,12 +23,15 @@ import bisq.core.app.CoreModule;
 
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
+import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.util.SingleThreadExecutorUtils;
 
 import java.util.concurrent.ExecutorService;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static java.lang.String.format;
 
 
 
@@ -46,6 +49,18 @@ public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.Bis
     /////////////////////////////////////////////////////////////////////////////////////
     // First synchronous execution tasks
     /////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void doExecute() {
+        // The API can move funds, so it must not run without a password. We stop before anything starts, as a
+        // failure at the later start of the gRPC server would only be logged.
+        if (config.apiPassword.isBlank()) {
+            handleConfigError(format("The '%s' option must be set. The gRPC API does not start without a password.",
+                    Config.API_PASSWORD));
+            return;
+        }
+        super.doExecute();
+    }
 
     @Override
     protected void configUserThread() {

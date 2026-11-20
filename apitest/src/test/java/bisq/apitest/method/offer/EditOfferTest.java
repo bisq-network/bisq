@@ -22,6 +22,9 @@ import bisq.proto.grpc.OfferInfo;
 
 import io.grpc.StatusRuntimeException;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -89,6 +92,28 @@ public class EditOfferTest extends DockerOfferTest {
         OfferInfo edited = aliceClient.getOffer(original.getId());
         assertFalse(edited.getUseMarketBasedPrice());
         sanityCheck(original, edited);
+    }
+
+    /**
+     * The edit reaches the peer as removal of the old offer payload plus the new payload with
+     * the same id. Bob must end up with exactly one listing of the offer, at the new price.
+     * The API reads the network offer book, so this does not cover the desktop offer list.
+     */
+    @Test
+    public void testEditedOfferReplacesListingOnPeer() {
+        PaymentAccount acct = getOrCreateF2F("US");
+        OfferInfo original = createFixedPriced(BUY.name(), USD, acct.getId(), "50000");
+        mineBlocks(1);
+        awaitOfferActivated(original.getId());
+        awaitCond(() -> bobListings(original.getId()).size() == 1, "bob lists the offer once");
+
+        aliceClient.editOfferFixedPrice(original.getId(), "56000");
+        // Removal and new payload arrive separately; a duplicate or stale listing that stays
+        // keeps the condition false until the timeout.
+        awaitCond(() -> {
+            List<OfferInfo> listed = bobListings(original.getId());
+            return listed.size() == 1 && "56000.0000".equals(listed.get(0).getPrice());
+        }, "bob lists the edited offer once, at the new price");
     }
 
     @Test
@@ -177,6 +202,12 @@ public class EditOfferTest extends DockerOfferTest {
         OfferInfo edited = aliceClient.getOffer(original.getId());
         assertFalse(edited.getUseMarketBasedPrice());
         sanityCheck(original, edited);
+    }
+
+    private static List<OfferInfo> bobListings(String offerId) {
+        return bobClient.getOffersSortedByDate(USD).stream()
+                .filter(o -> o.getId().equals(offerId))
+                .collect(Collectors.toList());
     }
 
     private OfferInfo createFixedPriced(String dir, String ccy, String acctId, String price) {

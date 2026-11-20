@@ -19,6 +19,7 @@ package bisq.core.support.dispute;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.support.SupportType;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -44,7 +45,6 @@ import org.bitcoinj.core.TransactionOutput;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -66,35 +66,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class DisputeValidation {
     public static void validateDisputeData(Dispute dispute,
                                            BtcWalletService btcWalletService) throws ValidationException {
-        validateDisputeData(dispute, btcWalletService, new Date());
-    }
-
-    public static void validateDisputeData(Dispute dispute,
-                                           BtcWalletService btcWalletService,
-                                           Trade trade) throws ValidationException {
-        validateDisputeData(dispute,
-                btcWalletService,
-                new Date(),
-                checkNotNull(trade).getDate());
-    }
-
-    static void validateDisputeData(Dispute dispute,
-                                    BtcWalletService btcWalletService,
-                                    Date now) throws ValidationException {
-        validateDisputeData(dispute, btcWalletService, now, null);
-    }
-
-    static void validateDisputeData(Dispute dispute,
-                                    BtcWalletService btcWalletService,
-                                    Date now,
-                                    @Nullable Date trustedTradeDate) throws ValidationException {
         try {
             Contract contract = dispute.getContract();
             checkArgument(contract.getOfferPayload().getId().equals(dispute.getTradeId()), "Invalid tradeId");
             checkArgument(dispute.getContractAsJson().equals(JsonUtil.objectToJson(contract)), "Invalid contractAsJson");
             checkArgument(Arrays.equals(Objects.requireNonNull(dispute.getContractHash()), Hash.getSha256Hash(checkNotNull(dispute.getContractAsJson()))),
                     "Invalid contractHash");
-            validateContractDisputeAgentPubKeys(dispute, contract, now, trustedTradeDate);
+            validateContractDisputeAgentPubKeys(dispute, contract);
             validateTxIdFormat(dispute.getDepositTxId(), "depositTxId");
             validateTxIdFormat(dispute.getDelayedPayoutTxId(), "delayedPayoutTxId");
 
@@ -156,20 +134,8 @@ public class DisputeValidation {
                 contract.getSellerMultiSigPubKey());
     }
 
-    private static void validateContractDisputeAgentPubKeys(Dispute dispute,
-                                                            Contract contract,
-                                                            Date now,
-                                                            @Nullable Date trustedTradeDate) {
-        if (!contract.hasDisputeAgentPubKeyVersion()) {
-            // The dispute date is sender-supplied and must not be used for this compatibility decision. The dispute
-            // agent has no local trade state, so legacy contracts can only be rejected by a peer with a local trade.
-            if (trustedTradeDate != null && Contract.requiresDisputeAgentPubKeyVersion(now, trustedTradeDate)) {
-                throw new IllegalArgumentException("Contract must include dispute agent pubKeyRings");
-            }
-
-            // TODO Remove this legacy contract fallback after dispute-agent pub key activation.
-            return;
-        }
+    private static void validateContractDisputeAgentPubKeys(Dispute dispute, Contract contract) {
+        checkArgument(contract.hasDisputeAgentPubKeyVersion(), "Contract must include dispute agent pubKeyRings");
 
         PubKeyRing expectedAgentPubKeyRing = getExpectedContractAgentPubKeyRing(dispute, contract);
         if (expectedAgentPubKeyRing == null) {
@@ -210,15 +176,18 @@ public class DisputeValidation {
         checkArgument(isCanonicalTxId, "%s must be a canonical 32-byte transaction ID", fieldName);
     }
 
-    public static void validateTradeAndDispute(Dispute dispute, Trade trade)
+    // A closed or failed trade loaded from disk is checked before it is moved back to the pending trades, so before its
+    // process model has the services. The delayed payout tx is therefore read with the given wallet service.
+    public static void validateTradeAndDispute(Dispute dispute, Trade trade, BtcWalletService btcWalletService)
             throws ValidationException {
         try {
-            checkArgument(dispute.getContract().equals(trade.getContract()),
+            checkArgument(contractsMatchForDispute(dispute.getContract(), trade.getContract()),
                     "contract must match contract from trade");
 
-            checkNotNull(trade.getDelayedPayoutTx(), "trade.getDelayedPayoutTx() must not be null");
+            Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx(btcWalletService),
+                    "trade.getDelayedPayoutTx() must not be null");
             checkNotNull(dispute.getDelayedPayoutTxId(), "delayedPayoutTxId must not be null");
-            checkArgument(dispute.getDelayedPayoutTxId().equals(trade.getDelayedPayoutTx().getTxId().toString()),
+            checkArgument(dispute.getDelayedPayoutTxId().equals(delayedPayoutTx.getTxId().toString()),
                     "delayedPayoutTxId must match delayedPayoutTxId from trade");
 
             checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
@@ -230,6 +199,33 @@ public class DisputeValidation {
         } catch (Throwable t) {
             throw new ValidationException(dispute, t.getMessage());
         }
+    }
+
+    // The account reveal can reach one trader before the other, and closed trades can have their account data
+    // cleared. Compare the commitments and all other contract fields, and verify any revealed account against its
+    // commitment, instead of requiring both nodes to hold the same optional account data.
+    private static boolean contractsMatchForDispute(Contract incoming, Contract local) {
+        if (incoming.equals(local)) {
+            return true;
+        }
+        protobuf.Contract incomingTradeData = incoming.toProtoMessage().toBuilder()
+                .clearMakerPaymentAccountPayload()
+                .clearTakerPaymentAccountPayload()
+                .build();
+        protobuf.Contract localTradeData = local.toProtoMessage().toBuilder()
+                .clearMakerPaymentAccountPayload()
+                .clearTakerPaymentAccountPayload()
+                .build();
+        return incomingTradeData.equals(localTradeData) &&
+                matchesPaymentAccountCommitment(incoming.getMakerPaymentAccountPayload(),
+                        incoming.getHashOfMakersPaymentAccountPayload()) &&
+                matchesPaymentAccountCommitment(incoming.getTakerPaymentAccountPayload(),
+                        incoming.getHashOfTakersPaymentAccountPayload());
+    }
+
+    private static boolean matchesPaymentAccountCommitment(@Nullable PaymentAccountPayload payload,
+                                                            @Nullable byte[] committedHash) {
+        return payload == null || Arrays.equals(payload.getHashForContract(), committedHash);
     }
 
 

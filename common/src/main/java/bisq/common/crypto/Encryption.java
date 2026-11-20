@@ -32,6 +32,7 @@ import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
@@ -42,8 +43,6 @@ import java.security.spec.X509EncodedKeySpec;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
-import java.util.Arrays;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,7 +143,7 @@ public class Encryption {
     private static boolean verifyHmac(byte[] message, byte[] hmac, SecretKey secretKey) {
         try {
             byte[] hmacTest = getHmac(message, secretKey);
-            return Arrays.equals(hmacTest, hmac);
+            return MessageDigest.isEqual(hmacTest, hmac);
         } catch (Throwable e) {
             log.error("Could not create cipher", e);
             throw new RuntimeException("Could not create cipher");

@@ -23,6 +23,7 @@ import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
+import bisq.common.file.FileUtil;
 import bisq.common.util.GcUtil;
 import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
@@ -36,6 +37,8 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import java.net.URISyntaxException;
 
 import java.nio.file.Paths;
+
+import java.io.File;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.RejectedExecutionException;
@@ -53,6 +56,7 @@ public class CommonSetup {
 
     public static void setup(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
         setupLog(config);
+        restrictAppDataDirToOwner(config.appDataDir);
         AsciiLogo.showAsciiLogo();
         Version.setBaseCryptoNetworkId(config.getBaseCurrencyNetwork().ordinal());
         Version.printVersion();
@@ -124,6 +128,14 @@ public class CommonSetup {
         log.info("Log file at: {}.log", logPath);
         Utilities.printSysInfo();
         Log.setLevel(Level.toLevel(config.logLevel));
+    }
+
+    // The data directory holds the wallet, the keys, the persisted data and the logs, in files with the default mode of
+    // the process. Owner-only, it keeps all of them from other local users. Every start sets the mode, so that a data
+    // directory of an earlier version gets it too. Called after the log setup, so that a failure is in the log.
+    @VisibleForTesting
+    static void restrictAppDataDirToOwner(File appDataDir) {
+        FileUtil.restrictToOwner(appDataDir.toPath(), "rwx------");
     }
 
     protected static void setSystemProperties() {

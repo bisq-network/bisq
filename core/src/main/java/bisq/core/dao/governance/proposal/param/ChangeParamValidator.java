@@ -137,7 +137,8 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
         }
     }
 
-    private void validateBsqValue(Coin currentParamValueAsCoin, Coin inputValueAsCoin, Param param) throws ParamValidationException {
+    @VisibleForTesting
+    void validateBsqValue(Coin currentParamValueAsCoin, Coin inputValueAsCoin, Param param) throws ParamValidationException {
         switch (param) {
             case DEFAULT_MAKER_FEE_BSQ:
             case DEFAULT_TAKER_FEE_BSQ:
@@ -152,7 +153,7 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
             case COMPENSATION_REQUEST_MAX_AMOUNT:
             case REIMBURSEMENT_MAX_AMOUNT:
                 checkArgument(inputValueAsCoin.value >= Restrictions.getMinNonDustOutput().value,
-                        Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
+                        Res.get("validation.amountBelowDust", bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
                 checkArgument(inputValueAsCoin.value <= 200000000,
                         Res.get("validation.inputTooLarge", "200 000 BSQ"));
                 break;
@@ -177,14 +178,15 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
         validationChange((double) currentParamValueAsCoin.value, (double) inputValueAsCoin.value, param);
     }
 
-    private void validateBtcValue(Coin currentParamValueAsCoin, Coin inputValueAsCoin, Param param) throws ParamValidationException {
+    @VisibleForTesting
+    void validateBtcValue(Coin currentParamValueAsCoin, Coin inputValueAsCoin, Param param) throws ParamValidationException {
         switch (param) {
             case DEFAULT_MAKER_FEE_BTC:
             case DEFAULT_TAKER_FEE_BTC:
             case MIN_MAKER_FEE_BTC:
             case MIN_TAKER_FEE_BTC:
                 checkArgument(inputValueAsCoin.value >= Restrictions.getMinNonDustOutput().value,
-                        Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
+                        Res.get("validation.amountBelowDust", bsqFormatter.formatBTCWithCode(Restrictions.getMinNonDustOutput())));
                 break;
             case ASSET_MIN_VOLUME:
             case MAX_TRADE_LIMIT:

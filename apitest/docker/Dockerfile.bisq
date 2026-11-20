@@ -1,16 +1,17 @@
-# syntax=docker/dockerfile:1.6
+# syntax=docker/dockerfile:1.6@sha256:ac85f380a63b13dfcefa89046420e1781752bab202122f8f50032edf31be0021
 #
 # Single image used for all four Bisq roles (seednode, arb, alice, bob).
 # Bakes in Alice and Bob's pre-synced app data dirs from dao-setup.zip; entrypoint
 # seeds the per-role appDataDir from /opt/dao-setup on first boot.
 
-FROM eclipse-temurin:21-jre-jammy
+# Corretto 21.0.13.1.2, including the fix for CVE-2026-114938, on amd64 and arm64.
+FROM amazoncorretto:21-al2023-headless@sha256:71b005271e4df1a2fb44f6d261bad4318e66aff82ea7541b4d2968a9a31357d7
 
-# Cheap+stable layer: apt deps.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        bash curl ncat netcat-openbsd ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+# nmap-ncat supplies both nc and ncat on Amazon Linux. The Gradle start scripts of the
+# install dists need xargs and sed; the Corretto base image has no findutils (xargs).
+RUN dnf install -y --setopt=install_weak_deps=False \
+        bash curl-minimal nmap-ncat ca-certificates findutils sed \
+    && dnf clean all
 
 # Pre-fetch the Linux-classifier javafx jars (Gradle install-dist ships empty
 # placeholders). Cached unless JAVAFX_VERSION changes.
@@ -24,7 +25,8 @@ RUN set -eux; \
     done
 
 COPY apitest/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+COPY apitest/docker/fee-stub.sh /usr/local/bin/fee-stub.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/fee-stub.sh
 
 WORKDIR /bisq
 

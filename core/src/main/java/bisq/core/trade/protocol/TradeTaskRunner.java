@@ -23,12 +23,26 @@ import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.taskrunner.TaskRunner;
 
+import lombok.Getter;
+
 public class TradeTaskRunner extends TaskRunner<TradeModel> {
+    // False for an attempt that the trader did not start: a failed task then logs its error and does not set it as
+    // the error message of the trade, which the UI shows to the trader
+    @Getter
+    private final boolean tradeErrorOnFailure;
 
     public TradeTaskRunner(TradeModel sharedModel,
                            ResultHandler resultHandler,
                            ErrorMessageHandler errorMessageHandler) {
+        this(sharedModel, resultHandler, errorMessageHandler, true);
+    }
+
+    public TradeTaskRunner(TradeModel sharedModel,
+                           ResultHandler resultHandler,
+                           ErrorMessageHandler errorMessageHandler,
+                           boolean tradeErrorOnFailure) {
         super(sharedModel, getSharedModelClass(sharedModel), resultHandler, errorMessageHandler);
+        this.tradeErrorOnFailure = tradeErrorOnFailure;
     }
 
     @SuppressWarnings("unchecked")

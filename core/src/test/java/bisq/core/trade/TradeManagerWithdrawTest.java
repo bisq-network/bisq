@@ -21,6 +21,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
+import bisq.core.offer.OfferFilterService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import bisq.core.provider.price.PriceFeedService;
@@ -92,7 +93,8 @@ class TradeManagerWithdrawTest {
                 .thenReturn(addressEntry);
 
         tradeManager = spy(new TradeManager(mock(User.class), mock(KeyRing.class), btcWalletService,
-                mock(BsqWalletService.class), mock(OpenOfferManager.class), mock(ClosedTradableManager.class),
+                mock(BsqWalletService.class), mock(OpenOfferManager.class), mock(OfferFilterService.class),
+                mock(ClosedTradableManager.class),
                 mock(BsqSwapTradeManager.class), mock(FailedTradesManager.class), mock(P2PService.class),
                 mock(PriceFeedService.class), mock(DelayedPayoutTxReceiverService.class),
                 mock(TradeStatisticsManager.class), mock(TradeUtil.class), mock(MediatorManager.class),

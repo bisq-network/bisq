@@ -44,11 +44,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -155,5 +157,76 @@ public class PreferencesTest {
 
         preferences.readPersisted(() ->
                 assertEquals("US Dollar (USD)", preferences.getFiatCurrenciesAsObservable().get(0).getNameAndCode()));
+    }
+
+    @Test
+    public void bsqOfferPriceRangeFactorDefaultsToTwo() {
+        assertEquals(2, preferences.getBsqOfferPriceRangeFactor());
+    }
+
+    // Older versions did not store the factor, which protobuf reads as 0. That value and every other factor which is
+    // not above 1 or which is above the maximum is replaced by the default.
+    @Test
+    public void invalidBsqOfferPriceRangeFactorIsReplacedByTheDefault() {
+        assertEquals(2, Preferences.getValidBsqOfferPriceRangeFactor(0));
+        assertEquals(2, Preferences.getValidBsqOfferPriceRangeFactor(1));
+        assertEquals(2, Preferences.getValidBsqOfferPriceRangeFactor(0.5));
+        assertEquals(2, Preferences.getValidBsqOfferPriceRangeFactor(-4));
+        assertEquals(2, Preferences.getValidBsqOfferPriceRangeFactor(1000.5));
+        assertEquals(2, Preferences.getValidBsqOfferPriceRangeFactor(Double.NaN));
+        assertEquals(2, Preferences.getValidBsqOfferPriceRangeFactor(Double.POSITIVE_INFINITY));
+
+        assertEquals(1.01, Preferences.getValidBsqOfferPriceRangeFactor(1.01));
+        assertEquals(4, Preferences.getValidBsqOfferPriceRangeFactor(4));
+        assertEquals(1000, Preferences.getValidBsqOfferPriceRangeFactor(1000));
+    }
+
+    @Test
+    public void invalidBsqOfferPriceRangeFactorIsNotSet() {
+        assertThrows(IllegalArgumentException.class, () -> preferences.setBsqOfferPriceRangeFactor(1));
+        assertThrows(IllegalArgumentException.class, () -> preferences.setBsqOfferPriceRangeFactor(1001));
+        assertThrows(IllegalArgumentException.class, () -> preferences.setBsqOfferPriceRangeFactor(Double.NaN));
+        assertEquals(2, preferences.getBsqOfferPriceRangeFactor());
+
+        preferences.setBsqOfferPriceRangeFactor(4);
+
+        assertEquals(4, preferences.getBsqOfferPriceRangeFactor());
+    }
+
+    // A data directory of a version without the factor has no value, which protobuf reads as 0
+    @Test
+    public void factorMissingInPersistedDataIsTheDefault() {
+        protobuf.PreferencesPayload withoutFactor = protobuf.PreferencesPayload.getDefaultInstance();
+        protobuf.PreferencesPayload withFactor = withoutFactor.toBuilder().setBsqOfferPriceRangeFactor(4).build();
+
+        assertEquals(2, PreferencesPayload.fromProto(withoutFactor, null).getBsqOfferPriceRangeFactor());
+        assertEquals(4, PreferencesPayload.fromProto(withFactor, null).getBsqOfferPriceRangeFactor());
+    }
+
+    @Test
+    public void factorIsSavedAndReadBack() {
+        PreferencesPayload payload = PreferencesPayload.fromProto(protobuf.PreferencesPayload.getDefaultInstance(), null);
+        payload.setBsqOfferPriceRangeFactor(4.5);
+
+        protobuf.PreferencesPayload saved =
+                ((protobuf.PersistableEnvelope) payload.toProtoMessage()).getPreferencesPayload();
+
+        assertEquals(4.5, saved.getBsqOfferPriceRangeFactor());
+        assertEquals(4.5, PreferencesPayload.fromProto(saved, null).getBsqOfferPriceRangeFactor());
+    }
+
+    // Persisted data passes fromProto, which already replaces an invalid factor. Reading the preferences checks the
+    // factor once more, as it does for the cold storage reminder threshold.
+    @Test
+    public void invalidFactorIsReplacedWhenThePreferencesAreRead() {
+        PreferencesPayload payload = mock(PreferencesPayload.class);
+
+        addReadPersistedStub(payload);
+        when(payload.getUserLanguage()).thenReturn("en");
+        when(payload.getUserCountry()).thenReturn(CountryUtil.getDefaultCountry());
+        when(payload.getPreferredTradeCurrency()).thenReturn(new FiatCurrency("USD"));
+        when(payload.getBsqOfferPriceRangeFactor()).thenReturn(0d);
+
+        preferences.readPersisted(() -> verify(payload).setBsqOfferPriceRangeFactor(2));
     }
 }

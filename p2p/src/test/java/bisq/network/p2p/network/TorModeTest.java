@@ -57,10 +57,7 @@ class TorModeTest {
     void theLogsOfTorAreInTheTorDirectoryOutsideTheDataDirectoryOfTor(@TempDir Path torDir) {
         List<File> logFiles = TorMode.getTorLogFiles(torDir.toFile());
 
-        assertEquals(List.of(torDir.resolve("tor-stdout.log").toFile(),
-                        torDir.resolve("tor-stdout.log.1").toFile(),
-                        torDir.resolve("tor-stderr.log").toFile()),
-                logFiles);
+        assertEquals(List.of(torDir.resolve("tor.log").toFile(), torDir.resolve("tor.log.1").toFile()), logFiles);
         Path torDataDir = TorMode.getTorDataDir(torDir.toFile()).toPath();
         logFiles.forEach(logFile -> assertFalse(logFile.toPath().startsWith(torDataDir)));
     }

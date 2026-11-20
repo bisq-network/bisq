@@ -1,5 +1,6 @@
 package bisq.gradle.packaging
 
+import bisq.packager.deb.DebPackager
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
@@ -21,7 +22,7 @@ abstract class DebReproducibleTask : DefaultTask() {
 
     @TaskAction
     fun run() {
-        val debPackager = bisq.deb_packager.DebPackager(
+        val debPackager = DebPackager(
             appVersion.get(),
             distDirFile.get().toPath(),
             outputDirectory.asFile.get().toPath()

@@ -107,6 +107,10 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     @Getter
     protected final ObservableList<DisputeValidation.ValidationException> validationExceptions =
             FXCollections.observableArrayList();
+    // Open trades without a dispute of this type for which we refused a dispute that the peer opened, because it was
+    // not addressed to us. The UI tells the trader.
+    @Getter
+    private final ObservableList<String> tradeIdsOfRefusedPeerDisputes = FXCollections.observableArrayList();
     @Getter
     private final KeyPair signatureKeyPair;
 
@@ -224,6 +228,13 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
 
     protected abstract Trade.DisputeState getDisputeStateStartedByPeer();
 
+    /**
+     * Whether a dispute that the peer opened may start in a trade with the given dispute state.
+     */
+    protected boolean isDisputeStartedByPeerAllowed(Trade.DisputeState disputeState) {
+        return true;
+    }
+
     public abstract void cleanupDisputes();
 
     protected abstract String getDisputeInfo(Dispute dispute);
@@ -319,8 +330,8 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                 // if so, dispute can close and the mediator needs to be informed so they can close their ticket.
                 tradeManager.getTradeById(dispute.getTradeId()).ifPresentOrElse(
                         t -> checkForMediatedTradePayout(t, dispute),
-                        () -> closedTradableManager.getTradableById(dispute.getTradeId()).ifPresent(
-                                t -> checkForMediatedTradePayout((Trade) t, dispute)));
+                        () -> findClosedTrade(dispute.getTradeId()).ifPresent(
+                                t -> checkForMediatedTradePayout(t, dispute)));
             }
         });
     }
@@ -434,6 +445,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             DisputeValidation.validateNodeAddresses(dispute, config);
             DisputeValidation.validateDisputeOpenerIsTrader(dispute, openNewDisputeMessage.getSenderNodeAddress());
             senderValidated = true;
+            // The opener encrypts to the agent of its choice. A dispute for another agent, for example the same
+            // trade filed with a second agent, must not enter our dispute list and receipt checks.
+            checkArgument(isAgent(dispute), "Dispute is not addressed to this agent");
             validateIncomingOpenNewDispute(dispute);
             validateIncomingDisputeReplay(dispute);
 
@@ -541,12 +555,16 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         Dispute dispute = peerOpenedDisputeMessage.getDispute();
         tradeManager.getTradeById(dispute.getTradeId()).ifPresentOrElse(
                 trade -> peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade, senderSignaturePubKey, false),
-                () -> closedTradableManager.getTradableById(dispute.getTradeId()).ifPresentOrElse(
-                        closedTradable -> newDisputeRevertsClosedTrade(peerOpenedDisputeMessage, dispute, (Trade) closedTradable, senderSignaturePubKey),
+                () -> findClosedTrade(dispute.getTradeId()).ifPresentOrElse(
+                        trade -> newDisputeRevertsClosedTrade(peerOpenedDisputeMessage, dispute, trade, senderSignaturePubKey),
                         () -> failedTradesManager.getTradeById(dispute.getTradeId()).ifPresentOrElse(
                                 trade -> newDisputeRevertsFailedTrade(peerOpenedDisputeMessage, dispute, trade, senderSignaturePubKey),
-                                () -> log.warn("Dropping {} for trade {}: no local trade, closed tradable, or failed trade found.",
+                                () -> log.warn("Dropping {} for trade {}: no pending, closed or failed trade found.",
                                         peerOpenedDisputeMessage.getClass().getSimpleName(), dispute.getTradeId()))));
+    }
+
+    private Optional<Trade> findClosedTrade(String tradeId) {
+        return closedTradableManager.getTradableById(tradeId).filter(Trade.class::isInstance).map(Trade.class::cast);
     }
 
     private void newDisputeRevertsFailedTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage,
@@ -557,6 +575,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                 trade,
                 senderSignaturePubKey,
                 peerOpenedDisputeMessage.getClass().getSimpleName())) {
+            return;
+        }
+        if (isPeerOpenedDisputeRefused(peerOpenedDisputeMessage, dispute, trade)) {
             return;
         }
 
@@ -574,6 +595,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                 trade,
                 senderSignaturePubKey,
                 peerOpenedDisputeMessage.getClass().getSimpleName())) {
+            return;
+        }
+        if (isPeerOpenedDisputeRefused(peerOpenedDisputeMessage, dispute, trade)) {
             return;
         }
 
@@ -601,11 +625,13 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                 peerOpenedDisputeMessage.getClass().getSimpleName())) {
             return;
         }
+        if (isPeerOpenedDisputeRefused(peerOpenedDisputeMessage, dispute, trade)) {
+            return;
+        }
 
         try {
-            DisputeValidation.validateDisputeData(dispute, btcWalletService, trade);
+            DisputeValidation.validateDisputeData(dispute, btcWalletService);
             DisputeValidation.validateNodeAddresses(dispute, config);
-            DisputeValidation.validateTradeAndDispute(dispute, trade);
             Transaction delayedPayoutTx = null;
             try {
                 delayedPayoutTx = checkDelayedPayoutTx(trade.getDelayedPayoutTx(),
@@ -660,6 +686,54 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
 
         sendAckMessage(peerOpenedDisputeMessage, dispute.getAgentPubKeyRing(), errorMessage == null, errorMessage);
         requestPersistence();
+    }
+
+
+    // The agent creates the dispute for us from the contract that the opener sent. We accept it only if it is ours and
+    // about our trade, and a new dispute only if the trade's dispute state allows it, before a closed or failed trade
+    // is moved back.
+    private boolean isPeerOpenedDisputeRefused(PeerOpenedDisputeMessage peerOpenedDisputeMessage,
+                                               Dispute dispute,
+                                               Trade trade) {
+        String errorMessage = null;
+        if (!isTrader(dispute) || dispute.getTraderId() != pubKeyRing.hashCode()) {
+            errorMessage = "The dispute is not for this trader";
+            onPeerDisputeNotForThisTrader(dispute.getTradeId());
+        } else if (findDispute(dispute).isEmpty() && !isDisputeStartedByPeerAllowed(trade.getDisputeState())) {
+            errorMessage = "A new dispute is not allowed in dispute state " + trade.getDisputeState();
+        } else {
+            // The opener chose the contract and the transaction IDs. With another contract, for example with key rings
+            // or multisig keys, which the traders do not sign, the agent would decide a case about another trade.
+            try {
+                DisputeValidation.validateTradeAndDispute(dispute, trade, btcWalletService);
+            } catch (DisputeValidation.ValidationException e) {
+                errorMessage = "The dispute does not match the trade: " + e.getMessage();
+            }
+        }
+        if (errorMessage == null) {
+            return false;
+        }
+
+        log.warn("We refuse the {} for trade {}: {}", peerOpenedDisputeMessage.getClass().getSimpleName(),
+                dispute.getTradeId(), errorMessage);
+        ObservableList<ChatMessage> messages = dispute.getChatMessages();
+        if (!messages.isEmpty()) {
+            sendAckMessage(messages.get(0), dispute.getAgentPubKeyRing(), false, errorMessage);
+        }
+        sendAckMessage(peerOpenedDisputeMessage, dispute.getAgentPubKeyRing(), false, errorMessage);
+        return true;
+    }
+
+    // The opener chooses the key rings in the contract that the agent copies. With a key ring that is not ours, we have
+    // no case for the trade, and the agent's node ignores our error if that key ring has another signature key. So only
+    // the trader can act, by opening a dispute.
+    private void onPeerDisputeNotForThisTrader(String tradeId) {
+        boolean isOpenTrade = tradeManager.getTradeById(tradeId).isPresent();
+        if (isOpenTrade &&
+                findDispute(tradeId, pubKeyRing.hashCode()).isEmpty() &&
+                !tradeIdsOfRefusedPeerDisputes.contains(tradeId)) {
+            tradeIdsOfRefusedPeerDisputes.add(tradeId);
+        }
     }
 
 

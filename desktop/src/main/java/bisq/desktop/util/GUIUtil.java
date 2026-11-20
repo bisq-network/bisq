@@ -29,8 +29,8 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.presentation.DaoPresentation;
 
-import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.BisqSetup;
 import bisq.core.btc.setup.WalletsSetup;
@@ -170,11 +170,14 @@ import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.addTopLabelComboBoxComboBox;
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class GUIUtil {
     public final static String SHOW_ALL_FLAG = "list.currency.showAll"; // Used for accessing the i18n resource
     public final static String EDIT_FLAG = "list.currency.editList"; // Used for accessing the i18n resource
+    // Used for accessing the i18n resource
+    public final static String STABLECOINS_ONLY_FLAG = "list.paymentMethod.stableCoinsOnly";
 
     public final static String OPEN_WEB_PAGE_KEY = "warnOpenURLWhenTorEnabled";
 
@@ -192,8 +195,15 @@ public class GUIUtil {
     @Setter
     private static Preferences preferences;
 
+    // Set at startup by MainViewModel, like feeService and preferences
+    private static DaoPresentation daoPresentation;
+
     public static void setFeeService(FeeService feeService) {
         GUIUtil.feeService = feeService;
+    }
+
+    public static void setDaoPresentation(DaoPresentation daoPresentation) {
+        GUIUtil.daoPresentation = daoPresentation;
     }
 
     public static String getUserLanguage() {
@@ -450,7 +460,7 @@ public class GUIUtil {
             } catch (RuntimeException | IOException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
-                new Popup().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
+                new Popup().error(Res.get("guiUtil.jsonExport.exportFailed", e.getMessage())).show();
             }
         }
     }
@@ -684,7 +694,8 @@ public class GUIUtil {
                     HBox box = new HBox();
                     box.setSpacing(20);
                     Label paymentType = new AutoTooltipLabel(
-                            method.isAltcoin() ? Res.get("shared.crypto") : Res.get("shared.fiat"));
+                            method.isAltcoin() ? Res.get("shared.crypto") :
+                                    method.isStableCoin() ? Res.get("payment.stablecoin.coin") : Res.get("shared.fiat"));
 
                     paymentType.getStyleClass().add("currency-label-small");
                     Label paymentMethod = new AutoTooltipLabel(Res.get(id));
@@ -694,6 +705,8 @@ public class GUIUtil {
                     if (id.equals(GUIUtil.SHOW_ALL_FLAG)) {
                         paymentType.setText(Res.get("shared.all"));
                         paymentMethod.setText(Res.get("list.currency.showAll"));
+                    } else if (id.equals(GUIUtil.STABLECOINS_ONLY_FLAG)) {
+                        paymentType.setText(Res.get("payment.stablecoin.coin"));
                     }
 
                     setGraphic(box);
@@ -992,9 +1005,18 @@ public class GUIUtil {
         return true;
     }
 
+    // Gate for actions which create or take an offer or publish a DAO transaction
+    public static boolean isDaoStateInSyncOrShowPopup() {
+        return checkNotNull(daoPresentation, "daoPresentation must be set").isDaoStateInSyncOrShowPopup();
+    }
+
     public static boolean canCreateOrTakeOfferOrShowPopup(User user,
                                                           Navigation navigation,
                                                           @Nullable TradeCurrency currency) {
+        if (!isDaoStateInSyncOrShowPopup()) {
+            return false;
+        }
+
         if (currency != null && currency.getCode().equals("BSQ")) {
             return true;
         }
@@ -1108,10 +1130,8 @@ public class GUIUtil {
                             ContentDisplay.RIGHT);
 
                     if (needsSigning) {
-                        AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(
-                                item.paymentAccountPayload);
                         AccountAgeWitnessService.SignState signState =
-                                accountAgeWitnessService.getSignState(myWitness);
+                                accountAgeWitnessService.getMySignState(item.paymentAccountPayload);
                         String info = StringUtils.capitalize(signState.getDisplayString());
 
                         MaterialDesignIcon icon = getIconForSignState(signState);

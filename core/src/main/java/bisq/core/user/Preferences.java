@@ -77,6 +77,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -108,7 +109,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("Blockonomics", "https://www.blockonomics.co/api/tx?txid=", "https://www.blockonomics.co/#/search?q="),
             new BlockChainExplorer("Chainflyer", "http://chainflyer.bitflyer.jp/Transaction/", "http://chainflyer.bitflyer.jp/Address/"),
             new BlockChainExplorer("Smartbit", "https://www.smartbit.com.au/tx/", "https://www.smartbit.com.au/address/"),
-            new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTC/", "https://chain.so/address/BTC/"),
+            new BlockChainExplorer("SoChain", "https://sochain.com/btc/tx/", "https://sochain.com/btc/address/"),
             new BlockChainExplorer("Blockchain.info", "https://blockchain.info/tx/", "https://blockchain.info/address/"),
             new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/"),
             new BlockChainExplorer("Blockchair", "https://blockchair.com/bitcoin/transaction/", "https://blockchair.com/bitcoin/address/")
@@ -120,7 +121,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/tBTC/tx/", "https://www.blocktrail.com/tBTC/address/"),
             new BlockChainExplorer("Biteasy", "https://www.biteasy.com/testnet/transactions/", "https://www.biteasy.com/testnet/addresses/"),
             new BlockChainExplorer("Smartbit", "https://testnet.smartbit.com.au/tx/", "https://testnet.smartbit.com.au/address/"),
-            new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTCTEST/", "https://chain.so/address/BTCTEST/"),
             new BlockChainExplorer("Blockchair", "https://blockchair.com/bitcoin/testnet/transaction/", "https://blockchair.com/bitcoin/testnet/address/")
     ));
     private static final ArrayList<BlockChainExplorer> BTC_DAO_TEST_NET_EXPLORERS = new ArrayList<>(Collections.singletonList(
@@ -175,6 +175,21 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             return INITIAL_COLD_STORAGE_REMINDER_THRESHOLD;
         }
         return Math.min(threshold, MAX_COLD_STORAGE_REMINDER_THRESHOLD);
+    }
+
+    // The BSQ offer book hides offers with a price worse for the taker than the 90-day average BSQ price times this
+    // factor or divided by it. The largest factor shows all offers.
+    public static final double DEFAULT_BSQ_OFFER_PRICE_RANGE_FACTOR = 2;
+    public static final double MAX_BSQ_OFFER_PRICE_RANGE_FACTOR = 1000;
+
+    // False for NaN as well
+    public static boolean isValidBsqOfferPriceRangeFactor(double factor) {
+        return factor > 1 && factor <= MAX_BSQ_OFFER_PRICE_RANGE_FACTOR;
+    }
+
+    // Older versions did not store a factor, which protobuf reads as 0
+    public static double getValidBsqOfferPriceRangeFactor(double factor) {
+        return isValidBsqOfferPriceRangeFactor(factor) ? factor : DEFAULT_BSQ_OFFER_PRICE_RANGE_FACTOR;
     }
 
     // payload is initialized so the default values are available for Property initialization.
@@ -395,6 +410,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         long clampedColdStorageReminderThreshold = getClampedColdStorageReminderThreshold(coldStorageReminderThreshold);
         if (coldStorageReminderThreshold != clampedColdStorageReminderThreshold) {
             setColdStorageReminderThreshold(clampedColdStorageReminderThreshold);
+        }
+
+        if (!isValidBsqOfferPriceRangeFactor(prefPayload.getBsqOfferPriceRangeFactor())) {
+            setBsqOfferPriceRangeFactor(DEFAULT_BSQ_OFFER_PRICE_RANGE_FACTOR);
         }
 
         // For users from old versions the 4 flags a false but we want to have it true by default
@@ -878,6 +897,12 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         requestPersistence();
     }
 
+    public void setBsqOfferPriceRangeFactor(double value) {
+        checkArgument(isValidBsqOfferPriceRangeFactor(value), "Invalid BSQ offer price range factor %s", value);
+        prefPayload.setBsqOfferPriceRangeFactor(value);
+        requestPersistence();
+    }
+
     public void setProcessBurningManAccountingData(boolean processBurningManAccountingData) {
         prefPayload.setProcessBurningManAccountingData(processBurningManAccountingData);
         requestPersistence();
@@ -991,7 +1016,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return prefPayload.isPayFeeInBtc();
     }
 
-    // Only an older version reads the stored bridge lines, see TorNetworkSettingsWindow.
+    // Compatibility with v1.10.11 and earlier: only releases before v1.10.11 read the stored bridge lines, see
+    // TorNetworkSettingsWindow.
     @Nullable
     public List<String> getBridgeAddresses() {
         return prefPayload.getBridgeAddresses();
@@ -1254,6 +1280,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setUserHasRaisedTradeLimit(boolean userHasRaisedTradeLimit);
 
         void setColdStorageReminderThreshold(long coldStorageReminderThreshold);
+
+        void setBsqOfferPriceRangeFactor(double bsqOfferPriceRangeFactor);
 
         void setProcessBurningManAccountingData(boolean processBurningManAccountingData);
 

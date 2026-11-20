@@ -28,7 +28,7 @@ public class LogFilesZipperTest {
     void zipsTheFilesToRedactThroughTheRedaction(@TempDir Path dataDir) throws IOException {
         Path logFilePath = dataDir.resolve("bisq.log");
         Files.writeString(logFilePath, "secret of the node");
-        Path redactedFilePath = dataDir.resolve("tor-stdout.log");
+        Path redactedFilePath = dataDir.resolve("tor.log");
         // The byte 0xff is no valid UTF-8, and the redaction keeps it
         Files.write(redactedFilePath, new byte[]{'s', 'e', 'c', 'r', 'e', 't', ' ', (byte) 0xff});
         Path destinationPath = dataDir.resolve("logs.zip");
@@ -38,7 +38,7 @@ public class LogFilesZipperTest {
 
         Map<String, byte[]> entries = readEntries(destinationPath);
         assertThat(new String(entries.get("bisq.log"), StandardCharsets.UTF_8), is("secret of the node"));
-        assertThat(entries.get("tor-stdout.log"),
+        assertThat(entries.get("tor.log"),
                 is(new byte[]{'[', 'r', 'e', 'd', 'a', 'c', 't', 'e', 'd', ']', ' ', (byte) 0xff}));
     }
 

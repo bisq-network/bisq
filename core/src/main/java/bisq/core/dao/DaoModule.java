@@ -62,6 +62,7 @@ import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStore;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStorageService;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStore;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
+import bisq.core.dao.governance.voteresult.VoteResultPresentation;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.governance.voteresult.issuance.IssuanceService;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
@@ -197,6 +198,7 @@ public class DaoModule extends AppModule {
 
         // VoteResult
         bind(VoteResultService.class).in(Singleton.class);
+        bind(VoteResultPresentation.class).in(Singleton.class);
         bind(MissingDataRequestService.class).in(Singleton.class);
         bind(IssuanceService.class).in(Singleton.class);
         bind(RepublishGovernanceDataHandler.class).in(Singleton.class);

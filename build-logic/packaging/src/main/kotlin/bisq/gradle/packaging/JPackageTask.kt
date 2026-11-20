@@ -39,6 +39,11 @@ abstract class JPackageTask : DefaultTask() {
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
+    // The Linux packages are built by separate tasks into the same directory, so each one may
+    // only replace its own format.
+    @get:Internal
+    protected open val replacedPackageFormats: Set<PackageFormat> = PackageFormat.values().toSet()
+
     @TaskAction
     open fun run() {
         val jPackagePath = jdkDirectory.asFile.get().toPath().resolve("bin").resolve("jpackage")
@@ -71,7 +76,7 @@ abstract class JPackageTask : DefaultTask() {
 
     private fun deleteExistingInstallerArtifacts(outputDirectoryFile: File) {
         outputDirectoryFile.mkdirs()
-        val installerExtensions = PackageFormat.values()
+        val installerExtensions = replacedPackageFormats
             .map { it.fileExtension }
             .toSet()
         outputDirectoryFile.listFiles()

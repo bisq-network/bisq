@@ -66,7 +66,10 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
             int burningManSelectionHeight = DelayedPayoutTxValidation.checkBurningManSelectionHeight(processModel.getBurningManSelectionHeight(),
                     delayedPayoutTxReceiverService);
 
-            long tradeTxFeeAsLong = MinerFeeValidation.checkTradeTxFeeIsInTolerance(trade.getTradeTxFeeAsLong(), feeService);
+            // Compatibility with v1.10.11 and earlier: a maker of these releases may have accepted the trade with a
+            // lower fee, see MIN_STORED_TRADE_TX_FEE_SAT.
+            long tradeTxFeeAsLong = MinerFeeValidation.checkStoredTradeTxFeeIsInTolerance(trade.getTradeTxFeeAsLong(),
+                    feeService);
 
             Transaction preparedDepositTx = toVerifiedTransaction(processModel.getPreparedDepositTx(), btcWalletService);
             long multisigOutputAmount = preparedDepositTx.getOutput(0).getValue().value;

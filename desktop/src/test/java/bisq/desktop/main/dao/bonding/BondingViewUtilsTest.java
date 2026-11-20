@@ -18,12 +18,17 @@
 package bisq.desktop.main.dao.bonding;
 
 import bisq.desktop.Navigation;
+import bisq.desktop.main.presentation.DaoPresentationTestUtil;
+import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.bond.lockup.LockupReason;
 import bisq.core.dao.governance.bond.reputation.MyReputationListService;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
@@ -46,8 +51,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -67,6 +75,7 @@ public class BondingViewUtilsTest {
         when(p2PService.getNumConnectedPeers()).thenReturn(new SimpleIntegerProperty(1));
         when(walletsSetup.hasSufficientPeersForBroadcast()).thenReturn(true);
         when(walletsSetup.isDownloadComplete()).thenReturn(true);
+        GUIUtil.setDaoPresentation(DaoPresentationTestUtil.daoPresentation(false));
 
         bondingViewUtils = new BondingViewUtils(
                 p2PService,
@@ -81,6 +90,7 @@ public class BondingViewUtilsTest {
     @AfterEach
     public void tearDown() {
         DevEnv.setDevMode(false);
+        GUIUtil.setDaoPresentation(null);
     }
 
     @Test
@@ -106,5 +116,56 @@ public class BondingViewUtilsTest {
                 eq(role.getHash()),
                 any(),
                 any());
+    }
+
+    @Test
+    public void lockupAndUnlockAreBlockedWhileDaoStateNeedsResync() {
+        GUIUtil.setDaoPresentation(DaoPresentationTestUtil.daoPresentation(true));
+        Role role = new Role(
+                "alice",
+                "https://bisq.network/roles/81",
+                BondedRoleType.NETLAYER_MAINTAINER);
+        RoleProposal proposal = new RoleProposal(role, new TreeMap<>());
+        Optional<RoleProposal> optionalProposal = Optional.of(proposal);
+        when(bondedRolesRepository.getAcceptedBondedRoleProposal(role)).thenReturn(optionalProposal);
+        when(bondedRolesRepository.canCreateNewLockup(role)).thenReturn(true);
+        when(daoFacade.getRequiredBond(optionalProposal)).thenReturn(20_000L);
+        @SuppressWarnings("unchecked")
+        Consumer<String> resultHandler = mock(Consumer.class);
+
+        bondingViewUtils.lockupBondForBondedRole(role, resultHandler);
+        bondingViewUtils.unLock("lockupTxId", resultHandler);
+
+        verify(daoFacade, never()).publishLockupTx(any(), anyInt(), any(), any(), any(), any());
+        verify(daoFacade, never()).publishUnlockTx(any(), any(), any());
+        verify(daoFacade, never()).getLockupTxOutput(any());
+    }
+
+    @Test
+    public void lockupIsNotPublishedWhenResyncIsNeededBeforePublication() {
+        // The DAO state is in sync when the user starts the lockup, but needs a resync at the publication.
+        DaoStateService daoStateService = mock(DaoStateService.class);
+        when(daoStateService.isParseBlockChainComplete()).thenReturn(true);
+        DaoStateMonitoringService daoStateMonitoringService = mock(DaoStateMonitoringService.class);
+        when(daoStateMonitoringService.isInConflictWithSeedNode()).thenReturn(false, true);
+        GUIUtil.setDaoPresentation(DaoPresentationTestUtil.daoPresentation(daoStateService,
+                daoStateMonitoringService,
+                mock(BsqWalletService.class)));
+        Role role = new Role(
+                "alice",
+                "https://bisq.network/roles/81",
+                BondedRoleType.NETLAYER_MAINTAINER);
+        RoleProposal proposal = new RoleProposal(role, new TreeMap<>());
+        Optional<RoleProposal> optionalProposal = Optional.of(proposal);
+        when(bondedRolesRepository.getAcceptedBondedRoleProposal(role)).thenReturn(optionalProposal);
+        when(bondedRolesRepository.canCreateNewLockup(role)).thenReturn(true);
+        when(daoFacade.getRequiredBond(optionalProposal)).thenReturn(20_000L);
+        @SuppressWarnings("unchecked")
+        Consumer<String> resultHandler = mock(Consumer.class);
+
+        bondingViewUtils.lockupBondForBondedRole(role, resultHandler);
+
+        verify(daoStateMonitoringService, times(2)).isInConflictWithSeedNode();
+        verify(daoFacade, never()).publishLockupTx(any(), anyInt(), any(), any(), any(), any());
     }
 }

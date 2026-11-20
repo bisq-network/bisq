@@ -65,6 +65,41 @@ public class ReceiptValidatorTest {
         assertTrue(new ReceiptValidator(offer, account, predicates).isValid());
     }
 
+    // All custom payment methods share one payment method ID, so the name has to match as well
+    @Test
+    public void testIsValidWhenCustomPaymentMethodAndNameMatches() {
+        account = mock(CustomPaymentMethodAccount.class);
+
+        when(predicates.isMatchingCurrency(offer, account)).thenReturn(true);
+        when(predicates.isEqualPaymentMethods(offer, account)).thenReturn(true);
+        when(predicates.isCustomPaymentMethod(offer)).thenReturn(true);
+        when(predicates.isMatchingCustomPaymentMethodAccount(offer, account)).thenReturn(true);
+
+        assertTrue(new ReceiptValidator(offer, account, predicates).isValid());
+    }
+
+    @Test
+    public void testIsValidWhenCustomPaymentMethodAndNameDoesNotMatch() {
+        account = mock(CustomPaymentMethodAccount.class);
+
+        when(predicates.isMatchingCurrency(offer, account)).thenReturn(true);
+        when(predicates.isEqualPaymentMethods(offer, account)).thenReturn(true);
+        when(predicates.isCustomPaymentMethod(offer)).thenReturn(true);
+        when(predicates.isMatchingCustomPaymentMethodAccount(offer, account)).thenReturn(false);
+
+        assertFalse(new ReceiptValidator(offer, account, predicates).isValid());
+    }
+
+    @Test
+    public void testIsValidWhenCustomPaymentMethodOfferAndAccountOfAnotherPaymentMethod() {
+        when(predicates.isMatchingCurrency(offer, account)).thenReturn(true);
+        when(predicates.isEqualPaymentMethods(offer, account)).thenReturn(false);
+        when(predicates.isCustomPaymentMethod(offer)).thenReturn(true);
+        when(predicates.isMatchingCustomPaymentMethodAccount(offer, account)).thenReturn(true);
+
+        assertFalse(validator.isValid());
+    }
+
     @Test
     public void testIsValidWhenNotMatchingCodes() {
         when(predicates.isMatchingCurrency(offer, account)).thenReturn(true);

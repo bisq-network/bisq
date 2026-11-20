@@ -3,7 +3,6 @@ package bisq.gradle.docker.image_builder
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaApplication
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
@@ -29,11 +28,8 @@ class DockerImageBuilderPlugin : Plugin<Project> {
         val generateDockerFileTask = project.tasks.register<CreateDockerfileTask>("generateDockerfile") {
             archiveFileName.set(distTarTask.flatMap { it.archiveFileName })
 
-            val classpathFiles: Provider<List<String>> = installDistTask.map { syncTask ->
-                val appLibsDir = File(syncTask.destinationDir, "lib")
-                appLibsDir.listFiles()!!.map { it.name }
-            }
-            classpathFileNames.set(classpathFiles)
+            dependsOn(installDistTask)
+            libDirectory.set(project.layout.dir(installDistTask.map { File(it.destinationDir, "lib") }))
 
             mainClassName.set(javaApplicationExtension.mainClass)
             outputFile.set(project.layout.buildDirectory.file("docker/Dockerfile"))

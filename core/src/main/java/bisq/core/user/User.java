@@ -75,8 +75,8 @@ public class User implements PersistedDataHost {
     private final PersistenceManager<UserPayload> persistenceManager;
     private final KeyRing keyRing;
 
-    private ObservableSet<PaymentAccount> paymentAccountsAsObservable = FXCollections.observableSet();
-    private ObjectProperty<PaymentAccount> currentPaymentAccountProperty = new SimpleObjectProperty<>();
+    private final ObservableSet<PaymentAccount> paymentAccountsAsObservable = FXCollections.observableSet();
+    private final ObjectProperty<PaymentAccount> currentPaymentAccountProperty = new SimpleObjectProperty<>();
 
     private UserPayload userPayload = new UserPayload();
     private boolean isPaymentAccountImport = false;
@@ -112,8 +112,9 @@ public class User implements PersistedDataHost {
 
         checkNotNull(userPayload.getPaymentAccounts(), "userPayload.getPaymentAccounts() must not be null");
         checkNotNull(userPayload.getAcceptedLanguageLocaleCodes(), "userPayload.getAcceptedLanguageLocaleCodes() must not be null");
-        paymentAccountsAsObservable = FXCollections.observableSet(userPayload.getPaymentAccounts());
-        currentPaymentAccountProperty = new SimpleObjectProperty<>(userPayload.getCurrentPaymentAccount());
+        // Services built before init() already observe these, so they are filled and not replaced
+        paymentAccountsAsObservable.addAll(userPayload.getPaymentAccounts());
+        currentPaymentAccountProperty.set(userPayload.getCurrentPaymentAccount());
         userPayload.setAccountId(String.valueOf(Math.abs(checkNotNull(keyRing).getPubKeyRing().hashCode())));
 
         // language setup

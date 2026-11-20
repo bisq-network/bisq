@@ -9,9 +9,11 @@ buildscript {
 
 import groovy.xml.XmlSlurper
 
+import javax.inject.Inject
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.util.zip.ZipFile
+import org.gradle.process.ExecOperations
 
 plugins {
     id 'bisq.gradle.regtest_plugin.RegtestPlugin'
@@ -786,9 +788,9 @@ def normalizeReleaseVersion = { String rawReleaseVersion ->
     releaseVersion
 }
 
-def resolveGpgExecutable = {
-    def configuredGpgExecutable = providers.gradleProperty('gpgExecutable').orNull ?:
-            providers.environmentVariable('GPG_EXECUTABLE').orNull
+// The configured value is read by the caller from its own providers. Script objects such as
+// 'providers' must not be used by code that runs during task execution (configuration cache).
+def resolveGpgExecutable = { String configuredGpgExecutable ->
     configuredGpgExecutable ?: [
             '/opt/homebrew/bin/gpg',
             '/usr/local/bin/gpg',
@@ -1225,9 +1227,36 @@ def installerEvidenceRequiredEntries = [
 ]
 def expectedReleaseJavaVersion = providers.gradleProperty('releaseBuild.javaVersion')
 def expectedReleaseJavaVendor = providers.gradleProperty('releaseBuild.javaVendor')
-def expectedReleaseJavaRuntimeVersion = providers.gradleProperty('releaseBuild.javaRuntimeVersion')
-def expectedReleaseJavaVendorVersion = providers.gradleProperty('releaseBuild.javaVendorVersion')
 def expectedReleaseGradleVersion = providers.gradleProperty('releaseBuild.gradleVersion')
+
+// releaseBuild.javaVersion is the minimum Java version. A build suffix such as +9 would not be compared, so it may only
+// hold version numbers.
+def parseMinimumJavaVersion = { String minimumJavaVersion ->
+    def version = null
+    try {
+        version = Runtime.Version.parse(minimumJavaVersion)
+    } catch (IllegalArgumentException ignored) {
+    }
+    if (version == null || version.pre().isPresent() || version.build().isPresent() || version.optional().isPresent()) {
+        throw new GradleException("releaseBuild.javaVersion must be a Java version such as 21.0.13.1, but is ${minimumJavaVersion}")
+    }
+    return version
+}
+
+// Compares the version numbers only, so the build number and -LTS do not count, and 21.0.13.1 is above 21.0.13.
+def isAtLeastJavaVersion = { Runtime.Version actualVersion, Runtime.Version minimumVersion ->
+    def actualNumbers = actualVersion.version()
+    def minimumNumbers = minimumVersion.version()
+    def size = Math.max(actualNumbers.size(), minimumNumbers.size())
+    for (int index = 0; index < size; index++) {
+        def actualNumber = index < actualNumbers.size() ? actualNumbers[index] : 0
+        def minimumNumber = index < minimumNumbers.size() ? minimumNumbers[index] : 0
+        if (actualNumber != minimumNumber) {
+            return actualNumber > minimumNumber
+        }
+    }
+    return true
+}
 
 def validateReleaseEvidenceBundle = { File bundle ->
     if (!bundle.file) {
@@ -1371,11 +1400,20 @@ def compactMap = { Map<String, Object> values ->
     }
 }
 
+// The script-level 'exec' method is not available when a task runs from a configuration cache entry.
+// Task actions therefore use this service, which is obtained at configuration time.
+interface InjectedExecOperations {
+    @Inject
+    ExecOperations getExecOperations()
+}
+
+def execOperations = objects.newInstance(InjectedExecOperations).execOperations
+
 def execResult = { List<String> command ->
     def output = new ByteArrayOutputStream()
     def stderrOutput = new ByteArrayOutputStream()
     try {
-        def result = exec {
+        def result = execOperations.exec {
             commandLine command
             standardOutput = output
             errorOutput = stderrOutput
@@ -1494,6 +1532,9 @@ def loadGradleWrapperProperties = {
     wrapperProperties
 }
 
+// Taken at configuration time because the Gradle object must not be read while a task runs.
+def runningGradleVersion = gradle.gradleVersion
+
 def buildInfoForManifest = { Collection entries, File manifest, File checksums ->
     def gitStatus = execText(['git', 'status', '--porcelain'])
     def wrapperProperties = loadGradleWrapperProperties()
@@ -1522,7 +1563,7 @@ def buildInfoForManifest = { Collection entries, File manifest, File checksums -
                     submodules: execText(['git', 'submodule', 'status', '--recursive'])
             ],
             gradle          : [
-                    version                     : gradle.gradleVersion,
+                    version                     : runningGradleVersion,
                     wrapperDistributionUrl      : wrapperProperties.getProperty('distributionUrl'),
                     wrapperDistributionSha256Sum: wrapperProperties.getProperty('distributionSha256Sum'),
                     expectedVersion             : expectedReleaseGradleVersion.get()
@@ -1531,6 +1572,7 @@ def buildInfoForManifest = { Collection entries, File manifest, File checksums -
                     version             : System.getProperty('java.version'),
                     vendor              : System.getProperty('java.vendor'),
                     runtimeVersion      : System.getProperty('java.runtime.version'),
+                    vendorVersion       : System.getProperty('java.vendor.version'),
                     vmName              : System.getProperty('java.vm.name'),
                     vmVersion           : System.getProperty('java.vm.version'),
                     specificationVersion: System.getProperty('java.specification.version'),
@@ -1618,12 +1660,10 @@ def writeBuildInfo = { File buildInfoFile, Map buildInfo ->
 
 tasks.register('verifyReleaseEnvironment') {
     group = 'verification'
-    description = 'Verifies the local Gradle and Java runtime match the pinned release build environment.'
+    description = 'Verifies the local Gradle and Java runtime meet the pinned release build environment.'
 
     inputs.property('expectedReleaseJavaVersion', expectedReleaseJavaVersion)
     inputs.property('expectedReleaseJavaVendor', expectedReleaseJavaVendor)
-    inputs.property('expectedReleaseJavaRuntimeVersion', expectedReleaseJavaRuntimeVersion)
-    inputs.property('expectedReleaseJavaVendorVersion', expectedReleaseJavaVendorVersion)
     inputs.property('expectedReleaseGradleVersion', expectedReleaseGradleVersion)
     outputs.upToDateWhen { false }
 
@@ -1634,39 +1674,21 @@ tasks.register('verifyReleaseEnvironment') {
     doLast {
         def expectedJavaVersion = expectedReleaseJavaVersion.get()
         def expectedJavaVendorValue = expectedReleaseJavaVendor.get()
-        def expectedJavaRuntimeVersion = expectedReleaseJavaRuntimeVersion.get()
-        def expectedJavaVendorVersion = expectedReleaseJavaVendorVersion.get()
         def expectedGradleVersion = expectedReleaseGradleVersion.get()
         def actualJavaVersion = Runtime.version()
         def actualJavaVendor = System.getProperty('java.vendor')
-        def actualJavaRuntimeVersion = System.getProperty('java.runtime.version')
         def actualJavaVendorVersion = System.getProperty('java.vendor.version')
         def violations = []
 
-        // A build suffix such as +9 would not be compared, so the pin may only hold the numbers of the update.
-        def pinnedJavaVersion = null
-        try {
-            pinnedJavaVersion = Runtime.Version.parse(expectedJavaVersion)
-        } catch (IllegalArgumentException ignored) {
-        }
-        if (pinnedJavaVersion == null || pinnedJavaVersion.pre().isPresent() || pinnedJavaVersion.build().isPresent() ||
-                pinnedJavaVersion.optional().isPresent()) {
-            throw new GradleException("releaseBuild.javaVersion must be a Java update such as 21.0.13, but is ${expectedJavaVersion}")
-        }
-        // The update is compared by its version numbers and the build exactly below, so a later Zulu build of the
-        // update, such as 21.0.13.0.3+1 of 21.0.13, needs no change of releaseBuild.javaVersion.
-        def pinnedJavaVersionNumbers = pinnedJavaVersion.version()
-        if (actualJavaVersion.version().take(pinnedJavaVersionNumbers.size()) != pinnedJavaVersionNumbers) {
-            violations << "Java version expected a build of ${expectedJavaVersion} but was ${actualJavaVersion}"
+        // Every build of the same feature version at or above the minimum passes, so a new Corretto build or update needs
+        // no change. Raise releaseBuild.javaVersion when a release must not ship without a fix.
+        def minimumJavaVersion = parseMinimumJavaVersion(expectedJavaVersion)
+        if (actualJavaVersion.feature() != minimumJavaVersion.feature() ||
+                !isAtLeastJavaVersion(actualJavaVersion, minimumJavaVersion)) {
+            violations << "Java version expected Java ${minimumJavaVersion.feature()} at or above ${expectedJavaVersion} but was ${actualJavaVersion}"
         }
         if (actualJavaVendor != expectedJavaVendorValue) {
             violations << "Java vendor expected ${expectedJavaVendorValue} but was ${actualJavaVendor}"
-        }
-        if (actualJavaRuntimeVersion != expectedJavaRuntimeVersion) {
-            violations << "Java runtime version expected ${expectedJavaRuntimeVersion} but was ${actualJavaRuntimeVersion}"
-        }
-        if (actualJavaVendorVersion != expectedJavaVendorVersion) {
-            violations << "Java vendor version expected ${expectedJavaVendorVersion} but was ${actualJavaVendorVersion}"
         }
         if (actualGradleVersion != expectedGradleVersion) {
             violations << "Gradle version expected ${expectedGradleVersion} but was ${actualGradleVersion}"
@@ -1792,16 +1814,35 @@ tasks.register('verifyReleaseBuilderImage') {
         if (!expectedJavaVersionValue) {
             throw new GradleException('Missing releaseBuild.javaVersion in gradle.properties')
         }
+        def minimumJavaVersion = parseMinimumJavaVersion(expectedJavaVersionValue)
 
         def text = dockerfile.getText(StandardCharsets.UTF_8.name())
         def trimmedLines = dockerfile.readLines(StandardCharsets.UTF_8.name()).collect { it.trim() }
         def fromLine = trimmedLines.find { it.startsWith('FROM ') }
         def snapshotLine = trimmedLines.find { it.startsWith('ARG UBUNTU_APT_SNAPSHOT=') }
-        def expectedBaseImage = "azul/zulu-openjdk:${expectedJavaVersionValue}"
+        def expectedBaseImage = 'ubuntu:24.04'
         def violations = []
 
         if (!(fromLine ==~ /^FROM --platform=linux\/amd64 ${java.util.regex.Pattern.quote(expectedBaseImage)}@sha256:[0-9a-f]{64}$/)) {
             violations << "Dockerfile FROM must pin linux/amd64 ${expectedBaseImage} by lowercase sha256 digest"
+        }
+        // The final number of the Corretto release is the build number; the preceding numbers are the Java version.
+        def jdkDownloadLine = trimmedLines.find { it.startsWith('ADD ') }
+        def jdkDownloadMatcher = (jdkDownloadLine ?: '') =~ /^ADD --checksum=sha256:[0-9a-f]{64} https:\/\/corretto\.aws\/downloads\/resources\/((\d+(?:\.\d+)*)\.\d+)\/amazon-corretto-\1-linux-x64\.tar\.gz \/tmp\/corretto\.tar\.gz$/
+        if (!jdkDownloadMatcher.matches()) {
+            violations << 'Dockerfile must pin a Corretto linux-x64 JDK archive by version and lowercase SHA-256 checksum'
+        } else {
+            // Corretto pads quarterly updates with a zero, for example 21.0.14.0.11; Runtime.Version omits it.
+            def imageJavaVersion = parseMinimumJavaVersion(jdkDownloadMatcher.group(2).replaceFirst(/(?:\.0)+$/, ''))
+            if (imageJavaVersion.feature() != minimumJavaVersion.feature() ||
+                    !isAtLeastJavaVersion(imageJavaVersion, minimumJavaVersion)) {
+                violations << "Dockerfile Corretto JDK must be Java ${minimumJavaVersion.feature()} at or above ${minimumJavaVersion}"
+            }
+        }
+        if (!text.contains('tar -xzf /tmp/corretto.tar.gz --strip-components=1 -C /opt/java/openjdk') ||
+                !trimmedLines.contains('ENV JAVA_HOME=/opt/java/openjdk') ||
+                !trimmedLines.contains('ENV PATH="${JAVA_HOME}/bin:${PATH}"')) {
+            violations << 'Dockerfile must install and select the pinned Corretto JDK at /opt/java/openjdk'
         }
         if (!(snapshotLine ==~ /^ARG UBUNTU_APT_SNAPSHOT=\d{8}T\d{6}Z$/)) {
             violations << 'Dockerfile must define UBUNTU_APT_SNAPSHOT as an exact UTC timestamp, for example 20260501T000000Z'
@@ -1817,9 +1858,6 @@ tasks.register('verifyReleaseBuilderImage') {
         }
         if (!text.contains('Legacy Ubuntu apt source must be snapshot-pinned')) {
             violations << 'Dockerfile must fail if an active legacy Ubuntu apt source remains without snapshot=yes'
-        }
-        if (!text.contains('rm -f /etc/apt/sources.list.d/zulu.list')) {
-            violations << 'Dockerfile must remove the unused Azul apt source before apt-get update'
         }
         if (!text.contains('apt-get install -y --no-install-recommends ca-certificates')) {
             violations << 'Dockerfile must bootstrap ca-certificates from the pinned HTTPS apt snapshot'
@@ -1887,7 +1925,7 @@ tasks.register('verifyReleaseBuilderImage') {
 
 tasks.register('verifyGithubActionsSecurity') {
     group = 'verification'
-    description = 'Verifies GitHub Actions workflows use pinned actions and non-floating build environments.'
+    description = 'Verifies GitHub Actions workflows use pinned actions and the release build environment.'
 
     def workflowFiles = fileTree('.github/workflows') {
         include '*.yml'
@@ -1896,26 +1934,13 @@ tasks.register('verifyGithubActionsSecurity') {
 
     inputs.files(workflowFiles)
     inputs.property('expectedReleaseJavaVersion', expectedReleaseJavaVersion)
-    inputs.property('expectedReleaseJavaRuntimeVersion', expectedReleaseJavaRuntimeVersion)
     outputs.upToDateWhen { false }
 
     doLast {
         def violations = []
-        def expectedJavaVersion = expectedReleaseJavaVersion.get()
-        def expectedJavaRuntimeVersion = expectedReleaseJavaRuntimeVersion.get()
-        def expectedJavaBuildVersion = expectedJavaRuntimeVersion.replaceFirst(/-LTS$/, '')
-        // Compared by version numbers: 21.0.13+9-LTS and 21.0.13.0.3+1-LTS are both builds of the update 21.0.13
-        def isBuildOf = { String runtimeVersion, String javaVersion ->
-            try {
-                def updateNumbers = Runtime.Version.parse(javaVersion).version()
-                return Runtime.Version.parse(runtimeVersion).version().take(updateNumbers.size()) == updateNumbers
-            } catch (IllegalArgumentException ignored) {
-                return false
-            }
-        }
-        if (!isBuildOf(expectedJavaRuntimeVersion, expectedJavaVersion)) {
-            violations << "releaseBuild.javaRuntimeVersion ${expectedJavaRuntimeVersion} is no build of releaseBuild.javaVersion ${expectedJavaVersion}"
-        }
+        // CI requests the feature version with check-latest, so each runner gets the newest Corretto build for its platform.
+        // verifyReleaseEnvironment then checks it against the minimum releaseBuild.javaVersion.
+        def expectedJavaFeatureVersion = parseMinimumJavaVersion(expectedReleaseJavaVersion.get()).feature().toString()
         workflowFiles.files.sort { left, right -> left.path <=> right.path }.each { workflowFile ->
             def lines = workflowFile.readLines(StandardCharsets.UTF_8.name())
             lines.eachWithIndex { line, index ->
@@ -1945,6 +1970,24 @@ tasks.register('verifyGithubActionsSecurity') {
                             violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses actions/checkout without persist-credentials: false"
                         }
                     }
+
+                    if (actionRef.startsWith('actions/setup-java@')) {
+                        def setupJavaStepLines = []
+                        for (int nextLineIndex = index + 1; nextLineIndex < lines.size(); nextLineIndex++) {
+                            def nextLine = lines[nextLineIndex]
+                            if (nextLine ==~ /^\s*-\s+(name|uses):\s+.*/) {
+                                break
+                            }
+                            setupJavaStepLines << nextLine
+                        }
+
+                        if (!setupJavaStepLines.any { it ==~ /^\s*distribution:\s*['"]?corretto['"]?\s*$/ }) {
+                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses actions/setup-java without distribution: corretto"
+                        }
+                        if (!setupJavaStepLines.any { it ==~ /^\s*check-latest:\s*true\s*$/ }) {
+                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses actions/setup-java without check-latest: true"
+                        }
+                    }
                 }
 
                 if (line ==~ /(?i).*\b(ubuntu|macos|windows)-latest\b.*/) {
@@ -1954,12 +1997,8 @@ tasks.register('verifyGithubActionsSecurity') {
                 def javaVersionMatcher = line =~ /^\s*java-version:\s*([^#]+?)(?:\s+#.*)?$/
                 if (javaVersionMatcher.matches()) {
                     def javaVersion = javaVersionMatcher.group(1).trim().replaceAll(/^['"]|['"]$/, '')
-                    if (!javaVersion.startsWith('${{')) {
-                        if (!(javaVersion ==~ /\d+(?:\.\d+){2,}\+\d+/)) {
-                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating Java version: ${line.trim()}"
-                        } else if (javaVersion != expectedJavaBuildVersion) {
-                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses Java version ${javaVersion} but releaseBuild.javaRuntimeVersion is ${expectedJavaRuntimeVersion}"
-                        }
+                    if (!javaVersion.startsWith('${{') && javaVersion != expectedJavaFeatureVersion) {
+                        violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses Java version ${javaVersion} but must use the feature version ${expectedJavaFeatureVersion} of releaseBuild.javaVersion"
                     }
                 }
 
@@ -1967,16 +2006,10 @@ tasks.register('verifyGithubActionsSecurity') {
                 if (javaMatrixMatcher.matches()) {
                     javaMatrixMatcher.group(1).split(',').each { value ->
                         def javaVersion = value.trim().replaceAll(/^['"]|['"]$/, '')
-                        if (!(javaVersion ==~ /\d+(?:\.\d+){2,}\+\d+/)) {
-                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating Java matrix version: ${javaVersion}"
-                        } else if (javaVersion != expectedJavaBuildVersion) {
-                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses Java matrix version ${javaVersion} but releaseBuild.javaRuntimeVersion is ${expectedJavaRuntimeVersion}"
+                        if (javaVersion != expectedJavaFeatureVersion) {
+                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses Java matrix version ${javaVersion} but must use the feature version ${expectedJavaFeatureVersion} of releaseBuild.javaVersion"
                         }
                     }
-                }
-
-                if (line ==~ /^\s*check-latest:\s*true\s*$/) {
-                    violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} sets check-latest: true"
                 }
             }
         }
@@ -1992,7 +2025,7 @@ tasks.register('verifyGithubActionsSecurity') {
                     'name: Linux Release Builder',
                     '  workflow_dispatch:',
                     'runs-on: ubuntu-24.04',
-                    'docker build --pull=false -t bisq-release-builder-linux:java-21.0.13 docker/release-builder/linux',
+                    'docker build --pull=false -t bisq-release-builder-linux:java-21 docker/release-builder/linux',
                     'git worktree add --detach build/release-builder-worktrees/a "$GITHUB_SHA"',
                     'git worktree add --detach build/release-builder-worktrees/b "$GITHUB_SHA"',
                     'git -C build/release-builder-worktrees/a submodule update --init --recursive',
@@ -2009,8 +2042,8 @@ tasks.register('verifyGithubActionsSecurity') {
                     '-PrightReleaseEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/release-evidence.zip"',
                     '-PleftInstallerEvidence=build/reports/release/installer-evidence.zip \\',
                     '-PrightInstallerEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/installer-evidence.zip"',
-                    'release-builder-linux-java-21.0.13',
-                    'release-builder-linux-installers-java-21.0.13',
+                    'release-builder-linux-java-21',
+                    'release-builder-linux-installers-java-21',
                     'build/release-builder-worktrees/a/build/reports/release/release-evidence.zip',
                     'build/release-builder-worktrees/a/build/reports/release/installer-evidence.zip',
                     'build/release-builder-worktrees/a/build/reports/release/installer-structure-summary.txt',
@@ -2566,11 +2599,11 @@ tasks.register('generateInstallerEvidenceBundle', Zip) {
     }
     def structureDirectoryFiles = {
         def structureDir = installerStructureReportDir.get().asFile
-        structureDir.directory
-                ? fileTree(structureDir).files
-                .findAll { it.file }
-                .sort { left, right -> left.path <=> right.path }
-                : []
+        def files = []
+        if (structureDir.directory) {
+            structureDir.eachFileRecurse(groovy.io.FileType.FILES) { files << it }
+        }
+        files.sort { left, right -> left.path <=> right.path }
     }
 
     archiveFileName = 'installer-evidence.zip'
@@ -3027,7 +3060,7 @@ tasks.register('signReleaseArtifacts') {
             throw new GradleException("No release artifacts found to sign in ${releaseDir}")
         }
 
-        def gpgExecutable = resolveGpgExecutable()
+        def gpgExecutable = resolveGpgExecutable(gpgExecutableProperty.orNull ?: gpgExecutableEnvironment.orNull)
         def failureDetails = { result ->
             [result.stderr, result.stdout]
                     .findAll { it != null && !it.trim().empty }
@@ -3470,7 +3503,7 @@ tasks.register('verifyGithubReleaseReadiness') {
             def stdout = new ByteArrayOutputStream()
             def stderr = new ByteArrayOutputStream()
             try {
-                def processResult = exec {
+                def processResult = execOperations.exec {
                     commandLine command
                     standardOutput = stdout
                     errorOutput = stderr
@@ -3490,13 +3523,7 @@ tasks.register('verifyGithubReleaseReadiness') {
             }
         }
 
-        def configuredGpgExecutable = gpgExecutableProperty.orNull ?:
-                gpgExecutableEnvironment.orNull
-        def gpgExecutable = configuredGpgExecutable ?: [
-                '/opt/homebrew/bin/gpg',
-                '/usr/local/bin/gpg',
-                '/usr/bin/gpg'
-        ].find { new File(it).canExecute() } ?: 'gpg'
+        def gpgExecutable = resolveGpgExecutable(gpgExecutableProperty.orNull ?: gpgExecutableEnvironment.orNull)
 
         def parseGpgKeyInfo = { String gpgOutput ->
             def lines = gpgOutput.readLines()

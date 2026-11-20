@@ -105,10 +105,22 @@ dispute-supplied keys does not independently authenticate the contract payout ad
 Admission must additionally authenticate the opener with the role-specific escrow key as defined in
 [`refund-claimant-authentication.md`](refund-claimant-authentication.md).
 
+## Several refund agents
+
+The record of consumed receipts is local to each refund agent. With one active refund agent it covers
+every direct refund. An agent accepts only disputes addressed to itself
+([`contract-dispute-agents.md`](contract-dispute-agents.md)), but the contract is not committed on
+chain: a trader who controls both sides of a trade can write a contract for each registered refund
+agent and present the same funding evidence to each of them. Each agent would then pay once.
+
+Before a second refund agent is activated, the agents must check each other's consumed receipts, at
+least by canonical deposit transaction ID, before each payout, or one of the protocol changes must be
+in place: a shared record of consumed receipts or an agent assignment derived from chain data.
+
 ## Compatibility and historical records
 
 The persisted dispute payout transaction ID is the compatibility-safe receipt marker. Payouts created by older
 releases that stored neither this marker nor the wallet receipt memo cannot always be identified automatically.
 Operators must correlate historical payout transactions before paying an old or restored refund ticket whose receipt
 may already have been used. The independently specified claimant proof adds a serialized dispute field and is required
-for new refund authorization after upgrade, subject to its temporary grace period for legacy records.
+for new refund authorization after upgrade.

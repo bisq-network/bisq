@@ -63,6 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static bisq.core.btc.model.AddressEntry.Context.TRADE_PAYOUT;
+import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
 import static bisq.proto.grpc.GetTradesRequest.Category.CLOSED;
 import static java.lang.String.format;
 
@@ -152,11 +153,17 @@ class CoreTradesService {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
 
-        offerUtil.maybeSetFeePaymentCurrencyPreference(takerFeeCurrencyCode);
-
         var paymentAccount = user.getPaymentAccount(paymentAccountId);
         if (paymentAccount == null)
             throw new IllegalArgumentException(format("payment account with id '%s' not found", paymentAccountId));
+
+        // The desktop lets the taker choose only among the accounts which match the offer
+        if (!isPaymentAccountValidForOffer(offer, paymentAccount))
+            throw new IllegalArgumentException(format("payment account with id '%s' does not match offer with id '%s'",
+                    paymentAccountId,
+                    offer.getId()));
+
+        offerUtil.maybeSetFeePaymentCurrencyPreference(takerFeeCurrencyCode);
 
         verifyIntendedTradeAmountIsInRange(intendedTradeAmount, offer);
 
@@ -203,6 +210,13 @@ class CoreTradesService {
                                 trade.getDepositTxId()));
             }
 
+            // The protocol accepts the confirmation only once and resends the message itself. Later calls would
+            // otherwise look successful while nothing was sent, and they would replace the proof of an XMR payment.
+            if (trade.isFiatSent()) {
+                throw new FailedPreconditionException(
+                        format("payment started was already confirmed for trade '%s'", trade.getId()));
+            }
+
             // Without the seller's payment account payload the buyer has no details to pay
             // to, so a payment started message would tell the seller a payment happened that
             // cannot have happened. The desktop client disables its confirm button on the
@@ -212,6 +226,20 @@ class CoreTradesService {
                 throw new FailedPreconditionException(
                         format("cannot send a payment started message for trade '%s'%n"
                                         + "until the seller's payment account details have been received",
+                                trade.getId()));
+            }
+
+            if (trade.hasMismatchedSellerPaymentRail()) {
+                throw new FailedPreconditionException("Seller payment account details do not match the payment rail of the offer.");
+            }
+
+            // The protocol carries this as a FluentProtocol precondition, which returns
+            // before the task runner holding our handlers is built, so the call would look
+            // successful while nothing was sent.
+            if (!trade.confirmPermitted()) {
+                throw new FailedPreconditionException(
+                        format("cannot send a payment started message for trade '%s'%n"
+                                        + "while the trade is under arbitration",
                                 trade.getId()));
             }
 
@@ -250,6 +278,14 @@ class CoreTradesService {
                 throw new FailedPreconditionException(
                         format("cannot send a payment received confirmation message for trade '%s'%n"
                                         + "until after a trade payment started message has been sent",
+                                trade.getId()));
+            }
+
+            // Same reason as on the buyer side: the protocol precondition cannot report back.
+            if (!trade.confirmPermitted()) {
+                throw new FailedPreconditionException(
+                        format("cannot send a payment received confirmation message for trade '%s'%n"
+                                        + "while the trade is in a dispute",
                                 trade.getId()));
             }
             var tradeProtocol = tradeManager.getTradeProtocol(trade);

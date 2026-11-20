@@ -17,6 +17,7 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.monetary.Volume;
 import bisq.core.payment.TradeLimits;
 
@@ -58,6 +59,15 @@ public final class TradeAmountValidation {
         checkArgument(!tradeAmount.isGreaterThan(TradeLimits.MAX_TRADE_AMOUNT),
                 "Trade amount must not exceed the network max trade amount. tradeAmount=%s, max=%s",
                 tradeAmount.toFriendlyString(), TradeLimits.MAX_TRADE_AMOUNT.toFriendlyString());
+        // In a sell offer the remaining offer amount is the maker's change in the deposit tx. Dust change makes
+        // the deposit tx non-standard, so the network would not relay it. Like the take offer UI, we apply this
+        // to both offer directions.
+        Coin remainingOfferAmount = offerMaxAmount.subtract(tradeAmount);
+        checkArgument(remainingOfferAmount.isZero() || Restrictions.isAboveDust(remainingOfferAmount),
+                "Trade amount must not leave a dust amount of the offer. tradeAmount=%s, offerMaxAmount=%s, " +
+                        "minNonDustOutput=%s",
+                tradeAmount.toFriendlyString(), offerMaxAmount.toFriendlyString(),
+                Restrictions.getMinNonDustOutput().toFriendlyString());
         return tradeAmount;
     }
 

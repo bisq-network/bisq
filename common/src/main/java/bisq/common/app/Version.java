@@ -36,7 +36,7 @@ public class Version {
     // VERSION = 0.5.0 introduces proto buffer for the P2P network and local DB and is a not backward compatible update
     // Therefore all sub versions start again with 1
     // We use semantic versioning with major, minor and patch
-    public static final String VERSION = "1.10.11";
+    public static final String VERSION = "1.10.12";
 
     /**
      * Holds a list of the tagged resource files for optimizing the getData requests.
@@ -46,7 +46,7 @@ public class Version {
     public static final List<String> HISTORICAL_RESOURCE_FILE_VERSION_TAGS = Arrays.asList("1.4.0", "1.5.0", "1.5.2",
             "1.5.5", "1.5.7", "1.6.0", "1.6.3", "1.6.5", "1.7.2", "1.7.4", "1.8.0", "1.8.1", "1.8.3", "1.9.0", "1.9.3",
             "1.9.5", "1.9.6", "1.9.7", "1.9.10", "1.9.11", "1.9.13", "1.9.15", "1.9.16", "1.9.18", "1.9.19", "1.9.20",
-            "1.10.1", "1.10.5", "1.10.8");
+            "1.10.1", "1.10.5", "1.10.8", "1.10.12");
 
     public static int getMajorVersion(String version) {
         return getSubVersion(version, 0);
@@ -81,6 +81,22 @@ public class Version {
             return false;
         else
             return false;
+    }
+
+    // A version in the format major.minor.patch with decimal digits only, which getMajorVersion, getMinorVersion
+    // and getPatchVersion can parse
+    public static boolean isValid(String version) {
+        if (version == null || !version.matches("\\d+\\.\\d+\\.\\d+")) {
+            return false;
+        }
+        try {
+            getMajorVersion(version);
+            getMinorVersion(version);
+            getPatchVersion(version);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     private static int getSubVersion(String version, int index) {

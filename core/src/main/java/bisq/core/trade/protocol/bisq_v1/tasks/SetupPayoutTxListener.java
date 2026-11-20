@@ -49,7 +49,7 @@ public abstract class SetupPayoutTxListener extends TradeTask {
 
     protected abstract void setState();
 
-    protected abstract void validatePayoutTx(Transaction payoutTx);
+    protected abstract void validatePayoutTx(Transaction payoutTx, boolean isConfirmed);
 
     @Override
     protected void run() {
@@ -62,11 +62,15 @@ public abstract class SetupPayoutTxListener extends TradeTask {
                         walletService.getAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT).orElse(null),
                         "Payout address entry must exist. tradeId=%s",
                         id).getAddress();
-                Transaction depositTx = checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
-
-                // check if the payout already happened (ensuring it was > deposit block height, see GH #5725)
-                TransactionConfidence confidence = walletService.getConfidenceForAddressFromBlockHeight(address,
-                        depositTx.getConfidence().getAppearedAtChainHeight());
+                // During a wallet rescan the trade can still be in its persisted, confirmed phase while the
+                // wallet has not reached the deposit block. Watch for the payout as the scan advances.
+                Transaction depositTx = trade.getDepositTx();
+                TransactionConfidence confidence = null;
+                if (depositTx != null &&
+                        depositTx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
+                    confidence = walletService.getConfidenceForAddressFromBlockHeight(address,
+                            depositTx.getConfidence().getAppearedAtChainHeight());
+                }
                 if (!isInNetwork(confidence) || !applyConfidence(confidence)) {
                     confidenceListener = new AddressConfidenceListener(address) {
                         @Override
@@ -98,7 +102,8 @@ public abstract class SetupPayoutTxListener extends TradeTask {
     private boolean applyConfidence(TransactionConfidence confidence) {
         if (trade.getPayoutTx() == null) {
             Transaction walletTx = processModel.getTradeWalletService().getWalletTx(confidence.getTransactionHash());
-            if (!isPayoutTxValid(walletTx)) {
+            boolean isConfirmed = confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING;
+            if (!isPayoutTxValid(walletTx, isConfirmed)) {
                 return false;
             }
             trade.setPayoutTx(walletTx);
@@ -116,9 +121,9 @@ public abstract class SetupPayoutTxListener extends TradeTask {
         return true;
     }
 
-    private boolean isPayoutTxValid(Transaction payoutTx) {
+    private boolean isPayoutTxValid(Transaction payoutTx, boolean isConfirmed) {
         try {
-            validatePayoutTx(payoutTx);
+            validatePayoutTx(payoutTx, isConfirmed);
             return true;
         } catch (Exception e) {
             String txId = payoutTx != null ? payoutTx.getTxId().toString() : "null";

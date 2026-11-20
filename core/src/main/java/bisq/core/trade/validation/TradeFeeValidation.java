@@ -31,8 +31,9 @@ public final class TradeFeeValidation {
     public static final double MAX_MAKER_FEE_DEVIATION_FACTOR = 2; // Max change by factor 2 (expected / 2 or expected * 2)
     public static final double MAX_TAKER_FEE_DEVIATION_FACTOR = 1.5; // Max change by factor 1.5 (expected / 1.5 or expected * 1.5)
 
-    // BSQ trade fee is currently 274.4 BSQ/BTC for taker. With 0.25 BTC limit the fee would be 68.6 BSQ.
-    // If we assume a very high fee of 2000 BSQ/BTC , we would get 500 BSQ as max trade fee.
+    // The DAO taker fee is 497.95 BSQ/BTC since block 969547. A BSQ swap of 0.5 BTC (the hard cap of
+    // TradeLimits.MAX_TRADE_AMOUNT) so pays about 249 BSQ. The ceiling of 500 BSQ is reached at a fee of
+    // 1000 BSQ/BTC for a trade at the hard cap. A higher ceiling only helps once both peers have it.
     // This is only used for setting boundaries.
     public static final int MAX_BSQ_TRADE_FEE = 50000; // 500 BSQ
 

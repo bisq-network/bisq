@@ -67,7 +67,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -81,8 +80,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -548,29 +545,6 @@ class RefundManagerTest {
                         dispute,
                         Coin.valueOf(20_001),
                         Coin.valueOf(5_000)));
-    }
-
-    @Test
-    void legacyGracePreservesPayoutLimitAndEvidenceBinding() {
-        Transaction deposit = tradeTxChain(0).get(2);
-        Transaction payout = delayedPayoutTx(deposit, List.of(new Tuple2<>(24_000L, newAddress())));
-        Dispute legacy = burningManDispute(deposit, List.of());
-        when(legacy.getDelayedPayoutTxId()).thenReturn(payout.getTxId().toString());
-        doReturn(null).when(legacy).getRefundClaimSignature();
-        when(legacy.getRefundClaimOpeningDate()).thenReturn(0L);
-        refundManager.getDisputesAsObservableList().add(legacy);
-        Instant beforeCutoff = Instant.parse("2026-10-31T23:59:59Z");
-        try (var time = mockStatic(Instant.class, CALLS_REAL_METHODS)) {
-            time.when(Instant::now).thenReturn(beforeCutoff);
-            RefundValidationResult validated = refundManager.verifyRefundPayoutAmount(deposit, payout,
-                    legacy, Coin.ZERO, Coin.valueOf(25_000));
-            assertDoesNotThrow(() -> validated.verifyMatches(legacy, Coin.ZERO, Coin.valueOf(25_000)));
-            assertThrows(IllegalArgumentException.class, () -> refundManager.verifyRefundPayoutAmount(deposit, payout,
-                    legacy, Coin.ZERO, Coin.valueOf(25_001)));
-            when(legacy.getTradeTxFee()).thenReturn(5_001L);
-            assertThrows(IllegalArgumentException.class,
-                    () -> validated.verifyMatches(legacy, Coin.ZERO, Coin.valueOf(25_000)));
-        }
     }
 
     @Test

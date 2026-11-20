@@ -25,8 +25,11 @@ import bisq.proto.grpc.OfferInfo;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -68,10 +71,29 @@ public class DaoTestUtils {
      */
     public void generateBlocks(int n) {
         if (n <= 0) return;
-        runBitcoinCli("generatetoaddress", String.valueOf(n), minerAddress);
-        int target = Integer.parseInt(runBitcoinCli("getblockcount").trim());
+        int target = mine(n);
         awaitChainHeight(alice, target, "alice");
         awaitChainHeight(bob, target, "bob");
+    }
+
+    /**
+     * Mine N blocks and wait only until {@code client} sees the new tip. For tests that
+     * stopped the other peer's container. Returns the new chain height.
+     */
+    public int generateBlocksSeenBy(int n, GrpcClient client, String label) {
+        int target = mine(n);
+        awaitChainHeight(client, target, label);
+        return target;
+    }
+
+    private int mine(int n) {
+        runBitcoinCli("generatetoaddress", String.valueOf(n), minerAddress);
+        return chainTip();
+    }
+
+    /** Height of bitcoind's chain tip. */
+    public int chainTip() {
+        return Integer.parseInt(runBitcoinCli("getblockcount").trim());
     }
 
     /**
@@ -128,6 +150,17 @@ public class DaoTestUtils {
     public void awaitChainHeight(GrpcClient client, int targetHeight, String label) {
         await(() -> client.getCycleInfo().getChainHeight() >= targetHeight,
                 30_000, "chain height >= " + targetHeight + " on " + label);
+    }
+
+    /**
+     * After {@link #startContainer}: block until the restarted daemon answers gRPC calls and
+     * has parsed the chain up to bitcoind's tip. The bound matches the runner's
+     * READY_TIMEOUT_SECS for a daemon start.
+     */
+    public void awaitRestartedAtTip(GrpcClient client, String label) {
+        int tip = chainTip();
+        await(() -> client.getCycleInfo().getChainHeight() >= tip,
+                300_000, label + " restarted and parsed up to height " + tip);
     }
 
     /**
@@ -416,7 +449,6 @@ public class DaoTestUtils {
 
     public String runBitcoinCli(String... args) {
         java.util.List<String> cmd = new java.util.ArrayList<>();
-        cmd.add("docker");
         cmd.add("exec");
         cmd.add(bitcoindContainer);
         cmd.add("bitcoin-cli");
@@ -424,25 +456,59 @@ public class DaoTestUtils {
         cmd.add("-rpcuser=bisqdao");
         cmd.add("-rpcpassword=bsq");
         for (String a : args) cmd.add(a);
+        return runDocker(cmd);
+    }
+
+    /**
+     * Stop a stack container (fixed {@code container_name} in dao-compose.yml). The grace
+     * time lets the daemon shut down and persist its data, as a user closing the app would.
+     * The container keeps its volume, so {@link #startContainer} resumes the same node.
+     */
+    public static void stopContainer(String container) {
+        runDocker(java.util.List.of("stop", "--time", "30", container));
+    }
+
+    public static void startContainer(String container) {
+        runDocker(java.util.List.of("start", container));
+    }
+
+    /** Run {@code docker <args>} and return its stdout; throws if it fails or exits non-zero. */
+    public static String runDocker(java.util.List<String> args) {
+        java.util.List<String> cmd = new java.util.ArrayList<>();
+        cmd.add("docker");
+        cmd.addAll(args);
         try {
-            Process p = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-            String out;
-            try (BufferedReader r = new BufferedReader(
-                    new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
-                out = r.lines().collect(Collectors.joining("\n"));
-            }
+            Process p = new ProcessBuilder(cmd).start();
+            // The command's stdout is the return value, so anything the container
+            // runtime writes to stderr must stay out of it. stderr is drained in
+            // parallel: reading it after stdout could block once its pipe fills.
+            // A stderr reader that outlives the process is given up on after the
+            // same timeout the process wait below uses.
+            CompletableFuture<String> errReader =
+                    CompletableFuture.supplyAsync(() -> readFully(p.getErrorStream()));
+            String out = readFully(p.getInputStream());
+            String err = errReader.completeOnTimeout("", 60, TimeUnit.SECONDS).join();
             if (!p.waitFor(60, TimeUnit.SECONDS)) {
                 p.destroyForcibly();
-                throw new IllegalStateException("bitcoin-cli timed out: " + String.join(" ", cmd));
+                throw new IllegalStateException("docker timed out: " + String.join(" ", cmd));
             }
             if (p.exitValue() != 0) {
-                throw new IllegalStateException("bitcoin-cli failed (" + p.exitValue() + "): "
-                        + String.join(" ", cmd) + "\n" + out);
+                throw new IllegalStateException("docker failed (" + p.exitValue() + "): "
+                        + String.join(" ", cmd) + (out.isEmpty() ? "" : "\n" + out)
+                        + (err.isEmpty() ? "" : "\n" + err));
             }
             return out;
         } catch (IOException | InterruptedException ex) {
             if (ex instanceof InterruptedException) Thread.currentThread().interrupt();
-            throw new IllegalStateException("bitcoin-cli invocation failed", ex);
+            throw new IllegalStateException("docker invocation failed: " + String.join(" ", cmd), ex);
+        }
+    }
+
+    private static String readFully(InputStream in) {
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+            return r.lines().collect(Collectors.joining("\n"));
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
         }
     }
 }

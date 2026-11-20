@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.peers.peerexchange.messages;
 
-import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SupportedCapabilitiesMessage;
 import bisq.network.p2p.peers.peerexchange.Peer;
 
@@ -86,11 +85,7 @@ public final class GetPeersResponse extends NetworkEnvelope implements PeerExcha
     public static GetPeersResponse fromProto(protobuf.GetPeersResponse proto, int messageVersion) {
         HashSet<Peer> reportedPeers = proto.getReportedPeersList()
                 .stream()
-                .map(peer -> {
-                    NodeAddress nodeAddress = new NodeAddress(peer.getNodeAddress().getHostName(),
-                            peer.getNodeAddress().getPort());
-                    return new Peer(nodeAddress, Capabilities.fromIntList(peer.getSupportedCapabilitiesList()));
-                })
+                .map(Peer::fromReportedProto)
                 .collect(Collectors.toCollection(HashSet::new));
         return new GetPeersResponse(proto.getRequestNonce(),
                 reportedPeers,

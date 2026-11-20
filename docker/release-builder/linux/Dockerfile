@@ -1,5 +1,14 @@
-# linux/amd64 manifest for docker.io/azul/zulu-openjdk:21.0.13.
-FROM --platform=linux/amd64 azul/zulu-openjdk:21.0.13@sha256:0b489efcb2e9f014b88ddabf3caad826880f76ec7eb6a1c92892cce3c0226ec5
+# Keep Ubuntu's package snapshots for the release tools; pin the Corretto JDK separately.
+FROM --platform=linux/amd64 ubuntu:24.04@sha256:77eb101c607d6e3d4f5ad0c8a02c2136c689b98aba1f359e6502ba517e5c57ec
+
+# Corretto 21.0.13.1.2 includes the fix for CVE-2026-114938.
+ADD --checksum=sha256:2aaa2a9a43143b20ff0b28c8d0da27407b97dc40b160d9a2f60a26965815e948 https://corretto.aws/downloads/resources/21.0.13.1.2/amazon-corretto-21.0.13.1.2-linux-x64.tar.gz /tmp/corretto.tar.gz
+RUN mkdir -p /opt/java/openjdk \
+    && tar -xzf /tmp/corretto.tar.gz --strip-components=1 -C /opt/java/openjdk \
+    && rm /tmp/corretto.tar.gz
+
+ENV JAVA_HOME=/opt/java/openjdk
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 ARG UBUNTU_APT_SNAPSHOT=20260501T000000Z
 
@@ -16,7 +25,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # signatures still authenticate package metadata and packages; the override is
 # removed and package lists are refreshed before installing the main toolchain.
 RUN set -eux; \
-    rm -f /etc/apt/sources.list.d/zulu.list; \
     if [ -f /etc/apt/sources.list ]; then \
         awk ' \
             BEGIN { ubuntu_snapshot_uri = "[[:space:]]https?://(archive|security)\\.ubuntu\\.com/ubuntu/?[[:space:]]" } \

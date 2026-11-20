@@ -17,10 +17,17 @@
 
 package bisq.apitest.dao;
 
+import bisq.cli.GrpcClient;
+
+import bisq.common.app.Version;
+
 import bisq.proto.grpc.DaoPhaseEnum;
 import bisq.proto.grpc.EvaluatedProposalInfo;
 import bisq.proto.grpc.GetVoteResultsReply;
 import bisq.proto.grpc.ProposalInfo;
+
+import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
@@ -57,16 +64,23 @@ public class VoteEdgeCasesTest extends DaoTestBase {
 
     @Test
     public void allIgnoreVotes_proposalRejected() {
-        dao.advanceToPhase(DaoPhaseEnum.DAO_PHASE_PROPOSAL);
+        // Need at least 2 blocks of headroom for the 2 confirmTx calls below.
+        dao.advanceToPhase(DaoPhaseEnum.DAO_PHASE_PROPOSAL, 2);
         ProposalInfo p = alice.createGenericProposal("ev-ignore", "https://x.test/ig");
         dao.confirmTx(p.getTxId());
+        // Both accept this one, so its evaluated proposal shows that the result was computed from both votes
+        ProposalInfo control = alice.createGenericProposal("ev-ignore-control", "https://x.test/igc");
+        dao.confirmTx(control.getTxId());
 
         dao.advanceToPhase(DaoPhaseEnum.DAO_PHASE_BLIND_VOTE);
         DaoTestUtils.await(() -> bob.getBallots().getBallotsList().stream()
-                        .anyMatch(b -> b.getProposal().getTxId().equals(p.getTxId())),
-                60_000, "bob sees ballot");
+                        .filter(b -> Set.of(p.getTxId(), control.getTxId()).contains(b.getProposal().getTxId()))
+                        .count() == 2,
+                60_000, "bob sees both ballots");
         alice.setVote(p.getTxId(), "ignore");
         bob.setVote(p.getTxId(), "ignore");
+        alice.setVote(control.getTxId(), "accept");
+        bob.setVote(control.getTxId(), "accept");
         String aBv = alice.publishBlindVote(50_000L);
         String bBv = bob.publishBlindVote(50_000L);
         dao.confirmTx(alice, aBv);
@@ -78,11 +92,32 @@ public class VoteEdgeCasesTest extends DaoTestBase {
         dao.advanceToPhase(DaoPhaseEnum.DAO_PHASE_RESULT);
         dao.generateBlocks(1);
 
-        EvaluatedProposalInfo eval = find(p.getTxId());
-        assertFalse(eval.getIsAccepted(), "all ignore → rejected (no active votes)");
-        assertEquals(0, eval.getNumAcceptedVotes());
-        assertEquals(0, eval.getNumRejectedVotes());
-        assertTrue(eval.getNumIgnoredVotes() >= 2);
+        // A proposal without any accept or reject vote gets no evaluated proposal, see
+        // docs/specifications/dao/vote-result-validation.md. Like a proposal without any
+        // blind vote, it is functionally rejected.
+        for (GrpcClient node : List.of(alice, bob)) {
+            String name = node == alice ? "alice" : "bob";
+            List<EvaluatedProposalInfo> evaluated = node.getVoteResults(-1).getEvaluatedProposalsList();
+            var ignored = evaluated.stream()
+                    .filter(e -> e.getProposal().getTxId().equals(p.getTxId()))
+                    .findFirst();
+            if (Version.isNewVersion("1.10.12", node.getVersion())) {
+                // Older peers keep an evaluated rejection for the all-ignore proposal.
+                EvaluatedProposalInfo rejection = ignored.orElseThrow();
+                assertFalse(rejection.getIsAccepted(), name);
+                assertEquals(0, rejection.getNumAcceptedVotes(), name);
+                assertEquals(0, rejection.getNumRejectedVotes(), name);
+                assertTrue(rejection.getNumIgnoredVotes() >= 2, name);
+            } else {
+                assertTrue(ignored.isEmpty(), "all-ignore proposal must not be in evaluated list of " + name);
+            }
+            EvaluatedProposalInfo controlResult = evaluated.stream()
+                    .filter(e -> e.getProposal().getTxId().equals(control.getTxId()))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("no eval for the control proposal at " + name));
+            assertEquals(2, controlResult.getNumAcceptedVotes(), "accepted votes of the control proposal at " + name);
+            assertEquals(0, controlResult.getNumRejectedVotes(), "rejected votes of the control proposal at " + name);
+        }
     }
 
     @Test

@@ -92,7 +92,8 @@ public abstract class BsqSwapOfferDataModel extends ActivatableDataModel {
     }
 
     public boolean canPlaceOrTakeOffer() {
-        return GUIUtil.isBootstrappedOrShowPopup(p2PService);
+        return GUIUtil.isBootstrappedOrShowPopup(p2PService) &&
+                GUIUtil.isDaoStateInSyncOrShowPopup();
     }
 
     public void calculateAmount() {

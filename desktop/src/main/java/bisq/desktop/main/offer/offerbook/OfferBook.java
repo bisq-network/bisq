@@ -170,11 +170,15 @@ public class OfferBook {
     }
 
     private void removeDuplicateItem(OfferBookListItem newOfferBookListItem) {
-        String offerId = newOfferBookListItem.getOffer().getId();
+        Offer newOffer = newOfferBookListItem.getOffer();
+        String offerId = newOffer.getId();
         // We need to remove any view items with a matching offerId before
         // a newOfferBookListItem is added to the view.
+        // Only an offer of the same owner replaces a listed offer, for example after the owner edited it. Anyone can
+        // publish an offer with the ID of another offer, but must not remove that offer from the offer book with it.
         List<OfferBookListItem> duplicateItems = offerBookListItems.stream()
                 .filter(item -> item.getOffer().getId().equals(offerId))
+                .filter(item -> item.getOffer().getOwnerPubKey().equals(newOffer.getOwnerPubKey()))
                 .collect(Collectors.toList());
         duplicateItems.forEach(oldOfferItem -> {
             offerBookListItems.remove(oldOfferItem);

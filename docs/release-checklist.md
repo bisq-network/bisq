@@ -18,14 +18,14 @@ release date. Some checks in that section also need a synced mainnet node.
 
 ## Step 1: Update the version number
 
-Ten values in eight files hold the version. Set `oldVersion` and `newVersion` in
+Eleven values in nine files hold the version. Set `oldVersion` and `newVersion` in
 `desktop/package/macosx/replace_version_number.sh` by hand first, then run that script. It updates
 most of the other files.
 
 | # | File | Line | Value |
 |---|------|------|-------|
 | 1 | `common/src/main/java/bisq/common/app/Version.java` | 39 | `VERSION` |
-| 2 | `build-logic/packaging/src/main/kotlin/bisq/gradle/packaging/PackagingPlugin.kt` | 22 | `APP_VERSION` |
+| 2 | `build-logic/packaging/src/main/kotlin/bisq/gradle/packaging/PackagingPlugin.kt` | 23 | `APP_VERSION` |
 | 3 | `desktop/package/macosx/Info.plist` | 8 | `CFBundleVersion` |
 | 4 | `desktop/package/macosx/Info.plist` | 11 | `CFBundleShortVersionString` |
 | 5 | `desktop/package/macosx/finalize.sh` | 6 | `version=` |
@@ -34,11 +34,12 @@ most of the other files.
 | 8 | `desktop/package/macosx/replace_version_number.sh` | 5 | `oldVersion=` |
 | 9 | `desktop/package/macosx/replace_version_number.sh` | 6 | `newVersion=` |
 | 10 | `desktop/src/main/resources/version.txt` | 1 | The version |
+| 11 | `reproducible-build/rpm/Dockerfile` | 3 | `ARG TAG_NAME=`, the release tag `v<version>` |
 
 The version must have exactly three parts that are separated by a dot. `Version.getSubVersion`
 rejects any other form.
 
-The task `verifyGithubReleaseReadiness` checks only entries 1, 2 and 5. Check the other seven by
+The task `verifyGithubReleaseReadiness` checks only entries 1, 2 and 5. Check the other eight by
 hand, for example with `grep -rn "<old version>"`.
 
 The version number on the website is changed in a separate repository, in `_config.yml` of
@@ -314,19 +315,24 @@ Document: [reproducible-builds/](reproducible-builds/) and
 The build environment is pinned in `gradle.properties`:
 
 ```
-releaseBuild.javaVersion=21.0.13
-releaseBuild.javaVendor=Azul Systems, Inc.
-releaseBuild.javaRuntimeVersion=21.0.13+9-LTS
-releaseBuild.javaVendorVersion=Zulu21.54+107-CA
+releaseBuild.javaVersion=21.0.13.1
+releaseBuild.javaVendor=Amazon.com Inc.
 releaseBuild.gradleVersion=9.0.0
 ```
 
 `verifyReleaseEnvironment` compares these values with the Java virtual machine that runs Gradle, not
-with the Java toolchain. The runtime build, the Zulu build, the vendor and the Gradle version must
-match exactly. The Java update matches when the version numbers of the JVM start with those of
-`releaseBuild.javaVersion`, so `21.0.13.0.3` is a build of `21.0.13`. Run Gradle itself with Azul
-Zulu `21.0.13+9`. GitHub Actions pins the same build because a request for `21.0.13` can resolve a
-newer Zulu build whose `java.version` is `21.0.13.0.3`.
+with the Java toolchain. The vendor and the Gradle version must match exactly. `releaseBuild.javaVersion`
+is the minimum: every Corretto build of Java 21 at or above it passes, so `21.0.13.1+2` and `21.0.14+7`
+pass, and `21.0.13+9` fails.
+
+Build the installers with the newest Amazon Corretto 21 build that is available for each OS. The installers
+bundle it as their runtime. The build info records the exact runtime and Corretto build. Raise
+`releaseBuild.javaVersion` before the build when the release must not ship without a fix of a newer
+Java build, for example a security fix.
+
+The project does not enable the Gradle build cache. If you enabled it in `~/.gradle/gradle.properties`,
+pass `--no-build-cache` for release and evidence builds. Restored task outputs are not covered by
+dependency verification and would hide non-determinism in a two-build comparison.
 
 1. Verify the build and produce the evidence files:
 
@@ -345,16 +351,16 @@ newer Zulu build whose `java.version` is `21.0.13.0.3`.
    ```
 
    The installer tasks are `:desktop:generateInstallers` (disk image on macOS, executable installer
-   on Windows), `:desktop:deb` and `:desktop:rpm`.
+   on Windows, DEB and RPM on Linux), `:desktop:deb` and `:desktop:rpm`.
    On Windows the WiX toolset must be installed and must be on the search path.
 
 3. Optional, for a second independent build in a container:
 
    ```
-   docker build --pull=false -t bisq-release-builder-linux:java-21.0.13 docker/release-builder/linux
+   docker build --pull=false -t bisq-release-builder-linux:java-21 docker/release-builder/linux
    docker run --rm --platform linux/amd64 --user "$(id -u):$(id -g)" \
      -v "$PWD:/workspace" -w /workspace \
-     bisq-release-builder-linux:java-21.0.13 \
+     bisq-release-builder-linux:java-21 \
      ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
    ```
 
@@ -500,7 +506,9 @@ Document: [in-app-update-download.md](in-app-update-download.md)
 2. Send the update message. The application does not poll for a new version. It receives a signed
    alert over the peer-to-peer network. Start the alert sender application (`Cmd + M`), remove the
    old version, select the update option, enter the version number and add the short release notes.
-   Leave the application running for about one minute so that the message spreads well, then make a
+   Send it from the new release: nodes ignore an alert without the alert signature, which earlier
+   versions do not add (see `docs/specifications/application/alert-admission.md`). Leave the
+   application running for about one minute so that the message spreads well, then make a
    backup of its data directory.
 
 3. Sign the source code archive for Arch Linux. GitHub creates the archive, so this is only possible
@@ -528,6 +536,7 @@ Document: [in-app-update-download.md](in-app-update-download.md)
 | `desktop/package/macosx/Info.plist` | Yes | `replace_version_number.sh` |
 | `desktop/package/macosx/{finalize,copy_dbs,insert_snapshot_version,replace_version_number}.sh` | Yes | By hand or `replace_version_number.sh` |
 | `desktop/src/main/resources/version.txt` | Yes | `replace_version_number.sh` |
+| `reproducible-build/rpm/Dockerfile` (`TAG_NAME` default) | Yes | `replace_version_number.sh` |
 | `p2p/src/main/resources/DaoStateStore_BTC_MAINNET` | Yes | `copy_dbs.sh` |
 | `p2p/src/main/resources/BsqBlocks_BTC_MAINNET/` | Yes | `copy_dbs.sh` |
 | `p2p/src/main/resources/SignedWitnessStore_BTC_MAINNET` | Yes | `copy_dbs.sh` |
@@ -565,9 +574,8 @@ rely on a step.
    `desktop-<version>-all-win.jar.SHA-256`, but `finalize.sh` and `createReleaseJarTxt` both need
    them. Create them by hand from the platform jar files.
 
-3. `replace_version_number.sh` also lists file names that no longer exist (`create_app.sh`,
-   `release.sh`, `release.bat`, `package.sh`, `package.bat`). It does not update its own two
-   variables and it does not update `insert_snapshot_version.sh`.
+3. Set `oldVersion` and `newVersion` in `replace_version_number.sh` by hand before running it.
+   The script updates `insert_snapshot_version.sh` as well as the release version files.
 
 4. [verify-download-files.md](verify-download-files.md) names `E222AA02` as the signing key, while
    `desktop/package/signingkey.asc` currently holds `387C8307`.
@@ -576,8 +584,8 @@ rely on a step.
    file.
 
 6. `verifyGithubActionsSecurity` compares fixed text from `release-builder.yml`. If you change that
-   workflow or `releaseBuild.javaVersion`, you must change the workflow, the file
-   `docker/release-builder/linux/Dockerfile` and the expected text in that task together.
+   workflow or the Java feature version of `releaseBuild.javaVersion`, you must change the workflow,
+   the file `docker/release-builder/linux/Dockerfile` and the expected text in that task together.
 
 ---
 
@@ -666,18 +674,60 @@ Historical hard fork heights must not be changed. Only check that they are uncha
 | `core/src/main/java/bisq/core/dao/governance/merit/MeritConsensus.java` | `MERIT_CONSENSUS_V2_ACTIVATION_HEIGHT` | `954_200` |
 | `core/src/main/java/bisq/core/dao/governance/bond/role/BondedRolesRepository.java` | `LEGACY_REGISTRATION_CUTOFF_HEIGHT_MAINNET` | `963_350` |
 
+### Consensus fixes without activation height
+
+Some fixes change the parsing of transactions on which every older node fails, so they need no
+activation height. Their rollout still has an order.
+
+The OP_RETURN type byte `0x00` (`fix(dao): treat the OP_RETURN type byte 0x00 as an unknown type`):
+a node without the fix throws on a BSQ transaction with such an OP_RETURN and keeps a half parsed
+block. Before the release:
+
+1. Update the seed nodes and the other block providers of lite nodes first. A seed node without the
+   fix keeps running after the exception and serves its incomplete block, signed, and updated lite
+   nodes accept it.
+2. Publish the commit only after the seed nodes run the fix, as the change shows how to trigger the
+   failure.
+3. If such a transaction occurred before the release, take the bundled DAO state from a node with
+   the fix, and resync every node which parsed that block with an older release: its snapshots keep
+   the incomplete block and are not parsed again.
+4. After the release, require it for the DAO with the filter field `disableDaoBelowVersion`.
+
+The rule is described in `specifications/dao/transactions/parsing.md` (rule `op-return-type-zero`) on
+branch `dao-bsq-transaction-specs`, which is not merged yet.
+
+### Rules without an activation height
+
+Some DAO rules apply from the release on, without an activation height. Nodes of an earlier release
+still apply the old rule, so all seed nodes must run the release before the first block at which the
+two rules give different results. A seed node of an earlier release then reports another DAO state
+hash, and every node of the release which compares hashes with it is in conflict (see
+[specifications/dao/seed-node-state-hashes.md](specifications/dao/seed-node-state-hashes.md)); a
+resync of those nodes does not resolve it.
+
+| Rule | Specification | Deadline for the seed nodes |
+|------|---------------|-----------------------------|
+| A proposal without an accept or reject vote is not part of the vote result (v1.10.12) | [specifications/dao/vote-result-validation.md](specifications/dao/vote-result-validation.md) | The first RESULT block after the release: block `978 897` for the cycle which started at `974 227`, unless a vote changes the phase durations |
+
+A seed node which processed the RESULT block `969 537` while running an earlier release recorded the
+proposal without votes. If its DAO state still holds it, the checkpoints at `970 000` and `971 000`,
+shipped since v1.10.10, remove its DAO data at its next start, and it must be restarted once.
+
 ### Activation dates
 
 Some rules activate on a calendar date instead of a block height. Check that the release ships before
 the date, and remove the compatibility code once a date has passed.
 
-| File | Line | Constant | Date |
-|------|------|----------|------|
-| `core/src/main/java/bisq/core/support/dispute/messages/DisputeMessage.java` | 41 | `SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE` | 2026-09-01 |
-| `core/src/main/java/bisq/core/trade/model/bisq_v1/Contract.java` | 69 | `DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE` | 2026-08-01 |
+No rule activates on a calendar date at the moment.
 
-`core/src/main/java/bisq/core/support/dispute/DisputeValidation.java` carries a `TODO` to remove the
-legacy contract fallback after the dispute agent public key date has passed.
+### Compatibility code for older releases
+
+Code that exists only for nodes of older releases is marked with a comment that starts with
+`Compatibility with v<version> and earlier:`, followed by the change that becomes possible. When a
+release is no longer supported, search for its marker, for example
+`grep -rn "Compatibility with v1.10.11 and earlier" --include=*.java .`, and decide for each place
+whether the change can be made. Some changes also wait until no trade or dispute of that release
+is open anymore. `grep -rn "Compatibility with v"` lists all markers.
 
 ### Values in the trade protocol that must stay identical between peers
 

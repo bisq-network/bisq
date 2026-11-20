@@ -19,6 +19,7 @@ package bisq.desktop.main.account.content.fiataccounts;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.AchTransferForm;
 import bisq.desktop.components.paymentmethods.AdvancedCashForm;
@@ -32,6 +33,7 @@ import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.CelPayForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
+import bisq.desktop.components.paymentmethods.CustomPaymentMethodForm;
 import bisq.desktop.components.paymentmethods.DomesticWireTransferForm;
 import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
@@ -62,6 +64,7 @@ import bisq.desktop.components.paymentmethods.SbpForm;
 import bisq.desktop.components.paymentmethods.SepaForm;
 import bisq.desktop.components.paymentmethods.SepaInstantForm;
 import bisq.desktop.components.paymentmethods.SpecificBankForm;
+import bisq.desktop.components.paymentmethods.StableCoinForm;
 import bisq.desktop.components.paymentmethods.StrikeForm;
 import bisq.desktop.components.paymentmethods.SwiftForm;
 import bisq.desktop.components.paymentmethods.SwishForm;
@@ -113,12 +116,14 @@ import bisq.core.payment.AustraliaPayidAccount;
 import bisq.core.payment.CashByMailAccount;
 import bisq.core.payment.CashDepositAccount;
 import bisq.core.payment.ClearXchangeAccount;
+import bisq.core.payment.CustomPaymentMethodAccount;
 import bisq.core.payment.F2FAccount;
 import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.MoneyGramAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
 import bisq.core.payment.RevolutAccount;
+import bisq.core.payment.StableCoinAccount;
 import bisq.core.payment.USPostalMoneyOrderAccount;
 import bisq.core.payment.WesternUnionAccount;
 import bisq.core.payment.payload.PaymentMethod;
@@ -142,16 +147,18 @@ import javax.inject.Named;
 import javafx.stage.Stage;
 
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Separator;
 import javafx.scene.input.Clipboard;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
+
 import javafx.collections.ObservableList;
 
 import javafx.util.StringConverter;
@@ -160,6 +167,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.GUIUtil.getComboBoxButtonCell;
 
 @FxmlView
 public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccountsViewModel> {
@@ -189,7 +197,12 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private final TransferwiseValidator transferwiseValidator;
     private final SbpValidator sbpValidator;
     private final CoinFormatter formatter;
-    private ComboBox<PaymentMethod> paymentMethodComboBox;
+    private AutocompleteComboBox<PaymentMethod> paymentMethodComboBox;
+    private AutocompleteComboBox<PaymentMethod> stableCoinComboBox;
+    private CheckBox customPaymentMethodCheckBox;
+    // The rows of the group of a new account and of its last selector of the payment method
+    private int accountGroupGridRow;
+    private int selectorsLastGridRow;
     private PaymentMethodForm paymentMethodForm;
     private TitledGroupBg accountTitledGroupBg;
     private Button saveNewAccountButton;
@@ -304,10 +317,27 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                     .actionButtonText(Res.get("shared.iUnderstand"))
                     .onAction(() -> doSaveNewAccount(paymentAccount))
                     .show();
+        } else if (paymentAccount instanceof StableCoinAccount) {
+            // A stablecoin transfer has no chargeback risk so we don't show the text from payment.limits.info.
+            new Popup().information(Res.get("payment.stablecoin.info.account"))
+                    .width(900)
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .actionButtonText(Res.get("shared.iUnderstand"))
+                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                    .show();
         } else if (paymentAccount instanceof HalCashAccount) {
             // HalCash has no chargeback risk so we don't show the text from payment.limits.info.
             new Popup().information(Res.get("payment.halCash.info"))
                     .width(700)
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .actionButtonText(Res.get("shared.iUnderstand"))
+                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                    .show();
+        } else if (paymentAccount instanceof CustomPaymentMethodAccount) {
+            // The trade limit of a custom payment method does not depend on the account age, so we show its own
+            // warning instead of the text from payment.limits.info.
+            new Popup().warning(Res.get("payment.custom.info", formatter.formatCoinWithCode(maxTradeLimitAsCoin)))
+                    .width(900)
                     .closeButtonText(Res.get("shared.cancel"))
                     .actionButtonText(Res.get("shared.iUnderstand"))
                     .onAction(() -> doSaveNewAccount(paymentAccount))
@@ -451,17 +481,26 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         paymentAccountsListView.getSelectionModel().clearSelection();
         removeAccountRows();
         addAccountButton.setDisable(true);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
-        paymentMethodComboBox = FormBuilder.addComboBox(root, gridRow, Res.get("shared.selectPaymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        paymentMethodComboBox.setVisibleRowCount(11);
-        paymentMethodComboBox.setPrefWidth(250);
-        @SuppressWarnings("deprecation") List<PaymentMethod> list = PaymentMethod.getPaymentMethods().stream()
+        accountGroupGridRow = ++gridRow;
+        accountTitledGroupBg = addTitledGroupBg(root, accountGroupGridRow, 2, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
+
+        // Stablecoins and the custom payment method have their own selectors, so the list of the other payment
+        // methods stays short enough to scan. Selecting in one selector clears the others.
+        @SuppressWarnings("deprecation") List<PaymentMethod> fiatPaymentMethods = PaymentMethod.getPaymentMethods().stream()
                 .filter(PaymentMethod::isFiat)
                 .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.VERSE_ID)) // Verse not existing anymore
+                .collect(Collectors.toList());
+        List<PaymentMethod> regularPaymentMethods = fiatPaymentMethods.stream()
+                .filter(paymentMethod -> !paymentMethod.isStableCoin() && !paymentMethod.isCustom())
                 .sorted()
                 .collect(Collectors.toList());
-        paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));
-        paymentMethodComboBox.setConverter(new StringConverter<>() {
+        // Sorted by name, which keeps the networks of a coin together
+        List<PaymentMethod> stableCoinPaymentMethods = fiatPaymentMethods.stream()
+                .filter(PaymentMethod::isStableCoin)
+                .sorted()
+                .collect(Collectors.toList());
+
+        StringConverter<PaymentMethod> converter = new StringConverter<>() {
             @Override
             public String toString(PaymentMethod paymentMethod) {
                 return paymentMethod != null ? Res.get(paymentMethod.getId()) : "";
@@ -469,35 +508,130 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
             @Override
             public PaymentMethod fromString(String s) {
-                return null;
+                return fiatPaymentMethods.stream()
+                        .filter(paymentMethod -> toString(paymentMethod).equals(s))
+                        .findAny()
+                        .orElse(null);
+            }
+        };
+        // The list of payment methods is long, so it can be searched
+        paymentMethodComboBox = addPaymentMethodSelector(gridRow, Res.get("shared.paymentMethod"),
+                Res.get("payment.select.paymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE, converter);
+        stableCoinComboBox = addPaymentMethodSelector(++gridRow, Res.get("payment.stablecoin.coin"),
+                Res.get("payment.select.stablecoin"), 0, converter);
+        resetPaymentMethodSelector(paymentMethodComboBox, regularPaymentMethods, Res.get("payment.select.paymentMethod"));
+        resetPaymentMethodSelector(stableCoinComboBox, stableCoinPaymentMethods, Res.get("payment.select.stablecoin"));
+
+        customPaymentMethodCheckBox = addCheckBox(root, ++gridRow, Res.get("payment.custom.select"), 10);
+
+        // Separates the selectors from the form of the selected payment method
+        Separator separator = new Separator();
+        GridPane.setRowIndex(separator, ++gridRow);
+        GridPane.setMargin(separator, new Insets(10, 0, 0, 0));
+        root.getChildren().add(separator);
+
+        selectorsLastGridRow = gridRow;
+        GridPane.setRowSpan(accountTitledGroupBg, getSelectorsRowSpan());
+
+        // Not onAction, which fires on every change of the search text
+        paymentMethodComboBox.setOnChangeConfirmed(e -> {
+            PaymentMethod selected = paymentMethodComboBox.getSelectionModel().getSelectedItem();
+            // An empty search text confirms as well
+            if (selected != null) {
+                resetPaymentMethodSelector(stableCoinComboBox, stableCoinPaymentMethods,
+                        Res.get("payment.select.stablecoin"));
+                customPaymentMethodCheckBox.setSelected(false);
+                onPaymentMethodSelected(selected);
             }
         });
-        paymentMethodComboBox.setOnAction(e -> {
-            if (paymentMethodForm != null) {
-                FormBuilder.removeRowsFromGridPane(root, 3, paymentMethodForm.getGridRow() + 1);
-                GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
-            }
-            gridRow = 2;
-            paymentMethodForm = getPaymentMethodForm(paymentMethodComboBox.getSelectionModel().getSelectedItem());
-            if (paymentMethodForm != null) {
-                if (paymentMethodForm.getPaymentAccount().getMessageForAccountCreation() != null &&
-                        !DevEnv.isIgnorePopupsInDevMode()) {
-                    new Popup().information(Res.get(paymentMethodForm.getPaymentAccount().getMessageForAccountCreation()))
-                            .width(900)
-                            .closeButtonText(Res.get("shared.iUnderstand"))
-                            .show();
-                }
-                paymentMethodForm.addFormForAddAccount();
-                gridRow = paymentMethodForm.getGridRow();
-                Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.saveNewAccount"), Res.get("shared.cancel"));
-                saveNewAccountButton = tuple2.first;
-                saveNewAccountButton.setOnAction(event -> onSaveNewAccount(paymentMethodForm.getPaymentAccount()));
-                saveNewAccountButton.disableProperty().bind(paymentMethodForm.allInputsValidProperty().not());
-                Button cancelButton = tuple2.second;
-                cancelButton.setOnAction(event -> onCancelNewAccount());
-                GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
+        stableCoinComboBox.setOnChangeConfirmed(e -> {
+            PaymentMethod selected = stableCoinComboBox.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                resetPaymentMethodSelector(paymentMethodComboBox, regularPaymentMethods,
+                        Res.get("payment.select.paymentMethod"));
+                customPaymentMethodCheckBox.setSelected(false);
+                onPaymentMethodSelected(selected);
             }
         });
+        customPaymentMethodCheckBox.setOnAction(e -> {
+            if (customPaymentMethodCheckBox.isSelected()) {
+                resetPaymentMethodSelector(paymentMethodComboBox, regularPaymentMethods,
+                        Res.get("payment.select.paymentMethod"));
+                resetPaymentMethodSelector(stableCoinComboBox, stableCoinPaymentMethods,
+                        Res.get("payment.select.stablecoin"));
+                onPaymentMethodSelected(PaymentMethod.CUSTOM);
+            } else {
+                removePaymentMethodForm();
+            }
+        });
+    }
+
+    private AutocompleteComboBox<PaymentMethod> addPaymentMethodSelector(int row,
+                                                                        String title,
+                                                                        String prompt,
+                                                                        double top,
+                                                                        StringConverter<PaymentMethod> converter) {
+        AutocompleteComboBox<PaymentMethod> comboBox = (AutocompleteComboBox<PaymentMethod>)
+                FormBuilder.<PaymentMethod>addLabelAutocompleteComboBox(root, row, title, top).second;
+        comboBox.setButtonCell(getComboBoxButtonCell(prompt, comboBox));
+        comboBox.getEditor().focusedProperty().addListener(observable -> comboBox.setPromptText(""));
+        comboBox.setPrefWidth(320);
+        comboBox.setConverter(converter);
+        return comboBox;
+    }
+
+    // Clears the selection and the search text. The prompt is set again, as focusing the selector removes it.
+    private static void resetPaymentMethodSelector(AutocompleteComboBox<PaymentMethod> comboBox,
+                                                   List<PaymentMethod> items,
+                                                   String prompt) {
+        comboBox.setAutocompleteItems(items);
+        comboBox.setPromptText(prompt);
+    }
+
+    // As before with one selector, the group spans one row more than its selectors.
+    private int getSelectorsRowSpan() {
+        return selectorsLastGridRow - accountGroupGridRow + 2;
+    }
+
+    private void onPaymentMethodSelected(PaymentMethod selectedPaymentMethod) {
+        // Reselecting the current method must keep the entered account data.
+        if (paymentMethodForm != null &&
+                selectedPaymentMethod.equals(paymentMethodForm.getPaymentAccount().getPaymentMethod())) {
+            return;
+        }
+
+        removePaymentMethodForm();
+        paymentMethodForm = getPaymentMethodForm(selectedPaymentMethod);
+        if (paymentMethodForm != null) {
+            if (paymentMethodForm.getPaymentAccount().getMessageForAccountCreation() != null &&
+                    !DevEnv.isIgnorePopupsInDevMode()) {
+                new Popup().information(Res.get(paymentMethodForm.getPaymentAccount().getMessageForAccountCreation()))
+                        .width(900)
+                        .closeButtonText(Res.get("shared.iUnderstand"))
+                        .show();
+            }
+            paymentMethodForm.addFormForAddAccount();
+            gridRow = paymentMethodForm.getGridRow();
+            Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.saveNewAccount"), Res.get("shared.cancel"));
+            saveNewAccountButton = tuple2.first;
+            saveNewAccountButton.setOnAction(event -> onSaveNewAccount(paymentMethodForm.getPaymentAccount()));
+            saveNewAccountButton.disableProperty().bind(paymentMethodForm.allInputsValidProperty().not());
+            Button cancelButton = tuple2.second;
+            cancelButton.setOnAction(event -> onCancelNewAccount());
+            // The form counts its rows from the last selector, the group starts above the selectors.
+            GridPane.setRowSpan(accountTitledGroupBg,
+                    paymentMethodForm.getRowSpan() + 1 + selectorsLastGridRow - accountGroupGridRow);
+        }
+    }
+
+    // Removes the form below the selectors of the payment method, with its buttons.
+    private void removePaymentMethodForm() {
+        if (paymentMethodForm != null) {
+            FormBuilder.removeRowsFromGridPane(root, selectorsLastGridRow + 1, paymentMethodForm.getGridRow() + 1);
+            paymentMethodForm = null;
+        }
+        gridRow = selectorsLastGridRow;
+        GridPane.setRowSpan(accountTitledGroupBg, getSelectorsRowSpan());
     }
 
     // Select account form
@@ -624,6 +758,10 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
     @SuppressWarnings("deprecation")
     private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod, PaymentAccount paymentAccount) {
+        if (paymentMethod.isStableCoin()) {
+            return new StableCoinForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+        }
+
         switch (paymentMethod.getId()) {
             case PaymentMethod.UPHOLD_ID:
                 return new UpholdForm(paymentAccount, accountAgeWitnessService, upholdValidator, inputValidator, root, gridRow, formatter);
@@ -673,6 +811,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new CashDepositForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CASH_BY_MAIL_ID:
                 return new CashByMailForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.CUSTOM_ID:
+                return new CustomPaymentMethodForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.HAL_CASH_ID:
                 return new HalCashForm(paymentAccount, accountAgeWitnessService, halCashValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.F2F_ID:
@@ -745,8 +885,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
     @Override
     protected void removeSelectAccountForm() {
-        FormBuilder.removeRowsFromGridPane(root, 2, gridRow);
-        gridRow = 1;
+        removeAccountRows();
         addAccountButton.setDisable(false);
         paymentAccountsListView.getSelectionModel().clearSelection();
     }
@@ -754,6 +893,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
     private void removeAccountRows() {
         FormBuilder.removeRowsFromGridPane(root, 2, gridRow);
+        paymentMethodForm = null;
         gridRow = 1;
     }
 

@@ -464,7 +464,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         if (item == null) {
             return;
         }
-        if (model.isBootstrappedOrShowPopup()) {
+        if (model.isBootstrappedOrShowPopup() && GUIUtil.isDaoStateInSyncOrShowPopup()) {
             String key = "clonedOfferInfo";
             if (DontShowAgainLookup.showAgain(key)) {
                 new Popup().backgroundInfo(Res.get("offerbook.clonedOffer.info"))
