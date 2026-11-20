@@ -3273,6 +3273,11 @@ tasks.register('verifyGithubReleaseReadiness') {
                 new File(gradleProjectDirectory, 'desktop/package/macosx/finalize.sh'),
                 /(?m)^\s*version="([^"]+)"/
         )
+        checkVersionValue(
+                'insert_snapshot_version.sh version',
+                new File(gradleProjectDirectory, 'desktop/package/macosx/insert_snapshot_version.sh'),
+                /(?m)^version=(\S+)$/
+        )
 
         def installerSourceFile = new File(gradleProjectDirectory, 'desktop/src/main/java/bisq/desktop/main/overlays/windows/downloadupdate/BisqInstaller.java')
         if (!installerSourceFile.file) {
