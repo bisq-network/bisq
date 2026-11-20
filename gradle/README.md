@@ -356,9 +356,8 @@ so Gradle writes it with the current result. Do not remove reasons by hand:
 With the key servers turned on, it refreshes the keys from Gradle's key servers and exports
 the armored keyring to `verification-keyring.keys`, which provides the public keys for
 signature verification and the signer names, emails and key creation dates used by the
-report. Some Gradle and Bouncy Castle combinations may write the keyring and then fail while
-finishing key export; the task accepts that case only if `verification-keyring.keys` was
-updated. A binary keyring (`verification-keyring.gpg`) is not used. The project does not
+report. If the wrapped command exits with an error, the task restores the previous keyring and
+fails, so a partial refresh never replaces it. A binary keyring (`verification-keyring.gpg`) is not used. The project does not
 contain one, and the task warns if one appears.
 
 ### Sources and Javadoc requested by the IDE

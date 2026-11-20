@@ -149,9 +149,9 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `javax.inject:javax.inject:1` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `javax.servlet:javax.servlet-api:3.1.0` | transitive | PGP signed | 2 signed / 0 checksum | `4F7E32D440EF90A83011A8FC6425559C47CC79C4`<br>created 2011-05-21 |
 | `kr.motd.maven:os-maven-plugin:1.7.1` | transitive | PGP signed | 2 signed / 0 checksum | `8858D45BE9B276802318155B96FB9DB219F3338D`<br>Trustin Heuiseung Lee<br>`t@motd.kr`<br>created 2010-06-14 |
-| `net.bytebuddy:byte-buddy-agent:1.17.7` | transitive | PGP signed | 2 signed / 0 checksum | `A7892505CF1A58076453E52D7999BEFBA1039E8B`<br>Rafael Winterhalter<br>`rafael.wth@gmail.com`<br>created 2019-11-07 |
-| `net.bytebuddy:byte-buddy:1.17.7` | transitive | PGP signed | 2 signed / 0 checksum | `A7892505CF1A58076453E52D7999BEFBA1039E8B`<br>Rafael Winterhalter<br>`rafael.wth@gmail.com`<br>created 2019-11-07 |
-| `net.bytebuddy:byte-buddy:1.18.3` | transitive | PGP signed | 2 signed / 0 checksum | `A7892505CF1A58076453E52D7999BEFBA1039E8B`<br>Rafael Winterhalter<br>`rafael.wth@gmail.com`<br>created 2019-11-07 |
+| `net.bytebuddy:byte-buddy-agent:1.17.7` | transitive | PGP signed | 2 signed / 0 checksum | `A7892505CF1A58076453E52D7999BEFBA1039E8B`<br>Rafael Winterhalter<br>`rafael.wth@gmail.com`<br>created 2019-11-08 |
+| `net.bytebuddy:byte-buddy:1.17.7` | transitive | PGP signed | 2 signed / 0 checksum | `A7892505CF1A58076453E52D7999BEFBA1039E8B`<br>Rafael Winterhalter<br>`rafael.wth@gmail.com`<br>created 2019-11-08 |
+| `net.bytebuddy:byte-buddy:1.18.3` | transitive | PGP signed | 2 signed / 0 checksum | `A7892505CF1A58076453E52D7999BEFBA1039E8B`<br>Rafael Winterhalter<br>`rafael.wth@gmail.com`<br>created 2019-11-08 |
 | `net.jcip:jcip-annotations:1.0` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `net.sf.jopt-simple:jopt-simple:5.0.4` | direct | PGP signed | 2 signed / 0 checksum | `517B94F8D0A46317A28D8AB30DA8A5EC02D11EAD`<br>Paul Holser<br>`pholser@alumni.rice.edu`<br>created 2011-05-12 |
 | `org.apache.commons:commons-compress:1.28.0` | direct | PGP signed | 2 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12 |
