@@ -1,0 +1,33 @@
+name: Release Builder Image
+
+# Builds the Linux release-builder image whenever it changes. The evidence run in release-builder.yml is
+# started by hand, so without this job a broken image, for example a Dependabot update of the base image
+# digest past UBUNTU_APT_SNAPSHOT, is only found when a release is built.
+on:
+  push:
+    # Path filters do not apply to tag pushes, so leave tags out.
+    branches: [ '**' ]
+    paths:
+      - "docker/release-builder/**"
+      - ".github/workflows/release-builder-image.yml"
+  pull_request:
+    paths:
+      - "docker/release-builder/**"
+      - ".github/workflows/release-builder-image.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  release-builder-image:
+    name: Build Linux release-builder image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+          persist-credentials: false
+
+    - name: Build Linux release-builder image
+      shell: bash
+      run: docker build --pull=false -t bisq-release-builder-linux:java-21 docker/release-builder/linux
