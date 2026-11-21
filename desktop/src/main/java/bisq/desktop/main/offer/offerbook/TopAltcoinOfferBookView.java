@@ -21,6 +21,7 @@ import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.overlays.windows.BsqSwapOfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
+import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -56,13 +57,13 @@ public class TopAltcoinOfferBookView extends OfferBookView<GridPane, TopAltcoinO
     @Override
     protected String getMarketTitle() {
         return model.getDirection().equals(OfferDirection.BUY) ?
-                Res.get("offerbook.availableOffersToBuy", TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode(), Res.getBaseCurrencyCode()) :
-                Res.get("offerbook.availableOffersToSell", TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode(), Res.getBaseCurrencyCode());
+                Res.get("offerbook.availableOffersToBuy", GUIUtil.TOP_ALTCOIN.getCode(), Res.getBaseCurrencyCode()) :
+                Res.get("offerbook.availableOffersToSell", GUIUtil.TOP_ALTCOIN.getCode(), Res.getBaseCurrencyCode());
     }
 
     @Override
     protected void activate() {
-        model.onSetTradeCurrency(TopAltcoinOfferBookViewModel.TOP_ALTCOIN);
+        model.onSetTradeCurrency(GUIUtil.TOP_ALTCOIN);
 
         super.activate();
 
@@ -72,6 +73,6 @@ public class TopAltcoinOfferBookView extends OfferBookView<GridPane, TopAltcoinO
 
     @Override
     String getTradeCurrencyCode() {
-        return TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode();
+        return GUIUtil.TOP_ALTCOIN.getCode();
     }
 }

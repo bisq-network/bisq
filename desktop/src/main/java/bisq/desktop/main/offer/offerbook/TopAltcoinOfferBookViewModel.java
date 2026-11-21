@@ -55,8 +55,6 @@ import java.util.stream.Collectors;
 
 public class TopAltcoinOfferBookViewModel extends OfferBookViewModel {
 
-    public static TradeCurrency TOP_ALTCOIN = GUIUtil.TOP_ALTCOIN;
-
     @Inject
     public TopAltcoinOfferBookViewModel(User user,
                                         OpenOfferManager openOfferManager,
@@ -82,12 +80,6 @@ public class TopAltcoinOfferBookViewModel extends OfferBookViewModel {
     }
 
     @Override
-    protected void activate() {
-        super.activate();
-        TOP_ALTCOIN = GUIUtil.TOP_ALTCOIN;
-    }
-
-    @Override
     void saveSelectedCurrencyCodeInPreferences(OfferDirection direction, String code) {
         // No need to store anything as it is just one Altcoin offers anyway
     }
@@ -101,8 +93,8 @@ public class TopAltcoinOfferBookViewModel extends OfferBookViewModel {
     @Override
     void fillCurrencies(ObservableList<TradeCurrency> tradeCurrencies,
                         ObservableList<TradeCurrency> allCurrencies) {
-        tradeCurrencies.add(TOP_ALTCOIN);
-        allCurrencies.add(TOP_ALTCOIN);
+        tradeCurrencies.add(GUIUtil.TOP_ALTCOIN);
+        allCurrencies.add(GUIUtil.TOP_ALTCOIN);
     }
 
     @Override
@@ -112,7 +104,7 @@ public class TopAltcoinOfferBookViewModel extends OfferBookViewModel {
             Offer offer = offerBookListItem.getOffer();
             // BUY Altcoin is actually SELL Bitcoin
             boolean directionResult = offer.getDirection() == direction;
-            boolean currencyResult = offer.getCurrencyCode().equals(TOP_ALTCOIN.getCode());
+            boolean currencyResult = offer.getCurrencyCode().equals(GUIUtil.TOP_ALTCOIN.getCode());
             boolean paymentMethodResult = isMatchingSelectedPaymentMethod(offer);
             boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
             return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
@@ -121,11 +113,11 @@ public class TopAltcoinOfferBookViewModel extends OfferBookViewModel {
 
     @Override
     TradeCurrency getDefaultTradeCurrency() {
-        return TOP_ALTCOIN;
+        return GUIUtil.TOP_ALTCOIN;
     }
 
     @Override
     String getCurrencyCodeFromPreferences(OfferDirection direction) {
-        return TOP_ALTCOIN.getCode();
+        return GUIUtil.TOP_ALTCOIN.getCode();
     }
 }
