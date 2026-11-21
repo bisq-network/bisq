@@ -618,8 +618,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                             removeButton.setOnAction(e -> {
                                 if (item.equals(preferences.getPreferredTradeCurrency())) {
                                     new Popup().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
-                                }
-                                if (item.equals(GUIUtil.BSQ) || item.equals(GUIUtil.TOP_ALTCOIN)) {
+                                } else if (item.equals(GUIUtil.BSQ) || item.equals(GUIUtil.TOP_ALTCOIN)) {
                                     new Popup().warning(Res.get("setting.preferences.cannotRemoveMainAltcoinCurrency")).show();
                                 } else {
                                     preferences.removeCryptoCurrency(item);
