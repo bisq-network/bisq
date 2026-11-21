@@ -22,7 +22,8 @@ The build info of a release records the exact runtime and Corretto build.
 GitHub Actions requests Java `21` with `distribution: corretto` and `check-latest: true`, so each runner gets the newest
 Corretto build for its platform. `verifyGithubActionsSecurity` requires this for every `actions/setup-java` step.
 The release-builder image pins Ubuntu 24.04 by digest and downloads the Corretto JDK by version and SHA-256 checksum.
-Dependabot updates the base-image digest. Update the archive URL and checksum when upgrading the release-builder JDK;
+Dependabot updates the base-image digest. A newer base image needs an `UBUNTU_APT_SNAPSHOT` that is not older than its
+packages, otherwise the image build stops. Update the archive URL and checksum when upgrading the release-builder JDK;
 `verifyReleaseBuilderImage` checks that its Java version meets the minimum.
 
 Raise `releaseBuild.javaVersion` when a release must not ship without a fix of a newer Java build, for example a
@@ -220,6 +221,10 @@ Set `releaseBuild.gradleVersion` in `gradle.properties` to the new version and c
 same value in `docs/release-checklist.md`. `verifyReleaseEnvironment` compares it with the
 Gradle version that runs the build and fails if they differ. The release builder image needs
 no change, because its Dockerfile runs `./gradlew`.
+
+`gradle.properties` also sets the internal retry properties `org.gradle.internal.repository.max.tentatives`
+and `org.gradle.internal.repository.initial.backoff`. Gradle ignores a property it no longer reads, so
+check in the new version that the dependency resolution still reads both.
 
 Five files are then ready to be committed, plus `gradle.properties` and the checklist.
 

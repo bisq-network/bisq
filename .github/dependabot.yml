@@ -23,7 +23,8 @@ updates:
     cooldown:
       default-days: 7
     ignore:
-      # Keep the release tools on Ubuntu 24.04 with the existing apt snapshot.
+      # Keep the release tools on Ubuntu 24.04. A new digest also needs a newer UBUNTU_APT_SNAPSHOT; the
+      # Release Builder Image workflow fails on the pull request until the snapshot is moved.
       - dependency-name: "ubuntu"
         update-types: ["version-update:semver-major"]
   - package-ecosystem: "docker"

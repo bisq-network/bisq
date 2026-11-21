@@ -1,15 +1,10 @@
 #!/bin/bash
 
-cd $(dirname $0)/../../../
+cd "$(dirname "$0")/../../../" || exit 1
 
-version=1.10.5
+version=1.10.12
 
+# replace_version_number.sh turns "$version-SNAPSHOT" into the next version in these two files only.
 find . -type f \( -name "finalize.sh" \
--o -name "create_app.sh" \
--o -name "build.gradle" \
--o -name "release.bat" \
--o -name "package.bat" \
--o -name "release.sh" \
--o -name "package.sh" \
 -o -name "version.txt" \
-\) -exec sed -i s/$version/"$version-SNAPSHOT"/ {} +
+\) -exec sed -i -e s/"$version-SNAPSHOT"/$version/ -e s/$version/"$version-SNAPSHOT"/ {} +
