@@ -1472,7 +1472,8 @@ public class GUIUtil {
 
     public static void updateTopAltcoin(Preferences preferences) {
         TradeCurrency tradeCurrency = preferences.getPreferredTradeCurrency();
-        if (CurrencyUtil.isFiatCurrency(tradeCurrency.getCode()) || tradeCurrency.equals(BSQ)) {
+        // Null if persisted preferences were not read, e.g. after a downgrade attempt
+        if (tradeCurrency == null || CurrencyUtil.isFiatCurrency(tradeCurrency.getCode()) || tradeCurrency.equals(BSQ)) {
             return;
         }
         TOP_ALTCOIN = tradeCurrency;

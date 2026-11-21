@@ -171,8 +171,6 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             navigation.navigateTo(MainView.class, this.getClass(), BtcOfferBookView.class);
         }
 
-        GUIUtil.updateTopAltcoin(preferences);
-
         if (topAltcoinOfferBookTab != null) {
             topAltcoinOfferBookTab.setText(GUIUtil.TOP_ALTCOIN.getCode());
         }
