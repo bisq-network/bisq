@@ -128,6 +128,11 @@ public class BuyerSendsShareBuyerPaymentAccountMessage extends SendMailboxMessag
         }
     }
 
+    @Override
+    protected void onCanceled() {
+        cleanup();
+    }
+
     private void cleanup() {
         if (timer != null) {
             timer.stop();
@@ -138,6 +143,10 @@ public class BuyerSendsShareBuyerPaymentAccountMessage extends SendMailboxMessag
     }
 
     private void tryToSendAgainLater() {
+        // A send that was under way can still report its outcome after the task was canceled
+        if (isCanceled()) {
+            return;
+        }
         if (resendCounter >= MAX_RESEND_ATTEMPTS) {
             cleanup();
             failed("We never received an ACK message when sending the msg to the peer. " +

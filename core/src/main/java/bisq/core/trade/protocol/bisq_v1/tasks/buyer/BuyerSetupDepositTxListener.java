@@ -208,6 +208,11 @@ public class BuyerSetupDepositTxListener extends TradeTask {
                 AddressEntry.Context.RESERVED_FOR_TRADE);
     }
 
+    @Override
+    protected void onCanceled() {
+        unSubscribeAndRemoveListener();
+    }
+
     private void unSubscribeAndRemoveListener() {
         if (tradeStateSubscription != null) {
             tradeStateSubscription.unsubscribe();

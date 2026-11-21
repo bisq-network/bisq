@@ -105,12 +105,12 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
 
     // Added in v1.4.0
     // MessageState of the last message sent from the seller to the buyer in the take offer process.
-    // It is used only in a task which would not be executed after restart, so no need to persist it.
+    // It is not persisted: after a restart the seller sends the message again if it was not acknowledged.
     @Setter
     transient private ObjectProperty<MessageState> depositTxMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
 
     // depositTx is not set for maker as buyer. A finalized seller deposit can be restored from
-    // finalizedDepositTx while fiat publication is deferred.
+    // finalizedDepositTx while the publication is deferred.
     @Nullable
     transient private Transaction depositTx;
     // The seller can reach deposit publication from overlapping task runners, for instance from the startup

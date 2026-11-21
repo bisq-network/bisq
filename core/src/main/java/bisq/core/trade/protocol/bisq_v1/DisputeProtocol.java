@@ -119,6 +119,19 @@ public class DisputeProtocol extends TradeProtocol {
         maybeFinalizeMediatedPayout();
     }
 
+    @Override
+    public void shutDown() {
+        super.shutDown();
+        if (mediationResultListener != null) {
+            trade.disputeStateProperty().removeListener(mediationResultListener);
+            mediationResultListener = null;
+        }
+        if (walletReadyListener != null) {
+            processModel.getBtcWalletService().removeNewBestBlockListener(walletReadyListener);
+            walletReadyListener = null;
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TradeProtocol implementation
@@ -300,6 +313,10 @@ public class DisputeProtocol extends TradeProtocol {
     // A newer signature can be handled before the kept one. Once a signature of the peer has passed the check and is
     // stored, the kept message is not needed anymore.
     private void handleKeptMessage(MediatedPayoutTxSignatureMessage message, NodeAddress peer) {
+        // Deferred, so the trade can have left the pending trades meanwhile
+        if (isShutDown()) {
+            return;
+        }
         if (processModel.getTradePeer().getMediatedPayoutTxSignature() != null) {
             log.info("We drop the kept MediatedPayoutTxSignatureMessage as we have stored a signature of the peer " +
                     "already. tradeId={}", trade.getId());
@@ -319,7 +336,8 @@ public class DisputeProtocol extends TradeProtocol {
     // check runs after the current event is handled, at startup after the mailbox messages of the trade.
     private void maybeFinalizeMediatedPayout() {
         UserThread.execute(() -> {
-            if (!isMediatedPayoutReadyToFinalize(trade)) {
+            // Deferred, so the trade can have left the pending trades meanwhile
+            if (isShutDown() || !isMediatedPayoutReadyToFinalize(trade)) {
                 return;
             }
 
