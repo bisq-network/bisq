@@ -2,22 +2,28 @@ package bisq.gradle.regtest_plugin
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.ArchiveOperations
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.Sync
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.jvm.toolchain.JavaToolchainService
 import org.gradle.jvm.toolchain.JvmImplementation
 import org.gradle.jvm.toolchain.JvmVendorSpec
 import org.gradle.kotlin.dsl.register
+import org.gradle.process.CommandLineArgumentProvider
 import java.io.File
 import javax.inject.Inject
 
 @Suppress("unused")
-class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaToolchainService) : Plugin<Project> {
+class RegtestPlugin @Inject constructor(
+    private val javaToolchainService: JavaToolchainService,
+    private val archiveOperations: ArchiveOperations
+) : Plugin<Project> {
 
     companion object {
         const val RPC_USER = "bisqdao"
@@ -26,8 +32,14 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
 
     override fun apply(project: Project) {
         val initialDaoSetupTask = project.tasks.register<Copy>("initialDaoSetup") {
-            from(project.zipTree("docs/dao-setup.zip"))
-            into(project.layout.projectDirectory.dir(".localnet"))
+            val destinationDir: Directory = project.layout.projectDirectory.dir(".localnet")
+
+            onlyIf("Target directory has not been initialized yet") {
+                !destinationDir.asFile.exists()
+            }
+
+            from(archiveOperations.zipTree("docs/dao-setup.zip"))
+            into(destinationDir)
 
             exclude("dao-setup/Bitcoin-regtest/bitcoin.conf")
 
@@ -40,34 +52,54 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
             includeEmptyDirs = false
             duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-            doLast {
-                val blockNotifyFile = project.layout.projectDirectory
-                    .dir(".localnet")
-                    .dir("bitcoind")
-                    .file("blocknotify")
-                    .asFile
-                blockNotifyFile.appendText("echo exit 0")
+            val localnetDir = project.layout.projectDirectory.dir(".localnet")
+            val blockNotifyFile = localnetDir.dir("bitcoind").file("blocknotify")
+            val bitcoind2Dir = localnetDir.dir("bitcoind2")
 
-                project.layout.projectDirectory
-                    .dir(".localnet")
-                    .dir("bitcoind2")
-                    .asFile
+            doLast {
+                blockNotifyFile.asFile
+                    .appendText("echo exit 0")
+
+                bitcoind2Dir.asFile
                     .mkdirs()
             }
         }
 
-        val startFirstBitcoindTask = project.tasks.register<StartBitcoindTask>("startFirstRegtestBitcoind") {
+        project.tasks.register<Exec>("startBitcoind") {
             dependsOn(initialDaoSetupTask)
-            pidFile.set(project.layout.projectDirectory.file(".localnet/bitcoind.pid"))
 
-            dataDirectory.set(project.layout.projectDirectory.dir(".localnet/bitcoind"))
-            rpcUser.set(RPC_USER)
-            rpcPassword.set(RPC_PASSWORD)
-            blockNotifyArg.set(".localnet/bitcoind/blocknotify %s")
-        }
+            executable = "bitcoind"
 
-        val stopFirstBitcoindTask = project.tasks.register<KillTask>("stopFirstRegtestBitcoind") {
-            pidFile.set(startFirstBitcoindTask.flatMap { it.pidFile })
+            val dataDir: Directory = project.layout.projectDirectory
+                .dir(".localnet")
+                .dir("bitcoind")
+            val port = 18444
+            val onionPort = 18445
+            val rpcBindPort = 18443
+
+            argumentProviders.add(
+                CommandLineArgumentProvider {
+                    listOf(
+                        "-datadir=${dataDir.asFile.absolutePath}",
+                        "-regtest",
+
+                        "-port=$port",
+                        "-bind=127.0.0.1:$port",
+                        "-bind=127.0.0.1:$onionPort=onion",
+
+                        "-prune=0",
+                        "-txindex=1",
+                        "-peerbloomfilters=1",
+                        "-server",
+
+                        "-rpcbind=127.0.0.1:$rpcBindPort",
+                        "-rpcuser=$RPC_USER",
+                        "-rpcpassword=$RPC_PASSWORD",
+
+                        "-blocknotify=${dataDir.asFile.absolutePath}/blocknotify %s"
+                    )
+                }
+            )
         }
 
         val startSecondBitcoindTask = project.tasks.register<StartBitcoindTask>("startSecondRegtestBitcoind") {
@@ -94,8 +126,6 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
         val seedNodeLibsDirProvider: Provider<Directory> = getBisqAppLibsDirProvider(project, "seednode")
 
         val startFirstSeedNodeTask = project.tasks.register<StartBisqTask>("startRegtestFirstSeednode") {
-            dependsOn(startFirstBitcoindTask)
-
             workingDirectory.set(project.layout.projectDirectory)
             javaExecutable.set(getJavaExecutable())
             libsDir.set(seedNodeLibsDirProvider)
@@ -114,7 +144,6 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
         }
 
         val startSecondSeedNodeTask = project.tasks.register<StartBisqTask>("startRegtestSecondSeednode") {
-            dependsOn(startFirstBitcoindTask)
             dependsOn(startFirstSeedNodeTask)
 
             workingDirectory.set(project.layout.projectDirectory)
@@ -207,7 +236,6 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
         }
 
         project.tasks.register<KillTask>("stopRegtest") {
-            dependsOn(stopFirstBitcoindTask)
             dependsOn(stopSecondBitcoindTask)
 
             dependsOn(stopFirstSeedNodeTask)
