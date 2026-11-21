@@ -18,7 +18,11 @@
 package bisq.core.app;
 
 import bisq.common.app.AppModule;
+import bisq.common.app.InstanceLock;
+import bisq.common.handlers.ResultHandler;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -89,11 +93,27 @@ class BisqExecutableTest {
         assertTrue(executable.configErrorMessage.contains("option 'torControlPort' is not supported anymore"));
     }
 
+    @Test
+    void instanceLockIsHeldUntilTheFlushHasCompleted(@TempDir Path appDataDir) throws IOException {
+        var executable = new TestBisqExecutable();
+        executable.instanceLock = new InstanceLock(appDataDir);
+        assertTrue(executable.instanceLock.tryLock());
+        executable.lockProbeDir = appDataDir;
+
+        executable.flushAndExit(BisqExecutable.EXIT_SUCCESS);
+
+        assertTrue(executable.lockHeldDuringFlush, "The lock must be held while the data is flushed");
+        assertTrue(executable.lockFreeOnCompletion, "The lock must be released when the shutdown completes");
+    }
+
     private static final class ConfigErrorHandled extends RuntimeException {
     }
 
     private static final class TestBisqExecutable extends BisqExecutable {
         private String configErrorMessage;
+        private Path lockProbeDir;
+        private boolean lockHeldDuringFlush;
+        private boolean lockFreeOnCompletion;
 
         private TestBisqExecutable() {
             super("test", "test", "test", "test");
@@ -125,6 +145,34 @@ class BisqExecutableTest {
 
         @Override
         public void onSetupComplete() {
+        }
+
+        // The real flush and the real exit are not part of these tests
+        @Override
+        protected void flushPersistableData(ResultHandler completeHandler) {
+            if (lockProbeDir == null) {
+                super.flushPersistableData(completeHandler);
+                return;
+            }
+            lockHeldDuringFlush = isLockedByAnotherInstance(lockProbeDir);
+            completeHandler.handleResult();
+        }
+
+        @Override
+        protected void completeShutDown(int status) {
+            if (lockProbeDir == null) {
+                super.completeShutDown(status);
+                return;
+            }
+            lockFreeOnCompletion = !isLockedByAnotherInstance(lockProbeDir);
+        }
+
+        private static boolean isLockedByAnotherInstance(Path appDataDir) {
+            try (var probe = new InstanceLock(appDataDir)) {
+                return !probe.tryLock();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
     }
 }
