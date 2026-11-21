@@ -275,6 +275,44 @@ class MediatedPayoutAutomaticFinalizationTest {
         assertTrue(trade.getErrorMessage().contains(SignMediatedPayoutTx.class.getSimpleName()));
     }
 
+    // The trade is moved to the failed trades while the publication waits for the wallet
+    @Test
+    void theProtocolOfAFailedTradeDoesNotPublishAtTheNextBlock() {
+        when(btcWalletService.isDownloadComplete()).thenReturn(false);
+        DisputeProtocol realProtocol = protocolWithRealTasks();
+        realProtocol.onStartupMailboxMessagesHandled();
+        ArgumentCaptor<NewBestBlockListener> listener = ArgumentCaptor.forClass(NewBestBlockListener.class);
+        verify(btcWalletService).addNewBestBlockListener(listener.capture());
+
+        realProtocol.shutDown();
+        when(btcWalletService.isDownloadComplete()).thenReturn(true);
+        listener.getValue().notifyNewBestBlock(null);
+
+        verify(btcWalletService).removeNewBestBlockListener(listener.getValue());
+        // ApplyFilter did not run, so no attempt was made
+        verify(filterPolicyService, never()).isNodeAddressBanned(PEER);
+        assertNull(trade.getPayoutTx());
+    }
+
+    // The check runs later on the user thread, and the trade can leave the pending trades before
+    @Test
+    void aDeferredCheckOfAFailedTradeDoesNotWaitForTheWallet() {
+        when(btcWalletService.isDownloadComplete()).thenReturn(false);
+        List<Runnable> deferred = new ArrayList<>();
+        UserThread.setExecutor(deferred::add);
+        try {
+            DisputeProtocol realProtocol = protocolWithRealTasks();
+            realProtocol.onStartupMailboxMessagesHandled();
+
+            realProtocol.shutDown();
+            deferred.forEach(Runnable::run);
+
+            verify(btcWalletService, never()).addNewBestBlockListener(any());
+        } finally {
+            UserThread.resetForTests();
+        }
+    }
+
     // ApplyFilter passes, so the chain reaches SignMediatedPayoutTx
     private DisputeProtocol protocolWithRealTasks() {
         when(provider.getFilterPolicyService()).thenReturn(filterPolicyService);
