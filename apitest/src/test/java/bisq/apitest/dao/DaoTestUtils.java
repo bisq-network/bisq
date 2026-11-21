@@ -75,6 +75,7 @@ public class DaoTestUtils {
     public void generateBlocks(int n) {
         int remaining = n;
         while (remaining > 0) {
+            awaitChainHeight(alice, chainTip(), "alice");
             GetCycleInfoReply ci = alice.getCycleInfo();
             awaitGovernanceDataBeforeLeavingBreak(ci);
             int batch = Math.min(remaining, ci.getBlocksRemainingInPhase() + 1);
