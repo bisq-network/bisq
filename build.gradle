@@ -79,12 +79,12 @@ def parseSignerUserId = { String userId ->
             : [name: userId, email: '', userId: userId]
 }
 
-// Throws on a malformed block: the report is committed, so a signer must not silently lose its name
+// Returns the primary key ids of the block's key rings
 def parsePgpPublicKeyBlock = { String armoredBlock, Map<String, Map> signers ->
     def rings = new PGPPublicKeyRingCollection(
             PGPUtil.getDecoderStream(new ByteArrayInputStream(armoredBlock.getBytes(StandardCharsets.US_ASCII))),
-            new BcKeyFingerprintCalculator())
-    rings.keyRings.each { ring ->
+            new BcKeyFingerprintCalculator()).keyRings.toList()
+    rings.each { ring ->
         def userIds = ring.publicKey.rawUserIDs.collect { normalizeOpenPgpUserId(new String(it, StandardCharsets.UTF_8).trim()) }.findAll { it }
         def user = userIds ? parseSignerUserId(userIds[0]) : [name: '', email: '', userId: '']
         // Subkeys keep their own creation date, so the report dates the key which actually signed
@@ -93,6 +93,7 @@ def parsePgpPublicKeyBlock = { String armoredBlock, Map<String, Map> signers ->
             signers[String.format('%016X', key.keyID)] = user + [created: created]
         }
     }
+    rings.collect { String.format('%016X', it.publicKey.keyID) }
 }
 
 def loadSignerMetadata = { File keyringFile ->
@@ -101,11 +102,24 @@ def loadSignerMetadata = { File keyringFile ->
         return signers
     }
 
+    // Gradle's export writes a pub line, then optional uid and sub lines, then that key's armored block.
+    // Every key must reach the report: a malformed or missing block fails instead of dropping a signer.
+    def announcedKeyId = null
     def armor = null
     keyringFile.eachLine(StandardCharsets.UTF_8.name()) { line, number ->
+        def pubMatcher = line =~ /^pub\s+([0-9A-Fa-f]+)\s*$/
+        if (pubMatcher.matches()) {
+            if (announcedKeyId != null || armor != null) {
+                throw new GradleException("${keyringFile}:${number} announces a key before the key block of ${announcedKeyId}.")
+            }
+            announcedKeyId = keyIdSuffix(pubMatcher[0][1])
+        }
         if (line.startsWith('-----BEGIN PGP PUBLIC KEY BLOCK-----')) {
             if (armor != null) {
                 throw new GradleException("${keyringFile}:${number} starts a key block before the previous one ended.")
+            }
+            if (announcedKeyId == null) {
+                throw new GradleException("${keyringFile}:${number} starts a key block without a pub line.")
             }
             armor = new StringBuilder()
         }
@@ -116,12 +130,20 @@ def loadSignerMetadata = { File keyringFile ->
             if (armor == null) {
                 throw new GradleException("${keyringFile}:${number} ends a key block that never started.")
             }
-            parsePgpPublicKeyBlock(armor.toString(), signers)
+            def parsedKeyIds = parsePgpPublicKeyBlock(armor.toString(), signers)
+            if (parsedKeyIds != [announcedKeyId]) {
+                throw new GradleException("${keyringFile}:${number} ends a key block holding ${parsedKeyIds ?: 'no key'}, " +
+                        "but the pub line announced ${announcedKeyId}.")
+            }
+            announcedKeyId = null
             armor = null
         }
     }
     if (armor != null) {
         throw new GradleException("${keyringFile} ends inside a key block.")
+    }
+    if (announcedKeyId != null) {
+        throw new GradleException("${keyringFile} ends without the key block of ${announcedKeyId}.")
     }
 
     signers
