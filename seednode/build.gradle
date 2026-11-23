@@ -34,3 +34,35 @@ dependencies {
     // SeedNodeSystemdUnitTest parses the external_tor.config which bisq.service writes as the Tor library does
     testImplementation 'tor:tor'
 }
+
+def registerSeedNodeTask(String taskName, String nodePort, String rpcPort, String appName) {
+    tasks.register(taskName, JavaExec) {
+        group = 'application'
+        dependsOn ':initialDaoSetup'
+
+        classpath = sourceSets.main.runtimeClasspath
+        mainClass = application.mainClass
+        jvmArgs = application.applicationDefaultJvmArgs
+        workingDir = rootProject.projectDir
+
+        args = [
+            "--baseCurrencyNetwork=BTC_REGTEST",
+            "--useLocalhostForP2P=true",
+            "--useDevPrivilegeKeys=true",
+            "--nodePort=${nodePort}",
+
+            "--fullDaoNode=true",
+            "--isBmFullNode=true",
+
+            "--rpcUser=bisqdao",
+            "--rpcPassword=bsq",
+            "--rpcBlockNotificationPort=${rpcPort}",
+
+            "--userDataDir=.localnet",
+            "--appName=${appName}"
+        ]
+    }
+}
+
+registerSeedNodeTask('firstSeedNode', '2002', '5120', 'seednode')
+registerSeedNodeTask('secondSeedNode', '3002', '5121', 'seednode2')
