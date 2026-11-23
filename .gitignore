@@ -40,7 +40,6 @@ deploy
 /apitest/src/main/resources/bisq-BTC_REGTEST_Arb_dao
 /apitest/src/main/resources/bisq-BTC_REGTEST_Alice_dao
 /apitest/src/main/resources/bisq-BTC_REGTEST_Bob_dao
-/.run
 /regtest/data_dirs
 /build-logic/app-start-plugin/out/*
 /build-logic/docker-image-builder/out/*
