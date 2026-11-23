@@ -30,8 +30,16 @@ class RegtestPlugin @Inject constructor(
 
     override fun apply(project: Project) {
         val initialDaoSetupTask = project.tasks.register<Copy>("initialDaoSetup") {
+            val destinationDir: Directory = project.layout.projectDirectory.dir(".localnet")
+            val successMarkerFile: RegularFile = project.layout.projectDirectory.dir(".localnet")
+                .file("success.marker")
+
+            onlyIf {
+                !successMarkerFile.asFile.exists()
+            }
+
             from(archiveOperations.zipTree("docs/dao-setup.zip"))
-            into(project.layout.projectDirectory.dir(".localnet"))
+            into(destinationDir)
 
             exclude("dao-setup/Bitcoin-regtest/bitcoin.conf")
 
@@ -54,6 +62,9 @@ class RegtestPlugin @Inject constructor(
 
                 bitcoind2Dir.asFile
                     .mkdirs()
+
+                successMarkerFile.asFile
+                    .writeText("1")
             }
         }
 
