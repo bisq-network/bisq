@@ -45,6 +45,8 @@ services:
       SEEDNODE_OPTS: "${SEEDNODE_OPTS:--Xms256M -Xmx1024M}"
     volumes:
       - seednode-data:/bisq/data
+    ports:
+      - "127.0.0.1:${SEED_BLIND_VOTE_HOST_PORT:-5124}:5124"
     # A daemon that finds no seed node at startup did not finish its P2P setup within the
     # 60 s the tests wait, and requested no DAO state hashes, so its getDaoStatus turned false
     # at the next block. So the daemons start only once the seed node accepts connections.

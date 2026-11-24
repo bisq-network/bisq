@@ -28,14 +28,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 /**
  * Helpers shared across DAO tests: phase advancement, polling, container exec.
@@ -48,11 +58,17 @@ public class DaoTestUtils {
     private final GrpcClient bob;
     private final String bitcoindContainer;
     private final String minerAddress;
+    private final Duration blindVoteTimeout;
 
     public DaoTestUtils(GrpcClient alice, GrpcClient bob, String bitcoindContainer) {
+        this(alice, bob, bitcoindContainer, Duration.ofSeconds(20));
+    }
+
+    DaoTestUtils(GrpcClient alice, GrpcClient bob, String bitcoindContainer, Duration blindVoteTimeout) {
         this.alice = alice;
         this.bob = bob;
         this.bitcoindContainer = bitcoindContainer;
+        this.blindVoteTimeout = blindVoteTimeout;
         this.minerAddress = fetchMinerAddress();
     }
 
@@ -151,37 +167,72 @@ public class DaoTestUtils {
 
     /**
      * Each node hashes its proposals at the first BLIND_VOTE block and its blind votes at the first VOTE_REVEAL
-     * block. Regtest can mine a break faster than the P2P layer's two-second broadcast interval. Give the seed
-     * and arb time to receive governance data before mining the next phase.
+     * block. Regtest can mine a break faster than the P2P layer's two-second broadcast interval.
      */
     private void awaitGovernanceDataBeforeLeavingBreak(GetCycleInfoReply aliceCycleInfo) {
         DaoPhaseEnum phase = aliceCycleInfo.getPhase();
-        if (phase != DaoPhaseEnum.DAO_PHASE_BREAK1 && phase != DaoPhaseEnum.DAO_PHASE_BREAK2) {
-            return;
-        }
-        GetCycleInfoReply bobCycleInfo = bob.getCycleInfo();
-        // Startup listeners populate the lists after the last startup block. A true sync flag confirms they ran.
-        // A seed conflict can also clear the flag, so keep the grace period when either count is uncertain.
-        if (aliceCycleInfo.getIsDaoStateInSync() && bobCycleInfo.getIsDaoStateInSync()) {
-            boolean empty = phase == DaoPhaseEnum.DAO_PHASE_BREAK1
-                    ? aliceCycleInfo.getNumProposalsInCurrentCycle() == 0
-                        && bobCycleInfo.getNumProposalsInCurrentCycle() == 0
-                    : aliceCycleInfo.getNumBlindVotesInCurrentCycle() == 0
-                        && bobCycleInfo.getNumBlindVotesInCurrentCycle() == 0;
-            if (empty) {
-                return;
-            }
-        }
-        log.info("Allowing {} ms in {} for governance data to propagate", GOVERNANCE_DATA_BROADCAST_MS, phase);
-        try {
-            Thread.sleep(GOVERNANCE_DATA_BROADCAST_MS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("interrupted while waiting for the governance data broadcast", e);
+        if (phase == DaoPhaseEnum.DAO_PHASE_BREAK2) {
+            int height = aliceCycleInfo.getChainHeight();
+            awaitBlindVotePropagation(bob, "bob and seed at height " + height, bobInfo -> {
+                if (bobInfo.getChainHeight() != height) return "bob parsed height " + bobInfo.getChainHeight();
+                int bobCount = bobInfo.getNumBlindVotesInCurrentCycle();
+                SeedBlindVotes seed = readSeedBlindVotes();
+                if (seed.height() != height) {
+                    return "seed parsed height " + seed.height() + ", bob has " + bobCount + " payloads";
+                }
+                if (bobCount == seed.expected() && seed.received() == seed.expected()) return null;
+                return "expected " + seed.expected() + " blind-vote payloads, bob has " + bobCount
+                        + " and seed has " + seed.received();
+            });
+        } else if (phase == DaoPhaseEnum.DAO_PHASE_BREAK1) {
+            awaitProposalBroadcast(aliceCycleInfo);
         }
     }
 
-    private static final long GOVERNANCE_DATA_BROADCAST_MS = 5_000;
+    private void awaitProposalBroadcast(GetCycleInfoReply aliceCycleInfo) {
+        GetCycleInfoReply bobCycleInfo = bob.getCycleInfo();
+        // Startup listeners populate the proposal lists after the last startup block.
+        if (aliceCycleInfo.getIsDaoStateInSync() && bobCycleInfo.getIsDaoStateInSync()
+                && aliceCycleInfo.getNumProposalsInCurrentCycle() == 0
+                && bobCycleInfo.getNumProposalsInCurrentCycle() == 0) {
+            return;
+        }
+        log.info("Allowing {} ms in BREAK1 for proposals to propagate", PROPOSAL_BROADCAST_MS);
+        try {
+            Thread.sleep(PROPOSAL_BROADCAST_MS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("interrupted while waiting for the proposal broadcast", e);
+        }
+    }
+
+    private static final long PROPOSAL_BROADCAST_MS = 5_000;
+
+    record SeedBlindVotes(int height, int expected, int received) {}
+
+    private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
+    private static final HttpRequest SEED_BLIND_VOTES = HttpRequest.newBuilder(URI.create("http://"
+            + System.getProperty("apiHost.seed", "127.0.0.1") + ":"
+            + Optional.ofNullable(System.getenv("SEED_BLIND_VOTE_HOST_PORT"))
+                    .filter(port -> !port.isEmpty()).orElse("5124") + "/blind-votes"))
+            .timeout(Duration.ofSeconds(2)).build();
+
+    SeedBlindVotes readSeedBlindVotes() {
+        try {
+            var response = HTTP.send(SEED_BLIND_VOTES, HttpResponse.BodyHandlers.ofString(StandardCharsets.US_ASCII));
+            if (response.statusCode() != 200) {
+                throw new IllegalStateException("seed blind-vote probe returned HTTP " + response.statusCode());
+            }
+            String[] fields = response.body().split(" ");
+            return new SeedBlindVotes(Integer.parseInt(fields[0]), Integer.parseInt(fields[1]),
+                    Integer.parseInt(fields[2]));
+        } catch (IOException e) {
+            throw new UncheckedIOException("seed blind-vote probe failed", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("seed blind-vote probe interrupted", e);
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Polling
@@ -327,8 +378,27 @@ public class DaoTestUtils {
      * gate progression past BLIND_VOTE until the payloads have replicated.
      */
     public void awaitBlindVotePropagation(GrpcClient client, int expected, String label) {
-        await(() -> client.getCycleInfo().getNumBlindVotesInCurrentCycle() >= expected,
-                20_000, label + " sees >=" + expected + " blind-vote payloads in current cycle");
+        awaitBlindVotePropagation(client, label, info -> {
+            int count = info.getNumBlindVotesInCurrentCycle();
+            return count >= expected ? null : "expected " + expected + " blind-vote payloads, observed " + count;
+        });
+    }
+
+    private void awaitBlindVotePropagation(GrpcClient client, String receivers, Function<GetCycleInfoReply, String> missing) {
+        var last = new AtomicReference<>("waiting for cycle info");
+        // The blocking gRPC call must also fit inside the propagation deadline.
+        assertTimeoutPreemptively(blindVoteTimeout, () -> {
+            while (true) {
+                try {
+                    String reason = missing.apply(client.getCycleInfo());
+                    if (reason == null) return;
+                    last.set(reason);
+                } catch (RuntimeException e) {
+                    last.set(e.toString());
+                }
+                Thread.sleep(250);
+            }
+        }, () -> "Blind-vote propagation on " + receivers + ": " + last.get());
     }
 
     public java.util.List<String> confirmAutoRevealsFor(GrpcClient owner) {

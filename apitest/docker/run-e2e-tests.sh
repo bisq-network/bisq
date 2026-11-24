@@ -25,6 +25,7 @@
 #   POLICY_DENY_LIST_RESOURCE  classpath fixture for policy phases
 #   BITCOIND_RPC_HOST_PORT  host port published for bitcoind RPC (default: 18443)
 #   BITCOIND_P2P_HOST_PORT  host port published for bitcoind P2P (default: 18444)
+#   SEED_BLIND_VOTE_HOST_PORT  loopback port for the seed's blind-vote counts (default: 5124)
 
 set -euo pipefail
 
@@ -145,7 +146,7 @@ trap early_cleanup EXIT INT TERM HUP QUIT
 export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-bisq-e2e-tests}"
 
 # Host ports the stack binds. Keep in sync with dao-compose.yml.
-HOST_PORTS=("${BITCOIND_RPC_HOST_PORT:-18443}" "${BITCOIND_P2P_HOST_PORT:-18444}" 9997 9998 9999)
+HOST_PORTS=("${BITCOIND_RPC_HOST_PORT:-18443}" "${BITCOIND_P2P_HOST_PORT:-18444}" "${SEED_BLIND_VOTE_HOST_PORT:-5124}" 9997 9998 9999)
 BISQ_CONTAINERS=(seednode arb alice bob)
 ALL_CONTAINERS=(bitcoind "${BISQ_CONTAINERS[@]}")
 

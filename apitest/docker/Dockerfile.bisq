@@ -42,9 +42,12 @@ COPY cli/build/install/cli           /bisq/cli
 COPY apitest/src/main/resources/bisq-BTC_REGTEST_Alice_dao /opt/dao-setup/bisq-BTC_REGTEST_Alice
 COPY apitest/src/main/resources/bisq-BTC_REGTEST_Bob_dao   /opt/dao-setup/bisq-BTC_REGTEST_Bob
 
-# Fix-ups: exec bits + javafx jar replacement.
+# Use Java's source-file launcher with the seed distribution's classpath and JVM options.
+COPY apitest/docker/RegtestSeedNode.java /opt/RegtestSeedNode.java
 RUN set -eux; \
     chmod +x /bisq/seednode/bin/* /bisq/daemon/bin/* /bisq/cli/bin/*; \
+    grep -Fq bisq.seednode.SeedNodeMain /bisq/seednode/bin/seednode; \
+    sed -i 's|bisq\.seednode\.SeedNodeMain|/opt/RegtestSeedNode.java|' /bisq/seednode/bin/seednode; \
     for app in seednode daemon cli; do \
       for mod in javafx-base javafx-graphics; do \
         target="/bisq/${app}/lib/${mod}-${JAVAFX_VERSION}.jar"; \

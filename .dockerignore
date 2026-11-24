@@ -10,6 +10,7 @@ apitest/docker/*
 !apitest/docker/bitcoind-entrypoint.sh
 !apitest/docker/entrypoint.sh
 !apitest/docker/fee-stub.sh
+!apitest/docker/RegtestSeedNode.java
 # Release peer install dists, staged here by the e2e compat workflow and COPYed
 # in by Dockerfile.bisq-release. Whitelisted past the `apitest/docker/*` exclude.
 !apitest/docker/.release-dist/
