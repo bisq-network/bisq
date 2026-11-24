@@ -64,16 +64,22 @@ public class DaoTestUtils {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * Mine N blocks and wait until alice and bob both observe the new chain tip.
-     * The target height is read from bitcoind directly — reading {@code alice.getCycleInfo()}
-     * here races the daemon's block-notification handler and would let
-     * {@link #awaitChainHeight} return before Bisq actually finished parsing the new blocks.
+     * Mine N blocks and wait until Alice and Bob have both parsed bitcoind's tip.
+     *
+     * <p>A batch ends at the first block of the next phase, so no DAO break is left without
+     * {@link #awaitGovernanceDataBeforeLeavingBreak}.
      */
     public void generateBlocks(int n) {
         if (n <= 0) return;
-        int target = mine(n);
-        awaitChainHeight(alice, target, "alice");
-        awaitChainHeight(bob, target, "bob");
+        awaitChainHeightOnBothPeers(chainTip());
+        int remaining = n;
+        while (remaining > 0) {
+            GetCycleInfoReply ci = alice.getCycleInfo();
+            awaitGovernanceDataBeforeLeavingBreak(ci);
+            int batch = Math.min(remaining, ci.getBlocksRemainingInPhase() + 1);
+            awaitChainHeightOnBothPeers(mine(batch));
+            remaining -= batch;
+        }
     }
 
     /**
@@ -143,11 +149,51 @@ public class DaoTestUtils {
         throw new IllegalStateException("cycle did not advance after 20 hops");
     }
 
+    /**
+     * Each node hashes its proposals at the first BLIND_VOTE block and its blind votes at the first VOTE_REVEAL
+     * block. Regtest can mine a break faster than the P2P layer's two-second broadcast interval. Give the seed
+     * and arb time to receive governance data before mining the next phase.
+     */
+    private void awaitGovernanceDataBeforeLeavingBreak(GetCycleInfoReply aliceCycleInfo) {
+        DaoPhaseEnum phase = aliceCycleInfo.getPhase();
+        if (phase != DaoPhaseEnum.DAO_PHASE_BREAK1 && phase != DaoPhaseEnum.DAO_PHASE_BREAK2) {
+            return;
+        }
+        GetCycleInfoReply bobCycleInfo = bob.getCycleInfo();
+        // Startup listeners populate the lists after the last startup block. A true sync flag confirms they ran.
+        // A seed conflict can also clear the flag, so keep the grace period when either count is uncertain.
+        if (aliceCycleInfo.getIsDaoStateInSync() && bobCycleInfo.getIsDaoStateInSync()) {
+            boolean empty = phase == DaoPhaseEnum.DAO_PHASE_BREAK1
+                    ? aliceCycleInfo.getNumProposalsInCurrentCycle() == 0
+                        && bobCycleInfo.getNumProposalsInCurrentCycle() == 0
+                    : aliceCycleInfo.getNumBlindVotesInCurrentCycle() == 0
+                        && bobCycleInfo.getNumBlindVotesInCurrentCycle() == 0;
+            if (empty) {
+                return;
+            }
+        }
+        log.info("Allowing {} ms in {} for governance data to propagate", GOVERNANCE_DATA_BROADCAST_MS, phase);
+        try {
+            Thread.sleep(GOVERNANCE_DATA_BROADCAST_MS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("interrupted while waiting for the governance data broadcast", e);
+        }
+    }
+
+    private static final long GOVERNANCE_DATA_BROADCAST_MS = 5_000;
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Polling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void awaitChainHeightOnBothPeers(int targetHeight) {
+        awaitChainHeight(alice, targetHeight, "alice");
+        awaitChainHeight(bob, targetHeight, "bob");
+    }
+
     public void awaitChainHeight(GrpcClient client, int targetHeight, String label) {
+        // The daemon serves getCycleInfo on the same single user thread that parses each DAO block.
         await(() -> client.getCycleInfo().getChainHeight() >= targetHeight,
                 30_000, "chain height >= " + targetHeight + " on " + label);
     }
@@ -163,13 +209,7 @@ public class DaoTestUtils {
                 300_000, label + " restarted and parsed up to height " + tip);
     }
 
-    /**
-     * Phase derives from chain height + parsed DAO state. {@link #generateBlocks(int)}
-     * already synchronizes both peers' chain heights, but the peer's DAO state parser
-     * (block-notify → JSON-RPC → parse → state update) runs slightly after the chain
-     * height update. Spin briefly on the chain-tip parse to settle, then verify phase.
-     * Deterministic in steady state: bounded by single-block parse time, not by P2P relay.
-     */
+    /** Wait until the peer reports the target phase for its parsed DAO height. */
     public void awaitPhaseOnPeer(GrpcClient client, DaoPhaseEnum target) {
         await(() -> client.getCycleInfo().getPhase() == target,
                 10_000, "peer phase " + target);
