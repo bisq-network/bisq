@@ -302,7 +302,7 @@ class CoreWalletsService {
                     .map(AddressEntry::getAddressString)
                     .collect(Collectors.toSet());
             Coin receiverAmount = getValidTransferAmount(amount, btcFormatter);
-            Coin txFeePerVbyte = getTxFeeRateFromParamOrPreferenceOrFeeService(txFeeRate);
+            Coin txFeePerVbyte = getValidBtcTxFeeRate(txFeeRate);
 
             // TODO Support feeExcluded (or included), default is fee included.
             //  See WithdrawalView # onWithdraw (and refactor).
@@ -632,6 +632,15 @@ class CoreWalletsService {
             throw new IllegalArgumentException(format("%s is an invalid transfer amount", amount));
 
         return amountAsCoin;
+    }
+
+    private Coin getValidBtcTxFeeRate(String txFeeRate) {
+        Coin txFeePerVbyte = getTxFeeRateFromParamOrPreferenceOrFeeService(txFeeRate);
+        long minFeePerVbyte = feeService.getMinFeePerVByte();
+        if (txFeePerVbyte.value < minFeePerVbyte)
+            throw new IllegalArgumentException(format("tx fee rate must be >= %d sat/vbyte", minFeePerVbyte));
+
+        return txFeePerVbyte;
     }
 
     private Coin getTxFeeRateFromParamOrPreferenceOrFeeService(String txFeeRate) {
