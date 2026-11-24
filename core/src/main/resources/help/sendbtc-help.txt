@@ -22,7 +22,10 @@ OPTIONS
         The destination BTC address for the send transaction.
 
 --amount
-		The amount of BTC to send.
+		The amount of BTC to spend, including the mining fee. If the selected coins
+		leave 1 to 545 satoshis as change, the wallet spends that remainder as well
+		and applies it to the fee first. The receiver gets the total spent minus the
+		fee, up to the entered amount.
 
 --tx-fee-rate
         An optional transaction fee rate in satoshis per virtual byte. The user is

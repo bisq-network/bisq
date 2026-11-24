@@ -17,8 +17,10 @@
 
 package bisq.core.api;
 
+import bisq.core.api.exception.NotAvailableException;
 import bisq.core.app.AppStartupState;
 import bisq.core.btc.Balances;
+import bisq.core.btc.exceptions.ReceiverAmountBelowDustException;
 import bisq.core.btc.wallet.BsqTransferService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.WalletsManager;
@@ -37,6 +39,7 @@ import org.junit.jupiter.api.Test;
 import static bisq.core.btc.wallet.WithdrawalTestWallet.PARAMS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -78,6 +81,56 @@ class CoreWalletsServiceSendBtcTest {
         assertSent(sentTx, 42_950, 7050, 2);
     }
 
+    // The 300 sat left of the coin cannot be a change output and pay the fee first
+    @Test
+    void aRemainderBelowTheDustLimitIsPaidOnce() {
+        testWallet.fund(8000);
+
+        Transaction sentTx = sendBtc("0.000077", "50");
+
+        assertSent(sentTx, 2500, 5500, 1);
+    }
+
+    // bitcoinj would keep the 540 sat left of the coin as change, which is below our dust limit
+    @Test
+    void aRemainderThatBitcoinjKeepsAsChangeIsPaidOnce() {
+        testWallet.fund(8240);
+
+        Transaction sentTx = sendBtc("0.000077", "50");
+
+        assertSent(sentTx, 2740, 5500, 1);
+    }
+
+    @Test
+    void withoutAFeeRateTheRateOfThePreferencesIsUsed() {
+        testWallet.fund(100_000);
+
+        Transaction sentTx = sendBtc("0.0005", "");
+
+        assertEquals(WithdrawalTestWallet.PREFERENCES_FEE_RATE.multiply(sentTx.getVsize()), sentTx.getFee());
+        assertSent(sentTx, 50_000 - sentTx.getFee().value, sentTx.getFee().value, 2);
+    }
+
+    @Test
+    void anAmountAboveTheFundsIsNotAvailable() {
+        testWallet.fund(10_000);
+
+        assertThrows(NotAvailableException.class,
+                () -> coreWalletsService.sendBtc(testWallet.getToAddress(), "0.0002", "50", "",
+                        WithdrawalTestWallet.noCallback()));
+    }
+
+    // The fee of 5500 sat leaves the receiver 545 sat
+    @Test
+    void anAmountThatTheFeeLeavesBelowTheDustLimitIsRefused() {
+        testWallet.fund(6045);
+
+        assertThrows(ReceiverAmountBelowDustException.class,
+                () -> coreWalletsService.sendBtc(testWallet.getToAddress(), "0.00006045", "50", "",
+                        WithdrawalTestWallet.noCallback()));
+        assertNull(testWallet.getSentTx());
+    }
+
     @Test
     void aFeeRateAtTheMinimumIsAccepted() {
         testWallet.fund(100_000);
@@ -85,6 +138,16 @@ class CoreWalletsServiceSendBtcTest {
         Transaction sentTx = sendBtc("0.0005", "2");
 
         assertSent(sentTx, 49_718, 282, 2);
+    }
+
+    @Test
+    void anUnaffordableRateIsReportedAsADustReceiver() {
+        testWallet.fund(100_000);
+
+        assertThrows(ReceiverAmountBelowDustException.class,
+                () -> coreWalletsService.sendBtc(testWallet.getToAddress(), "0.0005", Long.toString(Long.MAX_VALUE),
+                        "", WithdrawalTestWallet.noCallback()));
+        assertNull(testWallet.getSentTx());
     }
 
     @Test

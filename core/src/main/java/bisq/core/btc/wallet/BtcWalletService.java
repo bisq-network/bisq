@@ -1083,55 +1083,6 @@ public class BtcWalletService extends WalletService {
         }
     }
 
-    public Transaction getFeeEstimationTransactionForMultipleAddresses(Set<String> fromAddresses,
-                                                                       String toAddress,
-                                                                       Coin amount,
-                                                                       Coin txFeeForWithdrawalPerVbyte)
-            throws AddressFormatException, AddressEntryException, InsufficientFundsException {
-        Set<AddressEntry> addressEntries = fromAddresses.stream()
-                .map(address -> {
-                    Optional<AddressEntry> addressEntryOptional = findAddressEntry(address, AddressEntry.Context.AVAILABLE);
-                    if (!addressEntryOptional.isPresent())
-                        addressEntryOptional = findAddressEntry(address, AddressEntry.Context.OFFER_FUNDING);
-                    if (!addressEntryOptional.isPresent())
-                        addressEntryOptional = findAddressEntry(address, AddressEntry.Context.TRADE_PAYOUT);
-                    if (!addressEntryOptional.isPresent())
-                        addressEntryOptional = findAddressEntry(address, AddressEntry.Context.ARBITRATOR);
-                    return addressEntryOptional;
-                })
-                .flatMap(Optional::stream)
-                .collect(Collectors.toSet());
-        if (addressEntries.isEmpty())
-            throw new AddressEntryException("No Addresses for withdraw  found in our wallet");
-
-        try {
-            Coin fee;
-            int counter = 0;
-            int txVsize = 0;
-            Transaction tx;
-            do {
-                counter++;
-                fee = txFeeForWithdrawalPerVbyte.multiply(txVsize);
-                SendRequest sendRequest = getSendRequestForMultipleAddresses(toAddress, amount, fee, aesKey);
-                sendRequest.coinSelector = getCoinSelectorForMultipleAddresses(fromAddresses);
-                sendRequest.changeAddress = getFreshAddressEntry().getAddress();
-                wallet.completeTx(sendRequest);
-                tx = sendRequest.tx;
-                txVsize = tx.getVsize();
-                printTx("FeeEstimationTransactionForMultipleAddresses", tx);
-            }
-            while (feeEstimationNotSatisfied(counter, tx));
-            if (counter == 10)
-                log.error("Could not calculate the fee. Tx=" + tx);
-
-            return tx;
-        } catch (InsufficientMoneyException e) {
-            throw new InsufficientFundsException("The fees for that transaction exceed the available funds " +
-                    "or the resulting output value is below the min. dust value:\n" +
-                    "Missing " + (e.missing != null ? e.missing.toFriendlyString() : "null"));
-        }
-    }
-
     /**
      * Estimates a withdrawal from the given addresses as docs/specifications/wallet/btc-withdrawal-amount.md specifies
      * it. Sending the estimate's sender's amount with its fee by {@link #sendFundsForMultipleAddresses} creates the
