@@ -33,6 +33,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.exceptions.InsufficientFundsException;
+import bisq.core.btc.exceptions.ReceiverAmountBelowDustException;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.setup.WalletsSetup;
@@ -65,6 +66,7 @@ import org.bitcoinj.wallet.Wallet;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 
 import org.apache.commons.lang3.StringUtils;
@@ -108,6 +110,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -397,7 +400,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onWithdraw() {
-        if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
+        if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup) && areInputsValid()) {
             try {
                 Coin feeRate = Coin.valueOf(Integer.parseInt(transactionFeeInputTextField.getText()));
                 final String withdrawToAddress = withdrawToTextField.getText();
@@ -431,7 +434,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                             fee.value);
                 }
 
-                if (areInputsValid(sendersAmount)) {
+                if (isAmountAvailable(sendersAmount)) {
                     int txVsize = feeEstimationTransaction.getVsize();
                     log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txVsize, fee.toPlainString());
 
@@ -487,6 +490,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                             .closeButtonText(Res.get("shared.cancel"))
                             .show();
                 }
+            } catch (ReceiverAmountBelowDustException e) {
+                new Popup().warning(Res.get("portfolio.pending.step5_buyer.amountTooLow")).show();
             } catch (InsufficientFundsException e) {
                 new Popup().warning(Res.get("funds.withdrawal.warn.amountExceeds") + "\n\nError message:\n" + e.getMessage()).show();
             } catch (Throwable e) {
@@ -608,21 +613,39 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         tableView.getSelectionModel().clearSelection();
     }
 
-    private boolean areInputsValid(Coin sendersAmount) {
-        if (!sendersAmount.isPositive()) {
-            new Popup().warning(Res.get("validation.negative")).show();
-            return false;
-        }
+    private boolean areInputsValid() {
+        Optional<String> inputError = getInputError(totalAvailableAmountOfSelectedItems,
+                amountAsCoin,
+                withdrawToTextField.getText(),
+                btcAddressValidator,
+                formatter);
+        inputError.ifPresent(error -> new Popup().warning(error).show());
+        return inputError.isEmpty();
+    }
 
-        if (!btcAddressValidator.validate(withdrawToTextField.getText()).isValid) {
-            new Popup().warning(Res.get("validation.btc.invalidAddress")).show();
-            return false;
-        }
-        if (!totalAvailableAmountOfSelectedItems.isPositive()) {
-            new Popup().warning(Res.get("funds.withdrawal.warn.noSourceAddressSelected")).show();
-            return false;
-        }
+    // The checks that do not depend on the fee. The fee estimation fails on these inputs with errors that do not tell
+    // the user what to fix.
+    @VisibleForTesting
+    static Optional<String> getInputError(Coin availableAmount,
+                                          Coin amount,
+                                          String withdrawToAddress,
+                                          BtcAddressValidator btcAddressValidator,
+                                          CoinFormatter formatter) {
+        if (!availableAmount.isPositive())
+            return Optional.of(Res.get("funds.withdrawal.warn.noSourceAddressSelected"));
 
+        // The receiver gets at most the entered amount
+        if (!Restrictions.isAboveDust(amount))
+            return Optional.of(Res.get("validation.amountBelowDust",
+                    formatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
+
+        if (!btcAddressValidator.validate(withdrawToAddress).isValid)
+            return Optional.of(Res.get("validation.btc.invalidAddress"));
+
+        return Optional.empty();
+    }
+
+    private boolean isAmountAvailable(Coin sendersAmount) {
         if (sendersAmount.compareTo(totalAvailableAmountOfSelectedItems) > 0) {
             new Popup().warning(Res.get("funds.withdrawal.warn.amountExceeds")).show();
             return false;
