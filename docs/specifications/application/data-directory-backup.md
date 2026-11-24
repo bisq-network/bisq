@@ -17,7 +17,14 @@ directory, so it could put links or named pipes there, and Tor recreates its con
 directory ([`../network/tor-startup.md`](../network/tor-startup.md)): copied back next to another data directory, the
 record would describe that one, and the next Tor without the sandbox could read what a sandboxed Tor wrote there
 instead of starting on a cleared data directory. Without the record, the Tor library treats an existing data directory
-as written in the sandbox. Entries which the backup leaves out on purpose are not named to the user.
+as written in the sandbox.
+
+The backup does not copy the file of the single-instance lock of the data directory, and it must not open it. On
+Linux and macOS the lock belongs to the process, and closing any descriptor of the lock file releases it, so reading
+the file for the copy would let another instance start on the same data directory while the node runs
+([`graceful-shutdown.md`](graceful-shutdown.md)). A copy of the file is of no use, because every start creates it.
+
+Entries which the backup leaves out on purpose are not named to the user.
 
 The backup copies only regular files and directories. It does not follow symbolic links or junctions of Windows, and it
 does not read special files such as named pipes or devices. If the data directory itself is a link, for example to
