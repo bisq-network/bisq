@@ -451,18 +451,11 @@ public class DaoTestUtils {
     }
 
     public void awaitDaoStateReady(GrpcClient client, String label) {
-        // isDaoStateInSync also checks consensus with seed node — but seed and daemon
-        // can legitimately disagree on the *proposal payload set* (P2P gossip races)
-        // even when they agree on the chain itself. For test readiness, only require
-        // chain parsing to have produced a current cycle (chainHeight > 0).
+        int tip = chainTip();
         await(() -> {
-            try {
-                return client.getCycleInfo().getChainHeight() > 0
-                        && client.getCycleInfo().getCycleIndex() >= 0;
-            } catch (RuntimeException ex) {
-                return false;
-            }
-        }, 60_000, "DAO state ready on " + label);
+            GetCycleInfoReply ci = client.getCycleInfo();
+            return ci.getChainHeight() >= tip && ci.getCycleIndex() >= 0;
+        }, 60_000, "DAO cycle at chain height >= " + tip + " on " + label);
     }
 
     /**
