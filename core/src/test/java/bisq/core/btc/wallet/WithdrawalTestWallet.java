@@ -29,16 +29,17 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.wallet.KeyChainGroup;
 import org.bitcoinj.wallet.SendRequest;
-import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.WalletTransaction;
 
 import com.google.common.collect.ImmutableList;
@@ -90,13 +91,20 @@ public class WithdrawalTestWallet {
     }
 
     public WithdrawalTestWallet(int numSourceAddresses) {
+        this(numSourceAddresses, false);
+    }
+
+    // Legacy source addresses have P2PKH coins, whose signatures are not segwit data
+    public WithdrawalTestWallet(int numSourceAddresses, boolean legacySourceAddresses) {
         Context.propagate(new Context(PARAMS));
         wallet = new StoppingWallet();
         List<AddressEntry> addressEntries = new ArrayList<>();
         for (int i = 0; i < numSourceAddresses; i++) {
             ECKey key = key(1 + i);
             wallet.importKey(key);
-            Address address = SegwitAddress.fromKey(PARAMS, key);
+            Address address = legacySourceAddresses ?
+                    LegacyAddress.fromKey(PARAMS, key) :
+                    SegwitAddress.fromKey(PARAMS, key);
             sourceAddresses.add(address);
             addressEntries.add(availableAddressEntry(address));
         }
@@ -133,6 +141,15 @@ public class WithdrawalTestWallet {
     }
 
     public void fundSourceAddress(int sourceAddressIndex, long... values) {
+        addCoins(sourceAddressIndex, 1, values);
+    }
+
+    // Each value becomes a coin of the first source address with that many confirmations
+    public void fundWithConfirmations(int confirmations, long... values) {
+        addCoins(0, confirmations, values);
+    }
+
+    private void addCoins(int sourceAddressIndex, int confirmations, long[] values) {
         for (long value : values) {
             Transaction fundingTx = new Transaction(PARAMS);
             fundingTx.addInput(Sha256Hash.of(new byte[]{(byte) ++fundingTxs}), 0, new Script(new byte[0]));
@@ -140,7 +157,7 @@ public class WithdrawalTestWallet {
             TransactionConfidence confidence = fundingTx.getConfidence();
             confidence.setConfidenceType(TransactionConfidence.ConfidenceType.BUILDING);
             confidence.setAppearedAtChainHeight(1);
-            confidence.setDepthInBlocks(1);
+            confidence.setDepthInBlocks(confirmations);
             wallet.addWalletTransaction(new WalletTransaction(WalletTransaction.Pool.UNSPENT, fundingTx));
         }
     }
@@ -148,6 +165,37 @@ public class WithdrawalTestWallet {
     // How often the wallet completed a transaction, the rounds of a fee estimation
     public int getCompletedTxs() {
         return wallet.completedTxs;
+    }
+
+    // Funds the first source address with a confirmed coin when the wallet has completed that many transactions
+    public void fundAfterCompletedTxs(int completedTxs, long value) {
+        wallet.afterCompletedTxs = completedTxs;
+        wallet.afterCompletedTxsAction = () -> fund(value);
+    }
+
+    // Spends the coin of that value elsewhere when the wallet has completed that many transactions
+    public void spendAfterCompletedTxs(int completedTxs, long value) {
+        wallet.afterCompletedTxs = completedTxs;
+        wallet.afterCompletedTxsAction = () -> {
+            TransactionOutput coin = wallet.getUnspents().stream()
+                    .filter(output -> output.getValue().value == value)
+                    .findFirst()
+                    .orElseThrow();
+            Transaction spendingTx = new Transaction(PARAMS);
+            spendingTx.addInput(coin);
+            spendingTx.addOutput(coin.getValue(), SegwitAddress.fromKey(PARAMS, key(60)));
+            wallet.commitTx(spendingTx);
+        };
+    }
+
+    // Gives every confirmed transaction of the wallet one more confirmation when the wallet has completed that many
+    // transactions, as a new block does
+    public void confirmAfterCompletedTxs(int completedTxs) {
+        wallet.afterCompletedTxs = completedTxs;
+        wallet.afterCompletedTxsAction = () -> wallet.getTransactions(false).stream()
+                .map(Transaction::getConfidence)
+                .filter(confidence -> confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
+                .forEach(confidence -> confidence.setDepthInBlocks(confidence.getDepthInBlocks() + 1));
     }
 
     // The transaction of the last send, completed and signed but not committed
@@ -200,10 +248,13 @@ public class WithdrawalTestWallet {
     public static class SendStoppedException extends RuntimeException {
     }
 
-    private static class StoppingWallet extends Wallet {
+    private static class StoppingWallet extends BisqWallet {
         private int completedTxs;
         @Nullable
         private Transaction sentTx;
+        private int afterCompletedTxs;
+        @Nullable
+        private Runnable afterCompletedTxsAction;
 
         private StoppingWallet() {
             super(PARAMS, KeyChainGroup.createBasic(PARAMS));
@@ -213,6 +264,9 @@ public class WithdrawalTestWallet {
         public void completeTx(SendRequest request) throws InsufficientMoneyException {
             completedTxs++;
             super.completeTx(request);
+            if (completedTxs == afterCompletedTxs && afterCompletedTxsAction != null) {
+                afterCompletedTxsAction.run();
+            }
         }
 
         @Override
