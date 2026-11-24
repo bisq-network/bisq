@@ -42,6 +42,14 @@ hook may itself require the UserThread; initiating it there can create a circula
 must retain the requested exit status, including the failure status used to trigger wrapper-script
 restarts for seed, statistics, bridge, and REST nodes.
 
+The single-instance lock on the application data directory must stay held until the process
+exits, on every shutdown path. Shutdown must not release it explicitly. Writes to the data
+directory can still run after the final persistence flush has completed, for example the wallet
+shutdown on the timeout path. Another instance that starts on the same data directory before the
+process has exited must be refused. The operating system releases the lock when the process ends,
+also after a crash or a kill. Restarts by wrapper scripts and service managers wait for the process
+to exit and do not need an earlier release.
+
 Only the first controlled exit request may schedule process termination. Competing normal, timeout,
 and error paths must not create multiple exit threads or replace the status chosen by the first
 completed path. A later failure-triggered request joining an already running normal shutdown must not
