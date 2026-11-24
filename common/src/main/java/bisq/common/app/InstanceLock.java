@@ -43,6 +43,10 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>Strong references to the {@link FileChannel} and {@link FileLock} are retained for the
  * instance lifetime: if they were garbage collected the lock would be released silently.
+ *
+ * <p>No other code of the owning process may open the lock file, see {@link #getLockFile}. On Linux and macOS the
+ * lock belongs to the process, and closing any descriptor of the file releases it, while {@link FileLock#isValid()}
+ * still returns true.
  */
 @Slf4j
 public class InstanceLock implements AutoCloseable {
@@ -55,7 +59,11 @@ public class InstanceLock implements AutoCloseable {
     private FileLock fileLock;
 
     public InstanceLock(Path appDataDir) {
-        this.lockFilePath = appDataDir.resolve(LOCK_FILE_NAME);
+        this.lockFilePath = getLockFile(appDataDir);
+    }
+
+    public static Path getLockFile(Path appDataDir) {
+        return appDataDir.resolve(LOCK_FILE_NAME);
     }
 
     /**
