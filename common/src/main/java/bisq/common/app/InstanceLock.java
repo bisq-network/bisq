@@ -62,6 +62,10 @@ public class InstanceLock implements AutoCloseable {
         this.lockFilePath = getLockFile(appDataDir);
     }
 
+    /**
+     * The path is for code which has to leave the file alone, such as a copy of the data directory. Opening the file,
+     * even only to read it, releases the lock of the running instance on Linux and macOS.
+     */
     public static Path getLockFile(Path appDataDir) {
         return appDataDir.resolve(LOCK_FILE_NAME);
     }
@@ -123,7 +127,8 @@ public class InstanceLock implements AutoCloseable {
 
     /**
      * @return the PID recorded by the instance currently holding the lock, if readable.
-     *         Best-effort, for diagnostics only.
+     *         Best-effort, for diagnostics only. Reads the lock file, so only a process which does not hold the
+     *         lock may call it.
      */
     public Optional<Long> readOwnerPid() {
         try {
