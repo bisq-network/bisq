@@ -23,7 +23,6 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.model.TradeModel;
-import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
@@ -177,21 +176,18 @@ public class TradeUtil {
 
     /**
      * Returns a string describing a trader's role for a given trade.
+     * The role does not depend on the contract, which does not exist before the trade protocol creates it. The
+     * offer direction decides the trade type, and the contract takes its isBuyerMakerAndSellerTaker from that type.
      * @param trade Trade
      * @return String describing a trader's role for a given trade
      */
     public String getRole(Trade trade) {
-        Contract contract = trade.getContract();
-        if (contract == null)
-            throw new IllegalStateException(format("could not get role because no contract was found for trade '%s'",
-                    trade.getShortId()));
-
         Offer offer = trade.getOffer();
         if (offer == null)
             throw new IllegalStateException(format("could not get role because no offer was found for trade '%s'",
                     trade.getShortId()));
 
-        return getRole(contract.isBuyerMakerAndSellerTaker(),
+        return getRole(offer.isBuyOffer(),
                 offer.isMyOffer(keyRing),
                 offer.getCurrencyCode());
     }
