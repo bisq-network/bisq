@@ -24,8 +24,8 @@ trigger for the start height of the running request starts no new request.
 
 - A request goes to a seed node to which the node has a confirmed connection, if there is one.
   Otherwise, and after each failed attempt, the node retries after 10 seconds with a random seed node
-  that the request has not asked yet. An attempt fails if sending fails or if no answer comes within
-  4 minutes.
+  that the request has not asked yet. An attempt fails if sending fails, if the connection carrying
+  the request closes before the answer, or if no answer comes within 4 minutes.
 - A request asks each seed node at most once and schedules at most 12 retries. When no seed node or
   no retry is left, the node gives up the request. With fewer than 12 seed nodes, as on mainnet with
   6, the seed nodes run out first.
@@ -54,6 +54,11 @@ for the blocks after the current DAO state, so the answer of the replaced reques
 trigger for the same start height asks for the same blocks as the running request. The node keeps
 that request with its attempt in flight, which may be answered soon, or with its waiting retry.
 
+The seed node answers over the connection that carried the request, so after that connection closed
+no answer can come. The node may have another connection to the same seed node. If that connection
+closes, the attempt can still be answered. Counting it as failed would drop the answer, and if no
+other seed node is left, the request would give up.
+
 Without connections and during standby every attempt fails. These failures tell nothing about the
 seed nodes, so an unanswered request starts again with fresh retries. An answered request is not
 repeated, as a seed node would send the same blocks again; after the startup parsing the wallet
@@ -66,8 +71,6 @@ each request.
 
 ## Known gaps
 
-- If the asked seed node disconnects before it answers, the request ends without a retry and without
-  giving up.
 - A response that the node rejects, because it has unsigned blocks only or a block with an invalid
   signature, counts as answered and ends the request without a retry
   ([issue 7971](https://github.com/bisq-network/bisq/issues/7971)).

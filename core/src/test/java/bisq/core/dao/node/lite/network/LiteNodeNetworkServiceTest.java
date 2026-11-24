@@ -36,17 +36,18 @@ import bisq.network.p2p.peers.Broadcaster;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
-import bisq.common.FrameRateTimer;
 import bisq.common.UserThread;
 
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.IOException;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -62,6 +63,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
@@ -84,6 +86,9 @@ public class LiteNodeNetworkServiceTest {
 
     @BeforeEach
     void setUp() {
+        // The request handler defers a step with UserThread.execute. The tests expect the direct executor, also if an
+        // earlier test left another one.
+        UserThread.resetForTests();
         ManualTimer.clear();
         UserThread.setTimerClass(ManualTimer.class);
     }
@@ -91,7 +96,7 @@ public class LiteNodeNetworkServiceTest {
     @AfterEach
     void tearDown() {
         ManualTimer.clear();
-        UserThread.setTimerClass(FrameRateTimer.class);
+        UserThread.resetForTests();
     }
 
     @Test
@@ -600,6 +605,90 @@ public class LiteNodeNetworkServiceTest {
     }
 
     @Test
+    void asksAnotherSeedNodeWhenAskedSeedNodeDisconnects() {
+        BlockRequests blockRequests = new BlockRequests();
+        blockRequests.service.requestBlocks(100);
+        ManualTimer.latest().fire();
+        NodeAddress askedSeedNode = blockRequests.receivers.get(0);
+        blockRequests.sendResults.getFirst().set(blockRequests.connection);
+
+        blockRequests.disconnect(blockRequests.connection, askedSeedNode);
+        ManualTimer.latest().fire();
+
+        assertEquals(List.of(100, 100), blockRequests.requestedHeights());
+        assertNotEquals(askedSeedNode, blockRequests.receivers.get(1));
+    }
+
+    // The second seed node is the last one the request can ask, so dropping its attempt would make the request give up.
+    @Test
+    void keepsAttemptWhenAnotherConnectionToTheAskedSeedNodeCloses() {
+        BlockRequests blockRequests = new BlockRequests();
+        blockRequests.service.requestBlocks(100);
+        ManualTimer.latest().fire();
+        blockRequests.sendResults.getFirst().setException(new IOException("First seed is offline"));
+        ManualTimer.latest().fire();
+        blockRequests.sendResults.getLast().set(blockRequests.connection);
+
+        blockRequests.disconnect(mock(Connection.class), blockRequests.receivers.getLast());
+        blockRequests.answerLast();
+        ManualTimer.firePendingTimers();
+
+        assertEquals(1, blockRequests.listener.requestedBlocksCount.get());
+        assertEquals(0, blockRequests.listener.noSeedNodeAvailableCount.get());
+    }
+
+    @Test
+    void retriesWhenTheRequestConnectionClosesBeforeTheSendCompletes() {
+        BlockRequests blockRequests = new BlockRequests();
+        blockRequests.service.requestBlocks(100);
+        ManualTimer.latest().fire();
+        NodeAddress askedSeedNode = blockRequests.receivers.getFirst();
+        blockRequests.disconnect(blockRequests.connection, askedSeedNode);
+        blockRequests.sendResults.getFirst().set(blockRequests.connection);
+        ManualTimer.latest().fire();
+
+        assertEquals(List.of(100, 100), blockRequests.requestedHeights());
+        assertNotEquals(askedSeedNode, blockRequests.receivers.getLast());
+    }
+
+    @Test
+    void deliversAnAlreadyQueuedAnswerWhenTheSendCompletesOnAClosedConnection() {
+        BlockRequests blockRequests = new BlockRequests();
+        blockRequests.service.requestBlocks(100);
+        ManualTimer.latest().fire();
+        doReturn(true).when(blockRequests.connection).isStopped();
+
+        ArrayDeque<Runnable> events = new ArrayDeque<>();
+        Executor previousExecutor = UserThread.getExecutor();
+        UserThread.setExecutor(events::add);
+        try {
+            UserThread.execute(blockRequests::answerLast);
+            blockRequests.sendResults.getFirst().set(blockRequests.connection);
+            while (!events.isEmpty()) {
+                events.remove().run();
+            }
+        } finally {
+            UserThread.setExecutor(previousExecutor);
+        }
+        ManualTimer.firePendingTimers();
+
+        assertEquals(1, blockRequests.listener.requestedBlocksCount.get());
+        assertEquals(1, blockRequests.requests.size());
+    }
+
+    @Test
+    void keepsRequestWhenAnotherPeerDisconnects() {
+        BlockRequests blockRequests = new BlockRequests();
+        blockRequests.service.requestBlocks(100);
+        ManualTimer.latest().fire();
+        blockRequests.disconnect(mock(Connection.class), new NodeAddress("peer.onion:8000"));
+        blockRequests.answerLast();
+
+        assertEquals(1, blockRequests.requests.size());
+        assertEquals(1, blockRequests.listener.requestedBlocksCount.get());
+    }
+
+    @Test
     void doesNotRequestAnsweredBlocksAgainAfterStandby() {
         BlockRequests blockRequests = new BlockRequests();
         blockRequests.service.requestBlocks(100);
@@ -731,6 +820,12 @@ public class LiteNodeNetworkServiceTest {
 
         void answerLast() {
             answer(requests.size() - 1);
+        }
+
+        void disconnect(Connection closedConnection, NodeAddress peer) {
+            lenient().doReturn(Optional.of(peer)).when(closedConnection).getPeersNodeAddressOptional();
+            lenient().doReturn(true).when(closedConnection).isStopped();
+            service.onDisconnect(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER, closedConnection);
         }
 
         void answer(int index) {

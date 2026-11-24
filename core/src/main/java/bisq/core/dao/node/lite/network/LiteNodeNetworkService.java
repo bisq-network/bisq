@@ -211,7 +211,9 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        closeHandler(connection);
+        if (requestBlocksHandler != null) {
+            requestBlocksHandler.onDisconnect(connection);
+        }
 
         if (peerManager.isPeerBanned(closeConnectionReason, connection)) {
             connection.getPeersNodeAddressOptional().ifPresent(seedNodeAddresses::remove);
@@ -338,6 +340,13 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                     }
 
                     @Override
+                    public void onRequestConnectionClosed() {
+                        log.info("Connection to seed node {} closed before it answered our block request.", peersNodeAddress);
+                        requestBlocksHandler = null;
+                        tryWithNewSeedNode(startBlockHeight);
+                    }
+
+                    @Override
                     public void onFault(String errorMessage, @Nullable Connection connection) {
                         log.warn("requestBlocksHandler with outbound connection failed.\n\tnodeAddress={}\n\t" +
                                 "ErrorMessage={}", peersNodeAddress, errorMessage);
@@ -431,18 +440,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     private void restartUnansweredRequest() {
         stopRequest();
         tryWithNewSeedNode(lastRequestedBlockHeight);
-    }
-
-    private void closeHandler(Connection connection) {
-        Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
-        if (peersNodeAddressOptional.isPresent()) {
-            NodeAddress nodeAddress = peersNodeAddressOptional.get();
-            if (requestBlocksHandler != null && requestBlocksHandler.getNodeAddress().equals(nodeAddress)) {
-                closeHandler();
-            }
-        } else {
-            log.trace("closeHandler: nodeAddress not set in connection {}", connection);
-        }
     }
 
     private void closeHandler() {

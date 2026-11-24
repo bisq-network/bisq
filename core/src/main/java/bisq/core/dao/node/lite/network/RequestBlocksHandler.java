@@ -61,6 +61,8 @@ public class RequestBlocksHandler implements MessageListener {
     public interface Listener {
         void onComplete(GetBlocksResponse getBlocksResponse);
 
+        void onRequestConnectionClosed();
+
         @SuppressWarnings("UnusedParameters")
         void onFault(String errorMessage, @SuppressWarnings("SameParameterValue") @Nullable Connection connection);
     }
@@ -77,6 +79,8 @@ public class RequestBlocksHandler implements MessageListener {
     @Getter
     private final int startBlockHeight;
     private final Listener listener;
+    @Nullable
+    private Connection requestConnection;
     private Timer timeoutTimer;
     private final int nonce = new Random().nextInt();
     private boolean stopped;
@@ -136,6 +140,14 @@ public class RequestBlocksHandler implements MessageListener {
         Futures.addCallback(future, new FutureCallback<>() {
             @Override
             public void onSuccess(Connection connection) {
+                if (stopped) {
+                    return;
+                }
+                requestConnection = connection;
+                if (connection.isStopped()) {
+                    // The disconnect can precede the send result. Let an already queued response finish first.
+                    UserThread.execute(() -> onDisconnect(connection));
+                }
                 log.debug("Sending of GetBlocksRequest message to peer {} succeeded.", nodeAddress.getFullAddress());
             }
 
@@ -153,6 +165,13 @@ public class RequestBlocksHandler implements MessageListener {
                 }
             }
         }, MoreExecutors.directExecutor());
+    }
+
+    void onDisconnect(Connection connection) {
+        if (!stopped && connection == requestConnection) {
+            terminate();
+            listener.onRequestConnectionClosed();
+        }
     }
 
 
