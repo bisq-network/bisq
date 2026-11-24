@@ -43,6 +43,11 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>Strong references to the {@link FileChannel} and {@link FileLock} are retained for the
  * instance lifetime: if they were garbage collected the lock would be released silently.
+ *
+ * <p>No other code of the owning process may open the lock file, see {@link #getLockFile}. On Linux and macOS the
+ * lock belongs to the process, and closing any descriptor of the file releases it, while {@link FileLock#isValid()}
+ * still returns true. This also holds for a second {@code InstanceLock} on the same data directory in the same JVM, so
+ * there must be only one per data directory and process.
  */
 @Slf4j
 public class InstanceLock implements AutoCloseable {
@@ -55,7 +60,15 @@ public class InstanceLock implements AutoCloseable {
     private FileLock fileLock;
 
     public InstanceLock(Path appDataDir) {
-        this.lockFilePath = appDataDir.resolve(LOCK_FILE_NAME);
+        this.lockFilePath = getLockFile(appDataDir);
+    }
+
+    /**
+     * The path is for code which has to leave the file alone, such as a copy of the data directory. Opening the file,
+     * even only to read it, releases the lock of the running instance on Linux and macOS.
+     */
+    public static Path getLockFile(Path appDataDir) {
+        return appDataDir.resolve(LOCK_FILE_NAME);
     }
 
     /**
@@ -77,7 +90,8 @@ public class InstanceLock implements AutoCloseable {
             // tryLock returns null when the region is already locked by another process.
             fileLock = channel.tryLock();
         } catch (OverlappingFileLockException e) {
-            // Region already locked by this same JVM. Treat as "another instance" defensively.
+            // Region already locked by another InstanceLock of this JVM. Closing our channel below releases that lock
+            // on Linux and macOS, see the class Javadoc.
             fileLock = null;
         } catch (IOException e) {
             // The lock mechanism itself failed; close the channel before propagating so we
@@ -115,7 +129,8 @@ public class InstanceLock implements AutoCloseable {
 
     /**
      * @return the PID recorded by the instance currently holding the lock, if readable.
-     *         Best-effort, for diagnostics only.
+     *         Best-effort, for diagnostics only. Reads the lock file, so only a process which does not hold the
+     *         lock may call it.
      */
     public Optional<Long> readOwnerPid() {
         try {
