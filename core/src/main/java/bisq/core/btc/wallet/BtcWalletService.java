@@ -1282,6 +1282,20 @@ public class BtcWalletService extends WalletService {
         sendRequest.ensureMinRequiredFee = false;
         sendRequest.aesKey = aesKey;
         sendRequest.shuffleOutputs = false;
+        sendRequest.coinSelector = getCoinSelectorForMultipleAddresses(fromAddresses);
+        Optional<AddressEntry> addressEntryOptional = Optional.empty();
+
+        if (changeAddress != null)
+            addressEntryOptional = findAddressEntry(changeAddress, AddressEntry.Context.AVAILABLE);
+
+        AddressEntry changeAddressAddressEntry = addressEntryOptional.orElseGet(this::getFreshAddressEntry);
+        checkNotNull(changeAddressAddressEntry, "change address must not be null");
+        sendRequest.changeAddress = changeAddressAddressEntry.getAddress();
+        return sendRequest;
+    }
+
+    private BtcCoinSelector getCoinSelectorForMultipleAddresses(Set<String> fromAddresses)
+            throws AddressEntryException {
         Set<AddressEntry> addressEntries = fromAddresses.stream()
                 .map(address -> {
                     Optional<AddressEntry> addressEntryOptional = findAddressEntry(address, AddressEntry.Context.AVAILABLE);
@@ -1298,17 +1312,8 @@ public class BtcWalletService extends WalletService {
         if (addressEntries.isEmpty())
             throw new AddressEntryException("No Addresses for withdraw found in our wallet");
 
-        sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesFromAddressEntries(addressEntries),
+        return new BtcCoinSelector(walletsSetup.getAddressesFromAddressEntries(addressEntries),
                 preferences.getIgnoreDustThreshold());
-        Optional<AddressEntry> addressEntryOptional = Optional.empty();
-
-        if (changeAddress != null)
-            addressEntryOptional = findAddressEntry(changeAddress, AddressEntry.Context.AVAILABLE);
-
-        AddressEntry changeAddressAddressEntry = addressEntryOptional.orElseGet(this::getFreshAddressEntry);
-        checkNotNull(changeAddressAddressEntry, "change address must not be null");
-        sendRequest.changeAddress = changeAddressAddressEntry.getAddress();
-        return sendRequest;
     }
 
     // We ignore utxos which are considered dust attacks for spying on users' wallets.
