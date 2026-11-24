@@ -18,8 +18,13 @@
 package bisq.core.app;
 
 import bisq.common.app.AppModule;
+import bisq.common.app.InstanceLock;
+import bisq.common.handlers.ResultHandler;
 
 import java.nio.file.Path;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -89,10 +94,26 @@ class BisqExecutableTest {
         assertTrue(executable.configErrorMessage.contains("option 'torControlPort' is not supported anymore"));
     }
 
+    @Test
+    void instanceLockIsHeldUntilTheProcessExits(@TempDir Path appDataDir) throws IOException {
+        var executable = new LockProbingBisqExecutable(appDataDir);
+        executable.instanceLock = new InstanceLock(appDataDir);
+        try {
+            assertTrue(executable.instanceLock.tryLock());
+
+            executable.flushAndExit(BisqExecutable.EXIT_SUCCESS);
+
+            assertTrue(executable.lockHeldDuringFlush, "The lock must be held while the data is flushed");
+            assertTrue(executable.lockHeldWhenExitIsScheduled, "The lock must be held until the process exits");
+        } finally {
+            executable.instanceLock.close();
+        }
+    }
+
     private static final class ConfigErrorHandled extends RuntimeException {
     }
 
-    private static final class TestBisqExecutable extends BisqExecutable {
+    private static class TestBisqExecutable extends BisqExecutable {
         private String configErrorMessage;
 
         private TestBisqExecutable() {
@@ -125,6 +146,37 @@ class BisqExecutableTest {
 
         @Override
         public void onSetupComplete() {
+        }
+    }
+
+    // Replaces the real flush and the real exit, and probes the lock from a second InstanceLock on the same
+    // data directory. Within one JVM the probe sees the lock through the JVM's lock table.
+    private static final class LockProbingBisqExecutable extends TestBisqExecutable {
+        private final Path appDataDir;
+        private boolean lockHeldDuringFlush;
+        private boolean lockHeldWhenExitIsScheduled;
+
+        private LockProbingBisqExecutable(Path appDataDir) {
+            this.appDataDir = appDataDir;
+        }
+
+        @Override
+        protected void flushPersistableData(ResultHandler completeHandler) {
+            lockHeldDuringFlush = isLockedByAnotherInstance();
+            completeHandler.handleResult();
+        }
+
+        @Override
+        protected void completeShutDown(int status) {
+            lockHeldWhenExitIsScheduled = isLockedByAnotherInstance();
+        }
+
+        private boolean isLockedByAnotherInstance() {
+            try (var probe = new InstanceLock(appDataDir)) {
+                return !probe.tryLock();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
     }
 }
