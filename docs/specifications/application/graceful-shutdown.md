@@ -42,13 +42,18 @@ hook may itself require the UserThread; initiating it there can create a circula
 must retain the requested exit status, including the failure status used to trigger wrapper-script
 restarts for seed, statistics, bridge, and REST nodes.
 
-The single-instance lock on the application data directory must stay held until the process
-exits, on every shutdown path. Shutdown must not release it explicitly. Writes to the data
-directory can still run after the final persistence flush has completed, for example the wallet
-shutdown on the timeout path. Another instance that starts on the same data directory before the
-process has exited must be refused. The operating system releases the lock when the process ends,
-also after a crash or a kill. Restarts by wrapper scripts and service managers wait for the process
-to exit and do not need an earlier release.
+Once the process has acquired the single-instance lock on the application data directory, the
+lock must stay held until the process exits, on every shutdown path. Shutdown must not release it
+explicitly. Writes to the data directory can still run after the final persistence flush has
+completed, for example the wallet shutdown on the timeout path. Another instance that starts on the
+same data directory before the process has exited must be refused. The operating system releases
+the lock when the process ends, also after a crash or a kill. Restarts by wrapper scripts and
+service managers wait for the process to exit and do not need an earlier release.
+
+This guarantee requires that the process acquired the lock and that the file system supports
+locking. If the lock mechanism itself fails, for example because the lock file cannot be created,
+startup continues without the lock, so that an unusable lock file does not prevent the application
+from running. Such a process does not exclude other instances.
 
 Only the first controlled exit request may schedule process termination. Competing normal, timeout,
 and error paths must not create multiple exit threads or replace the status chosen by the first
