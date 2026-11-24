@@ -144,7 +144,7 @@ public abstract class DockerOfferTest extends DockerMethodTest {
         }
         // Confirm any pending cancel/maker-fee refund txs so the next test sees freed
         // BTC immediately. One block is enough on regtest.
-        try { mineBlocks(1); } catch (RuntimeException ignored) { }
+        try { mineBlocks(1); } catch (RuntimeException | AssertionError ignored) { }
     }
 
     /**

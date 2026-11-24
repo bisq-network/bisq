@@ -78,8 +78,8 @@ public abstract class DaoTestBase {
         if (dao != null) {
             try {
                 dao.generateBlocks(2);
-            } catch (RuntimeException ignored) {
-                // Best-effort cleanup; don't mask test result with teardown failure.
+            } catch (RuntimeException | AssertionError e) {
+                log.warn("Could not mine the post-test cleanup blocks", e);
             }
         }
     }
