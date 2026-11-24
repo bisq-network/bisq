@@ -112,6 +112,8 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     private RequestBlocksHandler requestBlocksHandler;
     private final Set<NodeAddress> triedSeedNodeAddresses = new HashSet<>();
     private Timer retryTimer;
+    // A retry needs a connection. Without any connection the request waits, and the next connection resumes it.
+    private boolean waitingForConnection;
     private boolean stopped;
     // The accepted announcements by block height. We forget an announcement only when its height has left the
     // window of MAX_RECENT_BLOCKS, so we know every announcement which we would still accept.
@@ -164,13 +166,15 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
 
     /**
      * Starts a new block request with no tried seed nodes and no retries, which replaces the running request. A running
-     * request with the same start height asks for the same blocks already. We keep it with its attempt in flight or its
-     * waiting retry, as replacing it would drop an attempt which may be answered soon, or wait for the retry again.
+     * request with the same start height asks for the same blocks already. We keep it with its attempt in flight, its
+     * waiting retry or its wait for a connection, as replacing it would drop an attempt which may be answered soon, or
+     * wait for the retry again.
      *
      * @param startBlockHeight      Block height from where we expect new blocks (current block height in bsqState + 1)
      */
     public void requestBlocks(int startBlockHeight) {
-        if (startBlockHeight == lastRequestedBlockHeight && (requestBlocksHandler != null || retryTimer != null)) {
+        if (startBlockHeight == lastRequestedBlockHeight &&
+                (requestBlocksHandler != null || retryTimer != null || waitingForConnection)) {
             log.info("We have a block request with startBlockHeight={} running already.", startBlockHeight);
             return;
         }
@@ -207,6 +211,10 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
 
     @Override
     public void onConnection(Connection connection) {
+        // At startup the first connection has no preceding all-connections-lost event.
+        if (waitingForConnection) {
+            tryWithNewSeedNode(lastRequestedBlockHeight);
+        }
     }
 
     @Override
@@ -370,20 +378,17 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void tryWithNewSeedNode(int startBlockHeight) {
-        if (networkNode.getAllConnections().isEmpty()) {
-            return;
-        }
-
-        if (lastRequestedBlockHeight == 0) {
-            return;
-        }
-
-        if (stopped) {
+        if (lastRequestedBlockHeight == 0 || stopped) {
             return;
         }
 
         if (retryTimer != null) {
             log.warn("We have a retry timer already running.");
+            return;
+        }
+
+        waitingForConnection = networkNode.getAllConnections().isEmpty();
+        if (waitingForConnection) {
             return;
         }
 
@@ -430,6 +435,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     private void stopRequest() {
         stopRetryTimer();
         closeHandler();
+        waitingForConnection = false;
         retryCounter = 0;
         triedSeedNodeAddresses.clear();
     }

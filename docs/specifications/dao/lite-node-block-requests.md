@@ -33,6 +33,9 @@ trigger for the start height of the running request starts no new request.
   of the replaced request and ignores its late answer or failure. A request for the start height of
   the running request does not replace it.
 - A request may start below the start height of an earlier request, as after a reorg.
+- When the node has no connection at all, as at a start before its first connection, a request waits
+  for a connection instead of asking a seed node. With the next connection the request continues
+  with a retry after 10 seconds.
 - When the node has a connection again after it lost all connections, and when it awakes from
   standby, it requests the blocks of the last request again if that request was not answered. This
   is a new request, which starts with a retry after 10 seconds.
@@ -60,9 +63,11 @@ closes, the attempt can still be answered. Counting it as failed would drop the 
 other seed node is left, the request would give up.
 
 Without connections and during standby every attempt fails. These failures tell nothing about the
-seed nodes, so an unanswered request starts again with fresh retries. An answered request is not
-repeated, as a seed node would send the same blocks again; after the startup parsing the wallet
-starts a new request for any block that is still missing.
+seed nodes. So a request waits while the node has no connection, which includes the start before
+the first connection, and an unanswered request starts again with fresh retries after the node lost
+all connections or was in standby. An answered request is not repeated, as a seed node would send
+the same blocks again; after the startup parsing the wallet starts a new request for any block that
+is still missing.
 
 ## Compatibility
 

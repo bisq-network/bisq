@@ -44,6 +44,7 @@ import java.io.IOException;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -529,6 +530,29 @@ public class LiteNodeNetworkServiceTest {
         assertFalse(waitingRetry.isStopped());
     }
 
+    // The waiting request keeps its tried seed nodes, so after the connection it asks only the seed node it has not
+    // asked yet.
+    @Test
+    void keepsRequestWaitingForAConnectionForTheSameHeight() {
+        BlockRequests blockRequests = new BlockRequests();
+        blockRequests.service.requestBlocks(100);
+        ManualTimer.latest().fire();
+        blockRequests.connections.clear();
+        blockRequests.sendResults.getFirst().setException(new IOException("Seed node is offline"));
+
+        blockRequests.service.requestBlocks(100);
+        blockRequests.connections.add(blockRequests.connection);
+        blockRequests.service.onConnection(blockRequests.connection);
+        blockRequests.failSending = true;
+        for (int i = 0; i < SEED_NODES.size(); i++) {
+            ManualTimer.latest().fire();
+        }
+
+        assertEquals(SEED_NODES, Set.copyOf(blockRequests.receivers));
+        assertEquals(SEED_NODES.size(), blockRequests.receivers.size());
+        assertEquals(1, blockRequests.listener.noSeedNodeAvailableCount.get());
+    }
+
     @Test
     void newRequestStopsWaitingRetryOfEarlierRequest() {
         BlockRequests blockRequests = new BlockRequests();
@@ -592,6 +616,33 @@ public class LiteNodeNetworkServiceTest {
     }
 
     @Test
+    void resumesPendingRequestOnFirstConnectionAfterOfflineStartup() {
+        BlockRequests blockRequests = new BlockRequests();
+        blockRequests.connections.clear();
+        blockRequests.service.requestBlocks(100);
+        ManualTimer.firePendingTimers();
+        assertEquals(List.of(), blockRequests.requestedHeights());
+
+        blockRequests.connections.add(blockRequests.connection);
+        blockRequests.service.onConnection(blockRequests.connection);
+        ManualTimer.firePendingTimers();
+
+        assertEquals(List.of(100), blockRequests.requestedHeights());
+    }
+
+    @Test
+    void newConnectionDoesNotRestartARequestThatGaveUp() {
+        BlockRequests blockRequests = new BlockRequests();
+        blockRequests.failAllAttempts(100);
+
+        blockRequests.service.onConnection(blockRequests.connection);
+        ManualTimer.firePendingTimers();
+
+        assertEquals(SEED_NODES.size(), blockRequests.requests.size());
+        assertEquals(1, blockRequests.listener.noSeedNodeAvailableCount.get());
+    }
+
+    @Test
     void requestsBlocksAgainWithNewRetriesAfterAllConnectionsLost() {
         BlockRequests blockRequests = new BlockRequests();
         blockRequests.failAllAttempts(100);
@@ -602,6 +653,28 @@ public class LiteNodeNetworkServiceTest {
 
         assertEquals(SEED_NODES.size() + 1, blockRequests.requests.size());
         assertEquals(100, blockRequests.requests.get(SEED_NODES.size()).getFromBlockHeight());
+    }
+
+    // The request connection was the last one. The peer manager reports that all connections were lost before the
+    // service sees the disconnect, so the attempt in flight ends there, and the next connection starts the request again.
+    @Test
+    void requestsBlocksAgainWhenTheLastConnectionCloses() {
+        BlockRequests blockRequests = new BlockRequests();
+        blockRequests.service.requestBlocks(100);
+        ManualTimer.latest().fire();
+        blockRequests.sendResults.getFirst().set(blockRequests.connection);
+        blockRequests.connections.clear();
+        blockRequests.service.onAllConnectionsLost();
+        blockRequests.disconnect(blockRequests.connection, blockRequests.receivers.getFirst());
+        ManualTimer.firePendingTimers();
+        assertEquals(List.of(100), blockRequests.requestedHeights());
+
+        blockRequests.connections.add(blockRequests.connection);
+        blockRequests.service.onNewConnectionAfterAllConnectionsLost();
+        blockRequests.service.onConnection(blockRequests.connection);
+        ManualTimer.firePendingTimers();
+
+        assertEquals(List.of(100, 100), blockRequests.requestedHeights());
     }
 
     @Test
@@ -776,6 +849,7 @@ public class LiteNodeNetworkServiceTest {
         final NetworkNode networkNode = mock(NetworkNode.class);
         final PeerManager peerManager = mock(PeerManager.class);
         final Connection connection = mock(Connection.class);
+        final Set<Connection> connections = new HashSet<>(Set.of(connection));
         final CountingListener listener = new CountingListener();
         final LiteNodeNetworkService service;
         final List<NodeAddress> receivers = new ArrayList<>();
@@ -789,7 +863,7 @@ public class LiteNodeNetworkServiceTest {
             SeedNodeRepository seedNodeRepository = mock(SeedNodeRepository.class);
             doReturn(SEED_NODES).when(seedNodeRepository).getSeedNodeAddresses();
             doReturn(true).when(peerManager).isSeedNode(any(NodeAddress.class));
-            doReturn(Set.of(connection)).when(networkNode).getAllConnections();
+            doReturn(connections).when(networkNode).getAllConnections();
             doAnswer(invocation -> handlers.add(invocation.getArgument(0)))
                     .when(networkNode).addMessageListener(any());
             doAnswer(invocation -> {
