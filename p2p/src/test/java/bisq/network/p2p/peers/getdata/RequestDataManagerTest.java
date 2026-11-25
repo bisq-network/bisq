@@ -121,9 +121,6 @@ public class RequestDataManagerTest {
         NetworkNode networkNode = mock(NetworkNode.class);
         SimpleObjectProperty<NodeAddress> nodeAddressProperty = new SimpleObjectProperty<>();
         when(networkNode.nodeAddressProperty()).thenReturn(nodeAddressProperty);
-        // The response is not sent, so the handler does not complete.
-        when(networkNode.sendMessage(any(Connection.class), any(GetDataResponse.class)))
-                .thenReturn(SettableFuture.create());
         SeedNodeRepository seedNodeRepository = mock(SeedNodeRepository.class);
         when(seedNodeRepository.getSeedNodeAddresses()).thenReturn(Set.of(SEED_NODE_ADDRESS));
         when(seedNodeRepository.isSeedNode(MY_NODE_ADDRESS)).thenReturn(isSeedNode);
@@ -139,6 +136,9 @@ public class RequestDataManagerTest {
         when(connection.getUid()).thenReturn("uid");
         when(connection.getCapabilities()).thenReturn(new Capabilities());
         when(connection.getPeersNodeAddressOptional()).thenReturn(Optional.of(PEER_NODE_ADDRESS));
+        SettableFuture<Connection> sendFuture = SettableFuture.create();
+        sendFuture.set(connection);
+        when(networkNode.sendMessage(eq(connection), any(GetDataResponse.class))).thenReturn(sendFuture);
 
         requestDataManager.onMessage(new GetUpdatedDataRequest(PEER_NODE_ADDRESS, 1, Collections.emptySet()),
                 connection);
