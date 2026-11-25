@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
@@ -144,6 +145,41 @@ class SeedNodeSystemdUnitTest {
         assertEquals(List.of("mount " + jsonDir, "umount " + jsonDir), Files.readAllLines(calls));
     }
 
+    // Only the mount runs as root. The user of the node creates the directories, so that the node can enter them.
+    @Test
+    void theUserOfTheNodeCreatesTheJsonDirectoryBeforeTheMount(@TempDir Path bisqHome) throws Exception {
+        Map<String, String> environment = readBisqEnv(bisqHome);
+        environment.put("BISQ_DUMP_BLOCKCHAIN", "true");
+        List<String> unit = Files.readAllLines(Path.of("bisq.service"));
+        int mkdirLine = indexOfLine(unit, EXEC_START_PRE_BASH, "db/json");
+        int mountLine = indexOfLine(unit, EXEC_START_PRE_BASH_AS_ROOT, "db/json");
+
+        runUnitCommand(EXEC_START_PRE_BASH, "db/json", environment);
+
+        assertTrue(mkdirLine < mountLine);
+        assertFalse(unit.get(mountLine).contains("mkdir"));
+        assertTrue(unit.get(mountLine).contains("mode=0700"));
+        assertTrue(getDirectoriesBelow(bisqHome).stream().anyMatch(directory -> directory.endsWith("db/json")));
+    }
+
+    @Test
+    void createsOwnerOnlyDirectories(@TempDir Path bisqHome) throws Exception {
+        Map<String, String> environment = readBisqEnv(bisqHome);
+        environment.put("BISQ_EXTERNAL_TOR_PORT", "9051");
+        environment.put("BISQ_DUMP_BLOCKCHAIN", "true");
+
+        runUnitCommand(EXEC_START_PRE_BASH_SINGLE_QUOTED, "bisq.properties", environment);
+        runExternalTorConfigCommand(environment);
+        runUnitCommand(EXEC_START_PRE_BASH, "db/json", environment);
+
+        List<Path> directories = getDirectoriesBelow(bisqHome);
+        assertFalse(directories.isEmpty());
+        for (Path directory : directories) {
+            assertEquals(PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(directory),
+                    directory.toString());
+        }
+    }
+
     // Every local user can read the command line of a process in /proc
     @Test
     void passesNoSecretOnTheCommandLineOfTheNode() throws IOException {
@@ -190,6 +226,21 @@ class SeedNodeSystemdUnitTest {
         runUnitCommand(EXEC_START_PRE_BASH_SINGLE_QUOTED, "bisq.properties", environment);
 
         assertEquals("http://localhost:13003", createConfigOfTheNode(environment).seedNodeReportingServerUrl);
+    }
+
+    private static int indexOfLine(List<String> lines, String prefix, String marker) {
+        for (int i = 0; i < lines.size(); i++) {
+            if (lines.get(i).startsWith(prefix) && lines.get(i).contains(marker)) {
+                return i;
+            }
+        }
+        throw new AssertionError("No line starts with " + prefix + " and contains " + marker);
+    }
+
+    private static List<Path> getDirectoriesBelow(Path path) throws IOException {
+        try (Stream<Path> paths = Files.walk(path)) {
+            return paths.filter(Files::isDirectory).filter(directory -> !directory.equals(path)).toList();
+        }
     }
 
     private static Map<String, String> readBisqEnv(Path bisqHome) throws IOException {

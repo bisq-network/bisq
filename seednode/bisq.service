@@ -46,7 +46,9 @@ Restart=on-failure
 # their lines there, keeps the other lines, and leaves the file readable by the user bisq only: mktemp creates it with
 # mode 600. The single quotes let bash quote the values; the values stay in the environment and never become arguments
 # of a program.
-ExecStartPre=/bin/bash -c 'dir=$BISQ_HOME/$BISQ_APP_NAME; mkdir -p $dir && touch $dir/bisq.properties && tmp=$(mktemp $dir/bisq.properties.XXXXXX) && { grep -v -e "^[[:space:]]*rpcPassword=" -e "^[[:space:]]*bmOracleNodePrivKey=" $dir/bisq.properties; echo "rpcPassword=$BITCOIN_RPC_PASS"; echo "bmOracleNodePrivKey=$BISQ_BM_ORACLE_NODE_PRIVKEY"; } > $tmp && mv $tmp $dir/bisq.properties'
+# The commands which create directories in the data directory set the umask, so that the directories are owner-only as
+# those which the node creates. UMask= would also apply to the files of the node.
+ExecStartPre=/bin/bash -c 'umask 077; dir=$BISQ_HOME/$BISQ_APP_NAME; mkdir -p $dir && touch $dir/bisq.properties && tmp=$(mktemp $dir/bisq.properties.XXXXXX) && { grep -v -e "^[[:space:]]*rpcPassword=" -e "^[[:space:]]*bmOracleNodePrivKey=" $dir/bisq.properties; echo "rpcPassword=$BITCOIN_RPC_PASS"; echo "bmOracleNodePrivKey=$BISQ_BM_ORACLE_NODE_PRIVKEY"; } > $tmp && mv $tmp $dir/bisq.properties'
 
 # The Tor library of Bisq reads the settings of a running Tor from external_tor.config in the Tor directory. With
 # BISQ_EXTERNAL_TOR_PORT=-1, the default, the node starts its own Tor. README.md describes the drop-in which starts the
@@ -54,8 +56,10 @@ ExecStartPre=/bin/bash -c 'dir=$BISQ_HOME/$BISQ_APP_NAME; mkdir -p $dir && touch
 # The node lower-cases the network for the name of its directory, whatever case --baseCurrencyNetwork has, so these
 # commands lower-case BISQ_BASE_CURRENCY with tr in the C locale, as the node does in every locale. They use no ${...}:
 # systemd replaces that itself, and would turn ${BISQ_BASE_CURRENCY,,} into an empty string.
-ExecStartPre=/bin/bash -c "network=$(echo $BISQ_BASE_CURRENCY | LC_ALL=C tr A-Z a-z); if [ $BISQ_EXTERNAL_TOR_PORT != -1 ];then mkdir -p $BISQ_HOME/$BISQ_APP_NAME/$network/tor && (echo UseExternalTor 1; echo CookieAuthentication 1; echo CookieAuthFile $BISQ_EXTERNAL_TOR_CONTROL_COOKIE_FILE; echo ControlPort 127.0.0.1:$BISQ_EXTERNAL_TOR_PORT) > $BISQ_HOME/$BISQ_APP_NAME/$network/tor/external_tor.config;else rm -f $BISQ_HOME/$BISQ_APP_NAME/$network/tor/external_tor.config;fi"
-ExecStartPre=+/bin/bash -c "network=$(echo $BISQ_BASE_CURRENCY | LC_ALL=C tr A-Z a-z); if [ $BISQ_DUMP_BLOCKCHAIN = true ];then mkdir -p $BISQ_HOME/$BISQ_APP_NAME/$network/db/json && mount -t tmpfs none -o size=8000M,uid=bisq,gid=bisq $BISQ_HOME/$BISQ_APP_NAME/$network/db/json;else true;fi"
+ExecStartPre=/bin/bash -c "network=$(echo $BISQ_BASE_CURRENCY | LC_ALL=C tr A-Z a-z); if [ $BISQ_EXTERNAL_TOR_PORT != -1 ];then umask 077; mkdir -p $BISQ_HOME/$BISQ_APP_NAME/$network/tor && (echo UseExternalTor 1; echo CookieAuthentication 1; echo CookieAuthFile $BISQ_EXTERNAL_TOR_CONTROL_COOKIE_FILE; echo ControlPort 127.0.0.1:$BISQ_EXTERNAL_TOR_PORT) > $BISQ_HOME/$BISQ_APP_NAME/$network/tor/external_tor.config;else rm -f $BISQ_HOME/$BISQ_APP_NAME/$network/tor/external_tor.config;fi"
+# The user bisq creates the directories, so that the node can enter them; only the mount needs root.
+ExecStartPre=/bin/bash -c "network=$(echo $BISQ_BASE_CURRENCY | LC_ALL=C tr A-Z a-z); if [ $BISQ_DUMP_BLOCKCHAIN = true ];then umask 077; mkdir -p $BISQ_HOME/$BISQ_APP_NAME/$network/db/json;else true;fi"
+ExecStartPre=+/bin/bash -c "network=$(echo $BISQ_BASE_CURRENCY | LC_ALL=C tr A-Z a-z); if [ $BISQ_DUMP_BLOCKCHAIN = true ];then mount -t tmpfs none -o size=8000M,uid=bisq,gid=bisq,mode=0700 $BISQ_HOME/$BISQ_APP_NAME/$network/db/json;else true;fi"
 ExecStopPost=+/bin/bash -c "network=$(echo $BISQ_BASE_CURRENCY | LC_ALL=C tr A-Z a-z); if [ $BISQ_DUMP_BLOCKCHAIN = true ];then umount $BISQ_HOME/$BISQ_APP_NAME/$network/db/json;else true;fi"
 
 User=bisq
