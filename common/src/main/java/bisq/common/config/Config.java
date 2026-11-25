@@ -1255,6 +1255,10 @@ public class Config {
         if (!dir.exists()) {
             try {
                 Path path = dir.toPath().toAbsolutePath();
+                // Bisq/. names Bisq, and its parent is the parent of Bisq
+                while (path.getFileName() != null && path.getFileName().toString().equals(".")) {
+                    path = path.getParent();
+                }
                 Path parent = path.getParent();
                 if (parent != null) {
                     Files.createDirectories(parent);

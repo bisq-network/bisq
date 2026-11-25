@@ -135,6 +135,21 @@ public class ConfigTests {
         assertThat(Files.getPosixFilePermissions(parent), equalTo(Files.getPosixFilePermissions(reference)));
     }
 
+    // The path names the directory Bisq, which is owner-only, and the parent share keeps the default mode
+    @Test
+    public void aDataDirectoryPathEndingInDotNamesTheOwnerOnlyDirectory(@TempDir Path tmp) throws IOException {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        Path appDataDir = tmp.resolve("share/Bisq");
+
+        Config config = configWithOpts(opt(APP_DATA_DIR, appDataDir + File.separator + "."), opt(HELP));
+
+        assertThat(config.appDataDir.getName(), equalTo("."));
+        assertThat(Files.getPosixFilePermissions(appDataDir), equalTo(PosixFilePermissions.fromString("rwx------")));
+        Path reference = Files.createDirectory(tmp.resolve("reference"));
+        assertThat(Files.getPosixFilePermissions(appDataDir.getParent()),
+                equalTo(Files.getPosixFilePermissions(reference)));
+    }
+
     @Test
     public void whenUnrecognizedOptionIsSet_thenConfigExceptionIsThrown() {
         Exception exception = assertThrows(ConfigException.class, () -> configWithOpts(opt("bogus")));
