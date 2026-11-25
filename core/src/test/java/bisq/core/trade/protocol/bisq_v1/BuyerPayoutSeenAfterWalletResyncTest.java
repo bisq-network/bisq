@@ -61,13 +61,18 @@ import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.mockito.ArgumentCaptor;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static com.natpryce.makeiteasy.MakeItEasy.a;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
@@ -132,6 +137,7 @@ class BuyerPayoutSeenAfterWalletResyncTest {
         depositTx.getConfidence().setAppearedAtChainHeight(100);
         // A payout that the wallet received in a filtered block has no witness data
         payoutTx = createPayoutTxWithoutWitness(depositTx, buyerPayoutAmount, SELLER_SECURITY_DEPOSIT);
+        payoutTx.getConfidence().setAppearedAtChainHeight(101);
         when(tradeWalletService.getWalletTx(payoutTx.getTxId())).thenReturn(payoutTx);
     }
 
@@ -155,12 +161,34 @@ class BuyerPayoutSeenAfterWalletResyncTest {
 
         // The wallet syncs the block with the deposit tx, then the one with the payout
         when(btcWalletService.getTransaction(depositTx.getTxId().toString())).thenReturn(depositTx);
-        listener.onTransactionConfidenceChanged(
-                confidence(TransactionConfidence.ConfidenceType.BUILDING, payoutTx.getTxId()));
+        listener.onTransactionConfidenceChanged(payoutTx.getConfidence());
 
         assertSame(payoutTx, trade.getPayoutTx());
         assertEquals(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK, trade.getTradeState());
         assertNull(trade.getErrorMessage());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void keepsWatchingWhenTheWalletFirstSeesTheDepositAsPending(boolean depositAtStartup) {
+        Trade trade = trade();
+        depositTx.getConfidence().setConfidenceType(TransactionConfidence.ConfidenceType.PENDING);
+        if (depositAtStartup)
+            when(btcWalletService.getTransaction(depositTx.getTxId().toString())).thenReturn(depositTx);
+
+        new BuyerAsMakerProtocol((BuyerAsMakerTrade) trade).onInitialized();
+
+        assertNull(trade.getErrorMessage());
+        AddressConfidenceListener listener = capturedListener();
+        when(btcWalletService.getTransaction(depositTx.getTxId().toString())).thenReturn(depositTx);
+        listener.onTransactionConfidenceChanged(null);
+        assertNull(trade.getPayoutTx());
+
+        depositTx.getConfidence().setAppearedAtChainHeight(100);
+        listener.onTransactionConfidenceChanged(payoutTx.getConfidence());
+
+        assertSame(payoutTx, trade.getPayoutTx());
+        assertEquals(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK, trade.getTradeState());
     }
 
     // Without the deposit tx, a transaction to the payout address cannot be checked and does not count
@@ -171,8 +199,7 @@ class BuyerPayoutSeenAfterWalletResyncTest {
 
         new BuyerAsMakerProtocol((BuyerAsMakerTrade) trade).onInitialized();
         AddressConfidenceListener listener = capturedListener();
-        listener.onTransactionConfidenceChanged(
-                confidence(TransactionConfidence.ConfidenceType.BUILDING, payoutTx.getTxId()));
+        listener.onTransactionConfidenceChanged(payoutTx.getConfidence());
 
         assertNull(trade.getPayoutTx());
         assertEquals(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG, trade.getTradeState());
@@ -180,8 +207,7 @@ class BuyerPayoutSeenAfterWalletResyncTest {
 
         // The next block changes the confidence of the payout again
         when(btcWalletService.getTransaction(depositTx.getTxId().toString())).thenReturn(depositTx);
-        listener.onTransactionConfidenceChanged(
-                confidence(TransactionConfidence.ConfidenceType.BUILDING, payoutTx.getTxId()));
+        listener.onTransactionConfidenceChanged(payoutTx.getConfidence());
 
         assertSame(payoutTx, trade.getPayoutTx());
         assertEquals(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK, trade.getTradeState());
@@ -196,16 +222,34 @@ class BuyerPayoutSeenAfterWalletResyncTest {
 
         new BuyerAsMakerProtocol((BuyerAsMakerTrade) trade).onInitialized();
         AddressConfidenceListener listener = capturedListener();
-        TransactionConfidence payoutConfidence = confidence(TransactionConfidence.ConfidenceType.BUILDING,
-                payoutTx.getTxId());
-        listener.onTransactionConfidenceChanged(payoutConfidence);
+        // A block can contain both the deposit and its spend.
+        payoutTx.getConfidence().setAppearedAtChainHeight(100);
+        listener.onTransactionConfidenceChanged(payoutTx.getConfidence());
         assertNull(trade.getPayoutTx());
 
         // The wallet syncs the block with the deposit tx; its confidence event does not touch the payout address
         when(btcWalletService.getTransaction(depositTx.getTxId().toString())).thenReturn(depositTx);
-        when(btcWalletService.getConfidenceForAddressFromBlockHeight(BUYER_PAYOUT_ADDRESS, 100))
-                .thenReturn(payoutConfidence);
+        when(btcWalletService.getTransactionsForAddress(BUYER_PAYOUT_ADDRESS)).thenReturn(Set.of(payoutTx));
         listener.onTransactionConfidenceChanged(null);
+
+        assertSame(payoutTx, trade.getPayoutTx());
+        assertEquals(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK, trade.getTradeState());
+        assertNull(trade.getErrorMessage());
+    }
+
+    @Test
+    void findsThePayoutAlongsideANewerPaymentToTheSameAddressAtStartup() {
+        Trade trade = trade();
+        when(btcWalletService.getTransaction(depositTx.getTxId().toString())).thenReturn(depositTx);
+        Transaction otherPayment = new Transaction(PARAMS);
+        otherPayment.addInput(Sha256Hash.of(new byte[]{3}), 0, ScriptBuilder.createEmpty());
+        otherPayment.addOutput(Coin.valueOf(25_000), BUYER_PAYOUT_ADDRESS);
+        otherPayment.getConfidence().setConfidenceType(TransactionConfidence.ConfidenceType.PENDING);
+        when(tradeWalletService.getWalletTx(otherPayment.getTxId())).thenReturn(otherPayment);
+        when(btcWalletService.getTransactionsForAddress(BUYER_PAYOUT_ADDRESS))
+                .thenReturn(new LinkedHashSet<>(List.of(otherPayment, payoutTx)));
+
+        new BuyerAsMakerProtocol((BuyerAsMakerTrade) trade).onInitialized();
 
         assertSame(payoutTx, trade.getPayoutTx());
         assertEquals(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK, trade.getTradeState());
@@ -216,13 +260,6 @@ class BuyerPayoutSeenAfterWalletResyncTest {
         ArgumentCaptor<AddressConfidenceListener> captor = ArgumentCaptor.forClass(AddressConfidenceListener.class);
         verify(btcWalletService).addAddressConfidenceListener(captor.capture());
         return captor.getValue();
-    }
-
-    private static TransactionConfidence confidence(TransactionConfidence.ConfidenceType type, Sha256Hash txId) {
-        TransactionConfidence confidence = mock(TransactionConfidence.class);
-        when(confidence.getConfidenceType()).thenReturn(type);
-        when(confidence.getTransactionHash()).thenReturn(txId);
-        return confidence;
     }
 
     // Buyer as maker in FIAT_SENT, as persisted: the deposit tx only by its id, to be read from the wallet

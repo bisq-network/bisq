@@ -60,6 +60,7 @@ import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.mockito.ArgumentCaptor;
 
@@ -74,7 +75,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -174,10 +174,8 @@ class MediatedPayoutSeenInWalletDuringRefundTest {
     @Test
     void unconfirmedPayoutInTheWalletAtStartupDuringARefundRequestIsIgnoredAndStillWatched() {
         Trade trade = trade(Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER);
-        TransactionConfidence pending = confidence(TransactionConfidence.ConfidenceType.PENDING,
-                mediatedPayoutTx.getTxId());
-        when(btcWalletService.getConfidenceForAddressFromBlockHeight(eq(SELLER_PAYOUT_ADDRESS), anyLong()))
-                .thenReturn(pending);
+        mediatedPayoutTx.getConfidence().setConfidenceType(TransactionConfidence.ConfidenceType.PENDING);
+        when(btcWalletService.getTransactionsForAddress(SELLER_PAYOUT_ADDRESS)).thenReturn(Set.of(mediatedPayoutTx));
 
         new DisputeProtocol(trade).onInitialized();
 

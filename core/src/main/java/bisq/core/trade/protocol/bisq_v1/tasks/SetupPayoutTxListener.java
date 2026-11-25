@@ -41,7 +41,7 @@ public abstract class SetupPayoutTxListener extends TradeTask {
     // Use instance fields to not get eaten up by the GC
     private Subscription tradeStateSubscription;
     private AddressConfidenceListener confidenceListener;
-    private boolean depositTxInWallet;
+    private boolean waitingForDepositTx;
 
     public SetupPayoutTxListener(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
@@ -63,27 +63,20 @@ public abstract class SetupPayoutTxListener extends TradeTask {
                         walletService.getAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT).orElse(null),
                         "Payout address entry must exist. tradeId=%s",
                         id).getAddress();
-                // After a resync of the wallet, the deposit tx is only in the wallet once the wallet has synced its
-                // block, and no payout can be in the wallet before it. We still watch the payout address, and the
-                // listener checks a payout once the deposit tx is there.
-                Transaction depositTx = trade.getDepositTx();
-                depositTxInWallet = depositTx != null;
-                TransactionConfidence confidence = null;
-                if (depositTx != null &&
-                        depositTx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
-                    // check if the payout already happened (ensuring it was > deposit block height, see GH #5725)
-                    confidence = walletService.getConfidenceForAddressFromBlockHeight(address,
-                            depositTx.getConfidence().getAppearedAtChainHeight());
-                } else if (depositTx == null) {
-                    log.warn("The deposit tx is not in the wallet yet. We watch the payout address. tradeId={}", id);
-                }
-                if (!isInNetwork(confidence) || !applyConfidence(confidence)) {
+                waitingForDepositTx = trade.getDepositTx() == null;
+                if (waitingForDepositTx || !applyPayoutFromWallet(walletService, address)) {
                     confidenceListener = new AddressConfidenceListener(address) {
                         @Override
                         public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                            if (isInNetwork(confidence) && applyConfidence(confidence))
-                                return;
-                            maybeApplyPayoutSeenBeforeDepositTx(walletService, address);
+                            if (waitingForDepositTx) {
+                                if (trade.getDepositTx() == null)
+                                    return;
+                                waitingForDepositTx = false;
+                                if (applyPayoutFromWallet(walletService, address))
+                                    return;
+                            }
+                            if (isInNetwork(confidence))
+                                applyConfidence(confidence);
                         }
                     };
                     walletService.addAddressConfidenceListener(confidenceListener);
@@ -106,21 +99,14 @@ public abstract class SetupPayoutTxListener extends TradeTask {
         }
     }
 
-    // A payout which reached the wallet before the deposit tx could not be checked then. Once the deposit tx is in
-    // the wallet, we check the payout address again instead of waiting for the next confidence change of the payout.
-    private void maybeApplyPayoutSeenBeforeDepositTx(BtcWalletService walletService, Address address) {
-        if (depositTxInWallet || trade.getPayoutTx() != null)
-            return;
-
-        Transaction depositTx = trade.getDepositTx();
-        if (depositTx == null)
-            return;
-
-        depositTxInWallet = true;
-        TransactionConfidence confidence = walletService.getConfidenceForAddressFromBlockHeight(address,
-                depositTx.getConfidence().getAppearedAtChainHeight());
-        if (isInNetwork(confidence))
-            applyConfidence(confidence);
+    private boolean applyPayoutFromWallet(BtcWalletService walletService, Address address) {
+        // A later payment can reuse the address. Validation identifies the payout by the deposit output it spends.
+        for (Transaction tx : walletService.getTransactionsForAddress(address)) {
+            TransactionConfidence confidence = tx.getConfidence();
+            if (isInNetwork(confidence) && applyConfidence(confidence))
+                return true;
+        }
+        return false;
     }
 
     private boolean applyConfidence(TransactionConfidence confidence) {

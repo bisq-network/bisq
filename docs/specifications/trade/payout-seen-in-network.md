@@ -16,6 +16,10 @@ started the payment, and either trader's node does it after accepting a mediatio
 - While the transaction is unconfirmed, its witness must contain valid signatures of both traders
   for that spend, in the form in which a BISQ wallet signs it, with SIGHASH_ALL.
 - Once the transaction is in a block, its signatures are not checked.
+- During a wallet resync, the node watches the payout address while it waits for the deposit
+  transaction. As soon as the deposit is available, even if it is still pending, the node checks
+  transactions already in the wallet against the same payout rules. This includes a payout mined in
+  the deposit's block and a payout followed by another payment to the same address.
 
 An unconfirmed transaction is only what a peer relayed. Without the signature check, a peer could
 relay a transaction that can never be mined and make the node treat the trade as paid out. A
@@ -27,20 +31,12 @@ Core sends the transactions of a filtered block without witness. So a payout tha
 sees in a block has no witness to check, for example when the node was offline while the payout was
 published, or after a resync of the wallet.
 
-- The node watches the payout address also when the deposit transaction is not in its wallet yet,
-  for example at the start of a resync of the wallet, before it has synced the block with the
-  deposit. A transaction to the payout address counts only once the deposit transaction is in the
-  wallet and the transaction passes the rules above. Until then the node keeps watching, and the
-  trade gets no error. When the deposit transaction arrives, the node checks the payout address
-  again, so a payout it saw before the deposit counts without waiting for its next confirmation.
-
-After a resync, the wallet has neither the deposit nor the payout until it has synced their blocks.
-Without the watch, the node set an error on the trade at startup, which stayed on the trade, and
-it completed the trade only after the next restart.
-
 ## Compatibility
 
 No message and no persisted data change.
+
+Older versions could record a persistent trade error at startup while the wallet was still syncing
+the deposit. The node can now detect the payout in the same session.
 
 Before, the node ignored a payout transaction without witness data. A trade whose payout message
 did not arrive, and whose payout the wallet first saw in a block, was never completed, although the
