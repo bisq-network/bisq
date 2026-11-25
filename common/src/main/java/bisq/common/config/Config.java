@@ -2,6 +2,8 @@ package bisq.common.config;
 
 import bisq.network.tor.common.platform.LinuxDistribution;
 
+import bisq.common.file.FileUtil;
+
 import org.bitcoinj.core.NetworkParameters;
 
 import joptsimple.AbstractOptionSpec;
@@ -16,6 +18,7 @@ import joptsimple.util.PathConverter;
 import joptsimple.util.PathProperties;
 import joptsimple.util.RegexMatcher;
 
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -1244,13 +1247,26 @@ public class Config {
 
     /**
      * Creates {@value APP_DATA_DIR} including any nonexistent parent directories. Does
-     * nothing if the directory already exists.
+     * nothing if the directory already exists. The directory is owner-only from its creation on, so that no other user
+     * can open a directory in it before CommonSetup restricts the data directory, also if the start ends before. The
+     * parents are no part of the data directory and get the default mode.
      * @return the given directory, now guaranteed to exist
      */
     private static File mkAppDataDir(File dir) {
         if (!dir.exists()) {
             try {
-                Files.createDirectories(dir.toPath());
+                Path path = dir.toPath().toAbsolutePath();
+                // Bisq/. names Bisq, and its parent is the parent of Bisq
+                while (path.getFileName() != null && path.getFileName().toString().equals(".")) {
+                    path = path.getParent();
+                }
+                Path parent = path.getParent();
+                if (parent != null) {
+                    Files.createDirectories(parent);
+                }
+                FileUtil.createOwnerOnlyDirectories(path);
+            } catch (AccessDeniedException ex) {
+                throw accessDeniedException(dir);
             } catch (IOException ex) {
                 throw new UncheckedIOException(format("Application data directory '%s' could not be created", dir), ex);
             }
@@ -1260,19 +1276,28 @@ public class Config {
 
     /**
      * Creates child directory assuming parent directories already exist. Does nothing if
-     * the directory already exists.
+     * the directory already exists. The directory is owner-only from its creation on, as the data directory.
      * @return the child directory, now guaranteed to exist
      */
     private static File mkdir(File parent, String child) {
         File dir = new File(parent, child);
         if (!dir.exists()) {
             try {
-                Files.createDirectory(dir.toPath());
+                FileUtil.createOwnerOnlyDirectories(dir.toPath());
+            } catch (AccessDeniedException ex) {
+                throw accessDeniedException(dir);
             } catch (IOException ex) {
                 throw new UncheckedIOException(format("Directory '%s' could not be created", dir), ex);
             }
         }
         return dir;
+    }
+
+    // For example the directory of the network belongs to root after a start as root. The user can fix it, so it is no
+    // unexpected error.
+    private static ConfigException accessDeniedException(File dir) {
+        return new ConfigException("Directory '%s' could not be created because access is denied. Check the owner and " +
+                "the permissions of '%s' and of the directories above it.", dir, dir.getAbsoluteFile().getParentFile());
     }
 
 

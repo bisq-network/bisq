@@ -1,7 +1,10 @@
 package bisq.common.config;
 
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -12,8 +15,10 @@ import java.io.UncheckedIOException;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static bisq.common.config.Config.*;
 import static java.lang.String.format;
@@ -28,6 +33,8 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class ConfigTests {
 
@@ -107,6 +114,80 @@ public class ConfigTests {
         }
         Config config = configWithOpts(opt(APP_NAME, "Bisq-commandLineValue"));
         assertThat(config.appName, equalTo("Bisq-commandLineValue"));
+    }
+
+    // With the usual umask 022 a directory gets rwxr-xr-x by default. A start with --help ends after Config, before
+    // the node restricts the data directory, and leaves the directories behind.
+    @Test
+    public void theDataDirectoryAndItsDirectoriesAreOwnerOnlyFromTheirCreation(@TempDir Path tmp) throws IOException {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        Path parent = tmp.resolve("share");
+        Path appDataDir = parent.resolve("Bisq");
+
+        Config config = configWithOpts(opt(APP_DATA_DIR, appDataDir), opt(HELP));
+
+        Set<PosixFilePermission> ownerOnly = PosixFilePermissions.fromString("rwx------");
+        for (File dir : List.of(config.appDataDir, config.walletDir.getParentFile(), config.keyStorageDir,
+                config.storageDir, config.torDir, config.walletDir)) {
+            assertThat(dir.toString(), Files.getPosixFilePermissions(dir.toPath()), equalTo(ownerOnly));
+        }
+        // A parent which is created on the way is no part of the data directory and keeps the default mode
+        Path reference = Files.createDirectory(tmp.resolve("reference"));
+        assertThat(Files.getPosixFilePermissions(parent), equalTo(Files.getPosixFilePermissions(reference)));
+    }
+
+    // The path names the directory Bisq, which is owner-only, and the parent share keeps the default mode
+    @Test
+    public void aDataDirectoryPathEndingInDotNamesTheOwnerOnlyDirectory(@TempDir Path tmp) throws IOException {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        Path appDataDir = tmp.resolve("share/Bisq");
+
+        Config config = configWithOpts(opt(APP_DATA_DIR, appDataDir + File.separator + "."), opt(HELP));
+
+        assertThat(config.appDataDir.getName(), equalTo("."));
+        assertThat(Files.getPosixFilePermissions(appDataDir), equalTo(PosixFilePermissions.fromString("rwx------")));
+        Path reference = Files.createDirectory(tmp.resolve("reference"));
+        assertThat(Files.getPosixFilePermissions(appDataDir.getParent()),
+                equalTo(Files.getPosixFilePermissions(reference)));
+    }
+
+    // As after a start as root, which leaves a network directory that the user cannot enter. A ConfigException reaches
+    // the user in a dialog, other exceptions only the standard error.
+    @Test
+    public void whenNetworkDirectoryCannotBeEntered_thenConfigExceptionIsThrown(@TempDir Path tmp) throws IOException {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        Path networkDir = Files.createDirectories(tmp.resolve("Bisq/btc_mainnet"));
+        Files.setPosixFilePermissions(networkDir, PosixFilePermissions.fromString("---------"));
+        try {
+            // Root can enter it
+            assumeTrue(networkDir.toFile().listFiles() == null);
+
+            Exception exception = assertThrows(ConfigException.class,
+                    () -> configWithOpts(opt(APP_DATA_DIR, networkDir.getParent())));
+
+            assertTrue(exception.getMessage().contains(networkDir.toString()));
+        } finally {
+            Files.setPosixFilePermissions(networkDir, PosixFilePermissions.fromString("rwx------"));
+        }
+    }
+
+    @Test
+    public void whenAccessToTheParentOfAppDataDirIsDenied_thenConfigExceptionIsThrown(@TempDir Path tmp)
+            throws IOException {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        Path parent = Files.createDirectory(tmp.resolve("share"));
+        Files.setPosixFilePermissions(parent, PosixFilePermissions.fromString("r-xr-xr-x"));
+        try {
+            // Root can write in it
+            assumeFalse(Files.isWritable(parent));
+
+            Exception exception = assertThrows(ConfigException.class,
+                    () -> configWithOpts(opt(APP_DATA_DIR, parent.resolve("Bisq"))));
+
+            assertTrue(exception.getMessage().contains(parent.toString()));
+        } finally {
+            Files.setPosixFilePermissions(parent, PosixFilePermissions.fromString("rwx------"));
+        }
     }
 
     @Test
