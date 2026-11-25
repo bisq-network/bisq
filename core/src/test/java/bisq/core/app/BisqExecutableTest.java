@@ -18,14 +18,23 @@
 package bisq.core.app;
 
 import bisq.common.app.AppModule;
+import bisq.common.app.InstanceLock;
+import bisq.common.handlers.ResultHandler;
 
 import java.nio.file.Path;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -89,10 +98,57 @@ class BisqExecutableTest {
         assertTrue(executable.configErrorMessage.contains("option 'torControlPort' is not supported anymore"));
     }
 
+    // Issue 8160: another process must not get the lock while the owner still flushes its data or exits.
+    // The owner runs in its own JVM: a probe in the owner's JVM only sees the JVM's own lock table, and on
+    // Linux closing the probe's channel can release the owner's lock in the operating system.
+    @Test
+    @Timeout(value = 60, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    void anotherProcessGetsTheInstanceLockOnlyAfterTheOwnerHasExited(@TempDir Path appDataDir) throws Exception {
+        String javaCommand = Path.of(System.getProperty("java.home"), "bin", "java").toString();
+        Process owner = new ProcessBuilder(javaCommand, "-cp", System.getProperty("java.class.path"),
+                InstanceLockOwner.class.getName(), appDataDir.toString())
+                .redirectErrorStream(true)
+                .start();
+        try (var ownerOutput = new BufferedReader(new InputStreamReader(owner.getInputStream(), UTF_8));
+             var ownerInput = new PrintWriter(owner.getOutputStream(), true, UTF_8)) {
+            awaitLine(ownerOutput, InstanceLockOwner.FLUSH_PENDING);
+            assertFalse(canAcquireInstanceLock(appDataDir), "The lock must be held while the flush is pending");
+
+            ownerInput.println();
+            awaitLine(ownerOutput, InstanceLockOwner.EXITING);
+            assertFalse(canAcquireInstanceLock(appDataDir), "The lock must be held until the process has exited");
+
+            ownerInput.println();
+            assertEquals(BisqExecutable.EXIT_SUCCESS, owner.waitFor());
+            assertTrue(canAcquireInstanceLock(appDataDir), "The lock must be free after the process has exited");
+        } finally {
+            owner.destroyForcibly();
+        }
+    }
+
+    private static void awaitLine(BufferedReader reader, String expected) throws IOException {
+        var output = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (line.equals(expected)) {
+                return;
+            }
+            output.append(line).append(System.lineSeparator());
+        }
+        throw new AssertionError("The lock owner ended before printing '" + expected + "':" +
+                System.lineSeparator() + output);
+    }
+
+    private static boolean canAcquireInstanceLock(Path appDataDir) throws IOException {
+        try (var probe = new InstanceLock(appDataDir)) {
+            return probe.tryLock();
+        }
+    }
+
     private static final class ConfigErrorHandled extends RuntimeException {
     }
 
-    private static final class TestBisqExecutable extends BisqExecutable {
+    private static class TestBisqExecutable extends BisqExecutable {
         private String configErrorMessage;
 
         private TestBisqExecutable() {
@@ -125,6 +181,44 @@ class BisqExecutableTest {
 
         @Override
         public void onSetupComplete() {
+        }
+    }
+
+    // Takes the lock, then shuts down through flushAndExit() with the real exit. Like the production flush,
+    // the flush completes after flushAndExit() has returned. It waits for a line on stdin while the flush is
+    // pending and again in a shutdown hook, so the test can probe the lock at both points.
+    public static final class InstanceLockOwner extends TestBisqExecutable {
+        static final String FLUSH_PENDING = "flush pending";
+        static final String EXITING = "exiting";
+
+        private ResultHandler pendingFlushHandler;
+
+        public static void main(String[] args) throws IOException {
+            var input = new BufferedReader(new InputStreamReader(System.in, UTF_8));
+            var owner = new InstanceLockOwner();
+            owner.instanceLock = new InstanceLock(Path.of(args[0]));
+            if (!owner.instanceLock.tryLock()) {
+                System.exit(EXIT_FAILURE);
+            }
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                System.out.println(EXITING);
+                System.out.flush();
+                try {
+                    input.readLine();
+                } catch (IOException ignored) {
+                }
+            }));
+
+            owner.flushAndExit(EXIT_SUCCESS);
+            System.out.println(FLUSH_PENDING);
+            System.out.flush();
+            input.readLine();
+            owner.pendingFlushHandler.handleResult();
+        }
+
+        @Override
+        protected void flushPersistableData(ResultHandler completeHandler) {
+            pendingFlushHandler = completeHandler;
         }
     }
 }

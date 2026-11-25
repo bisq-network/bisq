@@ -380,22 +380,23 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         }
     }
 
+    // The instance lock is not released here. Writes to the data directory can still be running until the process
+    // exits, so the OS releases the lock at process exit.
     protected void flushAndExit(int status) {
-        // The OS releases the lock on process exit; we release explicitly for a clean handover
-        // to a restarting instance.
-        if (instanceLock != null) {
-            instanceLock.close();
-        }
         if (!hasDowngraded) {
             // If user tried to downgrade we do not write the persistable data to avoid data corruption
             log.info("PersistenceManager flushAllDataToDiskAtShutdown started");
-            PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
+            flushPersistableData(() -> {
                 log.info("Graceful shutdown completed. Exiting now.");
                 completeShutDown(status);
             });
         } else {
             completeShutDown(status);
         }
+    }
+
+    protected void flushPersistableData(ResultHandler completeHandler) {
+        PersistenceManager.flushAllDataToDiskAtShutdown(completeHandler);
     }
 
     protected void completeShutDown(int status) {
