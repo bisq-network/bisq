@@ -33,6 +33,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class ConfigTests {
@@ -148,6 +149,45 @@ public class ConfigTests {
         Path reference = Files.createDirectory(tmp.resolve("reference"));
         assertThat(Files.getPosixFilePermissions(appDataDir.getParent()),
                 equalTo(Files.getPosixFilePermissions(reference)));
+    }
+
+    // As after a start as root, which leaves a network directory that the user cannot enter. A ConfigException reaches
+    // the user in a dialog, other exceptions only the standard error.
+    @Test
+    public void whenNetworkDirectoryCannotBeEntered_thenConfigExceptionIsThrown(@TempDir Path tmp) throws IOException {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        Path networkDir = Files.createDirectories(tmp.resolve("Bisq/btc_mainnet"));
+        Files.setPosixFilePermissions(networkDir, PosixFilePermissions.fromString("---------"));
+        try {
+            // Root can enter it
+            assumeTrue(networkDir.toFile().listFiles() == null);
+
+            Exception exception = assertThrows(ConfigException.class,
+                    () -> configWithOpts(opt(APP_DATA_DIR, networkDir.getParent())));
+
+            assertTrue(exception.getMessage().contains(networkDir.toString()));
+        } finally {
+            Files.setPosixFilePermissions(networkDir, PosixFilePermissions.fromString("rwx------"));
+        }
+    }
+
+    @Test
+    public void whenAccessToTheParentOfAppDataDirIsDenied_thenConfigExceptionIsThrown(@TempDir Path tmp)
+            throws IOException {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        Path parent = Files.createDirectory(tmp.resolve("share"));
+        Files.setPosixFilePermissions(parent, PosixFilePermissions.fromString("r-xr-xr-x"));
+        try {
+            // Root can write in it
+            assumeFalse(Files.isWritable(parent));
+
+            Exception exception = assertThrows(ConfigException.class,
+                    () -> configWithOpts(opt(APP_DATA_DIR, parent.resolve("Bisq"))));
+
+            assertTrue(exception.getMessage().contains(parent.toString()));
+        } finally {
+            Files.setPosixFilePermissions(parent, PosixFilePermissions.fromString("rwx------"));
+        }
     }
 
     @Test

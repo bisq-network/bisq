@@ -166,7 +166,8 @@ sudo chmod 700 /bisq
 If a program of another user reads the JSON files which the node writes for a BSQ explorer (`BISQ_DUMP_BLOCKCHAIN`) or
 for the markets (`BISQ_DUMP_STATISTICS`), let the user `bisq` copy these files to a directory which that program can
 read, instead of opening the whole directory. ACLs in the data directory do not help: at every start the node makes the
-data directory and every directory in it owner-only, which also takes back what ACL entries grant other users there.
+data directory and the directories of its network owner-only, which also takes back what ACL entries grant other users
+there.
 
 #### Upgrading to the Tor library
 

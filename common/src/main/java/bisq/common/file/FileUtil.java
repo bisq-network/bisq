@@ -19,6 +19,7 @@ package bisq.common.file;
 
 import bisq.common.util.Utilities;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.Files;
 
 import org.apache.commons.io.IOUtils;
@@ -39,6 +40,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.nio.file.attribute.UserPrincipal;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -397,7 +399,8 @@ public class FileUtil {
      * {@link #restrictToOwner}. A failure is logged, and the other directories still get the mode. Files keep their
      * modes. A link below the directory is not followed, so directories outside it keep their modes; a directory which
      * is itself a link is followed. A directory which its owner cannot read, for example one with the mode 0300, gets
-     * the mode first, so that its subtree gets it as well.
+     * the mode first, so that its subtree gets it as well. A directory of another user keeps its mode, with everything
+     * in it: its owner could replace a directory in it with a link during the walk, and root would lock out its user.
      * <p>
      * As {@link #copyDirectory(File, File)}, the walk reads the attributes of an entry and then uses its path, so a link
      * which replaces a directory between the two steps would be followed. Call it only while no other process writes
@@ -416,17 +419,26 @@ public class FileUtil {
         }
         if (java.nio.file.Files.isDirectory(root)) {
             restrictToOwner(root, "rwx------");
-            restrictDirectoriesBelowToOwner(root);
+            try {
+                restrictDirectoriesBelowToOwner(root, java.nio.file.Files.getOwner(root));
+            } catch (IOException e) {
+                log.warn("Could not make the directories below {} accessible to their owner only: {}", root,
+                        e.toString());
+            }
         }
     }
 
     // The directory itself has the mode already
-    private static void restrictDirectoriesBelowToOwner(Path directory) {
+    @VisibleForTesting
+    static void restrictDirectoriesBelowToOwner(Path directory, UserPrincipal owner) {
         try {
             java.nio.file.Files.walkFileTree(directory, new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attributes) {
                     if (!dir.equals(directory)) {
+                        if (!belongsTo(dir, owner)) {
+                            return FileVisitResult.SKIP_SUBTREE;
+                        }
                         restrictToOwner(dir, "rwx------");
                     }
                     return FileVisitResult.CONTINUE;
@@ -438,8 +450,10 @@ public class FileUtil {
                     // own can open it. The directory which this walk starts at already has the mode, so a failure there
                     // is final, which ends the retries.
                     if (!file.equals(directory) && java.nio.file.Files.isDirectory(file, LinkOption.NOFOLLOW_LINKS)) {
-                        restrictToOwner(file, "rwx------");
-                        restrictDirectoriesBelowToOwner(file);
+                        if (belongsTo(file, owner)) {
+                            restrictToOwner(file, "rwx------");
+                            restrictDirectoriesBelowToOwner(file, owner);
+                        }
                     } else {
                         log.warn("Could not make {} accessible to its owner only: {}", file, e.toString());
                     }
@@ -459,6 +473,20 @@ public class FileUtil {
             log.warn("Could not make the directories below {} accessible to their owner only: {}", directory,
                     e.toString());
         }
+    }
+
+    private static boolean belongsTo(Path directory, UserPrincipal owner) {
+        try {
+            UserPrincipal directoryOwner = java.nio.file.Files.getOwner(directory, LinkOption.NOFOLLOW_LINKS);
+            if (directoryOwner.equals(owner)) {
+                return true;
+            }
+            log.warn("{} belongs to {} and not to {}. It keeps its mode and may be open to other users.", directory,
+                    directoryOwner, owner);
+        } catch (IOException e) {
+            log.warn("Could not make {} accessible to its owner only: {}", directory, e.toString());
+        }
+        return false;
     }
 
     // No attribute on a file system without POSIX permissions, such as the one of Windows
