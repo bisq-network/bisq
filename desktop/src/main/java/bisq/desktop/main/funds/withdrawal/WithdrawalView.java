@@ -551,17 +551,17 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         updateInputSelection();
     }
 
-    private void doWithdraw(Coin amount, Coin fee, FutureCallback<Transaction> callback) {
+    private void doWithdraw(Coin sendersAmount, Coin fee, FutureCallback<Transaction> callback) {
         if (btcWalletService.isEncrypted()) {
             UserThread.runAfter(() -> walletPasswordWindow.onAesKey(aesKey ->
-                    sendFunds(amount, fee, aesKey, callback))
+                    sendFunds(sendersAmount, fee, aesKey, callback))
                     .show(), 300, TimeUnit.MILLISECONDS);
         } else {
-            sendFunds(amount, fee, null, callback);
+            sendFunds(sendersAmount, fee, null, callback);
         }
     }
 
-    private void sendFunds(Coin amount, Coin fee, KeyParameter aesKey, FutureCallback<Transaction> callback) {
+    private void sendFunds(Coin sendersAmount, Coin fee, KeyParameter aesKey, FutureCallback<Transaction> callback) {
         try {
             String memo = withdrawMemoTextField.getText();
             if (memo.isEmpty()) {
@@ -569,7 +569,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             }
             Transaction transaction = btcWalletService.sendFundsForMultipleAddresses(fromAddresses,
                     withdrawToTextField.getText(),
-                    amount,
+                    sendersAmount,
                     fee,
                     null,
                     aesKey,
