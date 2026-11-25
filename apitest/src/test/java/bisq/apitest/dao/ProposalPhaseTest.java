@@ -137,14 +137,15 @@ public class ProposalPhaseTest extends DaoTestBase {
     // confiscateBondProposal validation lives in ConfiscateBondProposalFactory at proposal-
     // create time, but it does NOT verify the lockup tx id is on-chain. Broadcasting a
     // bogus confiscate-bond proposal would pollute the daemon's DAO state vs. the seed
-    // node and break every subsequent test's `awaitDaoStateReady`. Skip; this case
+    // node. `getDaoStatus` stays false for the rest of the shared stack, an offer take gets only
+    // a NACK, and every later BREAK1 pauses. Skip; this case
     // would need a core change to be testable through gRPC without corrupting state.
 
     // Out-of-phase proposal publish is not enforced in CoreDaoService — broadcast succeeds
     // and the tx, when later mined outside PROPOSAL phase, gets discarded by TxParser
     // (logs "Tx is not in required phase"). Locally, however, the daemon adds it to its
-    // tempProposals list, which produces a `isInConflictWithSeedNode` state that breaks
-    // every subsequent test's `awaitDaoStateReady`. Skip this case.
+    // tempProposals list, which produces a `isInConflictWithSeedNode` state. `getDaoStatus`
+    // then stays false for the rest of the shared stack, with the same effects. Skip this case.
 
     private long countMatching(bisq.cli.GrpcClient c, String txId) {
         return c.getProposals(GetProposalsRequest.Filter.ACTIVE_OR_MY_UNCONFIRMED, -1)
