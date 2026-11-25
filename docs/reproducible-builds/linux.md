@@ -17,7 +17,8 @@ Supported:
 
 Remaining gaps:
 
-- Linux release-builder is manual CI, not automatic push or pull-request CI.
+- Linux release-builder is manual CI, not automatic push or pull-request CI. Only its image is built on each push and
+  pull request that changes it.
 - Evidence must still be signed and published by the release manager.
 
 ## Build The Release-Builder Image
@@ -28,11 +29,12 @@ docker build --pull=false \
   docker/release-builder/linux
 ```
 
-To test a newer Ubuntu package snapshot before changing the Dockerfile default:
+To test a newer Ubuntu package snapshot, set `UBUNTU_APT_SNAPSHOT` to its UTC timestamp
+(`YYYYMMDDTHHMMSSZ`) and run the build.
 
 ```bash
 docker build --pull=false \
-  --build-arg UBUNTU_APT_SNAPSHOT=20260501T000000Z \
+  --build-arg "UBUNTU_APT_SNAPSHOT=${UBUNTU_APT_SNAPSHOT:?Set the snapshot timestamp}" \
   -t bisq-release-builder-linux:java-21 \
   docker/release-builder/linux
 ```

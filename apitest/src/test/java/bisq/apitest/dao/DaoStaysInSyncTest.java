@@ -40,9 +40,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>Why this matters: a daemon whose DAO state diverges from the seed node fails that
  * check, and {@code OpenOfferManager.handleOfferAvailabilityRequest} then answers a take
  * with only a NACK (no OfferAvailabilityResponse) — the failure mode that flaked
- * {@link TradeScenarioTest}. Several existing DAO tests' comments also note that polluting
- * the DAO state "produces an isInConflictWithSeedNode state that breaks every subsequent
- * test's awaitDaoStateReady". This test makes that property explicit: a correctly gated
+ * {@link TradeScenarioTest}. Several existing DAO tests skip cases that would pollute the
+ * DAO state and leave a daemon in conflict with the seed node for the tests after them.
+ * This test makes that property explicit: a correctly gated
  * proposal + blind-vote + reveal + result cycle must leave every daemon in sync at each
  * milestone, not just produce the right vote outcome.
  *

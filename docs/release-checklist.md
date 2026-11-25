@@ -39,7 +39,7 @@ most of the other files.
 The version must have exactly three parts that are separated by a dot. `Version.getSubVersion`
 rejects any other form.
 
-The task `verifyGithubReleaseReadiness` checks only entries 1, 2 and 5. Check the other eight by
+The task `verifyGithubReleaseReadiness` checks only entries 1, 2, 5 and 7. Check the other seven by
 hand, for example with `grep -rn "<old version>"`.
 
 The version number on the website is changed in a separate repository, in `_config.yml` of
@@ -531,10 +531,11 @@ Document: [in-app-update-download.md](in-app-update-download.md)
 
 | File or directory | Required every release | How it is created |
 |-------------------|------------------------|-------------------|
-| `common/src/main/java/bisq/common/app/Version.java` | Yes | By hand or `replace_version_number.sh` |
+| `common/src/main/java/bisq/common/app/Version.java` | Yes | `replace_version_number.sh` |
 | `build-logic/packaging/.../PackagingPlugin.kt` | Yes | `replace_version_number.sh` |
 | `desktop/package/macosx/Info.plist` | Yes | `replace_version_number.sh` |
-| `desktop/package/macosx/{finalize,copy_dbs,insert_snapshot_version,replace_version_number}.sh` | Yes | By hand or `replace_version_number.sh` |
+| `desktop/package/macosx/{finalize,copy_dbs,insert_snapshot_version}.sh` | Yes | `replace_version_number.sh` |
+| `desktop/package/macosx/replace_version_number.sh` | Yes | By hand, before running it |
 | `desktop/src/main/resources/version.txt` | Yes | `replace_version_number.sh` |
 | `reproducible-build/rpm/Dockerfile` (`TAG_NAME` default) | Yes | `replace_version_number.sh` |
 | `p2p/src/main/resources/DaoStateStore_BTC_MAINNET` | Yes | `copy_dbs.sh` |

@@ -10,7 +10,7 @@ RUN mkdir -p /opt/java/openjdk \
 ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
-ARG UBUNTU_APT_SNAPSHOT=20260501T000000Z
+ARG UBUNTU_APT_SNAPSHOT=20261111T000000Z
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
@@ -20,11 +20,27 @@ ENV DEBIAN_FRONTEND=noninteractive \
     HOME=/tmp/bisq-home \
     GRADLE_USER_HOME=/tmp/bisq-home/.gradle
 
+# UBUNTU_APT_SNAPSHOT must be an exact UTC timestamp. date also accepts an
+# empty or partial value, and with an empty APT::Snapshot apt uses the live
+# archives.
+# The apt snapshot must not be older than the packages of the base image: apt
+# does not downgrade them, so tools that depend on an exact older version of
+# such a package could not be installed.
 # If the pinned base image lacks a CA bundle, temporarily disable APT HTTPS
 # peer verification only for the ca-certificates bootstrap. APT repository
 # signatures still authenticate package metadata and packages; the override is
 # removed and package lists are refreshed before installing the main toolchain.
 RUN set -eux; \
+    case "$UBUNTU_APT_SNAPSHOT" in \
+        [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]T[0-9][0-9][0-9][0-9][0-9][0-9]Z) ;; \
+        *) echo "UBUNTU_APT_SNAPSHOT '$UBUNTU_APT_SNAPSHOT' is not a UTC timestamp of the form YYYYMMDDTHHMMSSZ" >&2; exit 1 ;; \
+    esac; \
+    base_packages_time="$(stat -c %Y /var/lib/dpkg/status)"; \
+    snapshot_time="$(date -u -d "$(printf '%s' "$UBUNTU_APT_SNAPSHOT" | sed -E 's/^([0-9]{4})([0-9]{2})([0-9]{2})T([0-9]{2})([0-9]{2})([0-9]{2})Z$/\1-\2-\3 \4:\5:\6/')" +%s)"; \
+    if [ "$snapshot_time" -lt "$base_packages_time" ]; then \
+        echo "UBUNTU_APT_SNAPSHOT $UBUNTU_APT_SNAPSHOT is older than the packages of the base image, installed at $(date -u -d "@$base_packages_time" +%Y%m%dT%H%M%SZ)" >&2; \
+        exit 1; \
+    fi; \
     if [ -f /etc/apt/sources.list ]; then \
         awk ' \
             BEGIN { ubuntu_snapshot_uri = "[[:space:]]https?://(archive|security)\\.ubuntu\\.com/ubuntu/?[[:space:]]" } \

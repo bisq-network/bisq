@@ -132,7 +132,10 @@ jobs:
             -t bisq-daemon:ci \
             -f apitest/docker/Dockerfile.bisq .
           # Release peer image: inherits the master harness, swaps app binaries.
+          # The docker-container builder of setup-buildx-action cannot see the local bisq-daemon:ci image and
+          # tries to pull it from docker.io, so build FROM it with the docker driver of the default builder.
           docker buildx build \
+            --builder default \
             --build-arg BASE_IMAGE=bisq-daemon:ci \
             --load \
             -t bisq-daemon:release \

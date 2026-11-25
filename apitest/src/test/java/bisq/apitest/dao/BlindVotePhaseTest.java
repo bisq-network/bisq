@@ -86,8 +86,9 @@ public class BlindVotePhaseTest extends DaoTestBase {
 
     // Bisq core does not enforce phase at publish-time for blind votes. A broadcast
     // outside the BLIND_VOTE phase is accepted locally, which corrupts the daemon's
-    // DAO state vs. the seed node (`isInConflictWithSeedNode == true`), making every
-    // subsequent test fail at `awaitDaoStateReady`. Out-of-phase enforcement happens
+    // DAO state vs. the seed node (`isInConflictWithSeedNode == true`). `getDaoStatus` stays
+    // false for the rest of the shared stack, an offer take gets only a NACK, and every later
+    // BREAK1 pauses. Out-of-phase enforcement happens
     // in TxParser at chain-parse time, not in CoreDaoService. Skip this case.
 
     @Test

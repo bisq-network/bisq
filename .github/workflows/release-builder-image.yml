@@ -1,0 +1,55 @@
+name: Release Builder Image
+
+# Builds the Linux release-builder image whenever it changes. The evidence run in release-builder.yml is
+# started by hand, so without this job a broken image, for example a Dependabot update of the base image
+# digest past UBUNTU_APT_SNAPSHOT, is only found when a release is built.
+on:
+  push:
+    # Path filters do not apply to tag pushes, so leave tags out.
+    branches: [ '**' ]
+    paths:
+      - "docker/release-builder/**"
+      - ".github/workflows/release-builder-image.yml"
+  pull_request:
+    paths:
+      - "docker/release-builder/**"
+      - ".github/workflows/release-builder-image.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  release-builder-image:
+    name: Build Linux release-builder image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+          persist-credentials: false
+
+    - name: Build Linux release-builder image
+      shell: bash
+      run: docker build --pull=false -t bisq-release-builder-linux:java-21 docker/release-builder/linux
+
+    # verifyReleaseBuilderImage only checks that the guard text exists. Build with bad values and expect the
+    # guard's own message, so that a build failing for another reason does not pass. BuildKit also prints the
+    # RUN command with the build argument filled in, so only output lines of the running step that start with
+    # the message count. The layers before the guard come from the build above.
+    - name: Reject unusable apt snapshots
+      shell: bash
+      run: |
+        set -uo pipefail
+        check() {
+          local snapshot=$1 message=$2
+          if docker build --pull=false --progress=plain --build-arg "UBUNTU_APT_SNAPSHOT=$snapshot" \
+              docker/release-builder/linux > guard.log 2>&1; then
+            echo "::error::The image built with UBUNTU_APT_SNAPSHOT='$snapshot'"
+            exit 1
+          fi
+          sed -nE 's/^#[0-9]+ [0-9]+\.[0-9]+ //p' guard.log | awk -v m="$message" 'index($0, m) == 1 { f = 1 } END { exit !f }' ||
+            { cat guard.log; echo "::error::No guard message for '$snapshot'"; exit 1; }
+        }
+        check "" "UBUNTU_APT_SNAPSHOT '' is not a UTC timestamp"
+        check 20261111 "UBUNTU_APT_SNAPSHOT '20261111' is not a UTC timestamp"
+        check 20260501T000000Z "UBUNTU_APT_SNAPSHOT 20260501T000000Z is older than the packages of the base image"
