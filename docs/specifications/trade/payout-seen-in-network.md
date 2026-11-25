@@ -20,6 +20,10 @@ started the payment, and either trader's node does it after accepting a mediatio
   transaction. As soon as the deposit is available, even if it is still pending, the node checks
   transactions already in the wallet against the same payout rules. This includes a payout mined in
   the deposit's block and a payout followed by another payment to the same address.
+- The buyer's node does not process the seller's payout message while its wallet does not have the
+  deposit transaction, unless it already has the payout. The payout in the message can only be
+  checked against the deposit. The rejection sets no error on the trade; a mailbox message is
+  handled again at the next start, and the watched payout address completes the trade before that.
 
 An unconfirmed transaction is only what a peer relayed. Without the signature check, a peer could
 relay a transaction that can never be mined and make the node treat the trade as paid out. A
@@ -35,8 +39,9 @@ published, or after a resync of the wallet.
 
 No message and no persisted data change.
 
-Older versions could record a persistent trade error at startup while the wallet was still syncing
-the deposit. The node can now detect the payout in the same session.
+Older versions could record a persistent trade error at startup, or when the payout message
+arrived, while the wallet was still syncing the deposit. The node can now detect the payout in the
+same session.
 
 Before, the node ignored a payout transaction without witness data. A trade whose payout message
 did not arrive, and whose payout the wallet first saw in a block, was never completed, although the
@@ -45,7 +50,7 @@ payout without mediation, so such a trade now completes at the next start.
 
 ## Not covered
 
-The payout transaction received in the peer's message is checked as before, including its
-signatures. When the node watches for a mediated payout, also after a restart:
+Apart from the deposit precondition above, the payout transaction received in the peer's message is
+checked as before, including its signatures. When the node watches for a mediated payout, also after a restart:
 [mediated-payout-detection.md](mediated-payout-detection.md). The delayed payout transaction and
 refunds.

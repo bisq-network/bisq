@@ -55,8 +55,10 @@ peer's MediatedPayoutTxPublishedMessage also after that and during a refund requ
   While a refund request or a legacy arbitration is open, it rejects the message in every phase,
   unless its wallet has that payout as confirmed, by the rule that
   [mediated-payout-detection.md](mediated-payout-detection.md) defines for the payout seen in the
-  wallet as well. A rejected mailbox message stays in the local mailbox and is handled again at the
-  next start.
+  wallet as well. Without its own payout, the node also rejects the message while its wallet does
+  not have the deposit transaction yet, for example during a resync, because the payout can only be
+  checked against it. A rejected mailbox message stays in the local mailbox and is handled again at
+  the next start.
 
 Without the rule for a signature that arrives after the own acceptance, both traders could accept
 before the other's signature arrived. Then both nodes have both signatures, both show that they

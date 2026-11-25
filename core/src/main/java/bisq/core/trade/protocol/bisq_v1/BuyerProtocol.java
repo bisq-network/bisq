@@ -224,7 +224,11 @@ public abstract class BuyerProtocol extends DisputeProtocol {
     protected void handle(PayoutTxPublishedMessage message, NodeAddress peer) {
         expect(anyPhase(Trade.Phase.FIAT_SENT, Trade.Phase.PAYOUT_PUBLISHED)
                 .with(message)
-                .from(peer))
+                .from(peer)
+                // After a resync of the wallet, the deposit tx is only in the wallet once the wallet has synced its
+                // block, and the payout can only be checked against it. A rejected mailbox message is applied again
+                // at the next start, and until then the payout listener watches the payout address.
+                .preCondition(trade.getPayoutTx() != null || trade.getDepositTx() != null))
                 .setup(tasks(BuyerProcessPayoutTxPublishedMessage.class))
                 .executeTasks();
 

@@ -32,6 +32,7 @@ import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.Provider;
+import bisq.core.trade.protocol.bisq_v1.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.user.User;
@@ -250,6 +251,32 @@ class BuyerPayoutSeenAfterWalletResyncTest {
                 .thenReturn(new LinkedHashSet<>(List.of(otherPayment, payoutTx)));
 
         new BuyerAsMakerProtocol((BuyerAsMakerTrade) trade).onInitialized();
+
+        assertSame(payoutTx, trade.getPayoutTx());
+        assertEquals(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK, trade.getTradeState());
+        assertNull(trade.getErrorMessage());
+    }
+
+    // The payout in the seller's message can only be checked against the deposit tx. A message that arrives before
+    // the wallet has synced the deposit tx is not processed and sets no error on the trade. The payout listener
+    // completes the trade once the wallet has both transactions.
+    @Test
+    void payoutMessageBeforeTheDepositTxIsInTheWalletSetsNoError() {
+        Trade trade = trade();
+        when(btcWalletService.getTransaction(depositTx.getTxId().toString())).thenReturn(null);
+        BuyerAsMakerProtocol protocol = new BuyerAsMakerProtocol((BuyerAsMakerTrade) trade);
+        protocol.onInitialized();
+        AddressConfidenceListener listener = capturedListener();
+        NodeAddress seller = new NodeAddress("seller.onion:9999");
+
+        protocol.handle(new PayoutTxPublishedMessage(trade.getId(), payoutTx.bitcoinSerialize(), seller, null), seller);
+
+        assertNull(trade.getPayoutTx());
+        assertEquals(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG, trade.getTradeState());
+        assertNull(trade.getErrorMessage());
+
+        when(btcWalletService.getTransaction(depositTx.getTxId().toString())).thenReturn(depositTx);
+        listener.onTransactionConfidenceChanged(payoutTx.getConfidence());
 
         assertSame(payoutTx, trade.getPayoutTx());
         assertEquals(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK, trade.getTradeState());
