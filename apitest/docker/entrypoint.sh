@@ -13,6 +13,11 @@ set -euo pipefail
 APP_DATA_DIR="${APP_DATA_DIR:-/bisq/data}"
 mkdir -p "${APP_DATA_DIR}"
 
+# A stopped container loses its address. With the default DNS cache of 30 s a peer still
+# connects to the old address and waits for the TCP connect timeout (about 2 min) instead of
+# failing at once and falling back to the mailbox. The Gradle start scripts read JAVA_OPTS.
+export JAVA_OPTS="${JAVA_OPTS:-} -Dsun.net.inetaddr.ttl=0"
+
 # Seed APP_DATA_DIR/$APP_NAME from baked-in dao-setup on first boot. Idempotent.
 if [[ -d "/opt/dao-setup/${APP_NAME}" && ! -d "${APP_DATA_DIR}/${APP_NAME}" ]]; then
   echo "[entrypoint] seeding ${APP_DATA_DIR}/${APP_NAME} from /opt/dao-setup/${APP_NAME}"
