@@ -18,6 +18,7 @@ import joptsimple.util.PathConverter;
 import joptsimple.util.PathProperties;
 import joptsimple.util.RegexMatcher;
 
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -1266,6 +1267,8 @@ public class Config {
                 FileUtil.createOwnerOnlyDirectories(path);
                 // For a path ending in .. the line above found the directory, which was created on the way to the parent
                 FileUtil.restrictToOwner(path, "rwx------");
+            } catch (AccessDeniedException ex) {
+                throw accessDeniedException(dir);
             } catch (IOException ex) {
                 throw new UncheckedIOException(format("Application data directory '%s' could not be created", dir), ex);
             }
@@ -1283,11 +1286,20 @@ public class Config {
         if (!dir.exists()) {
             try {
                 FileUtil.createOwnerOnlyDirectories(dir.toPath());
+            } catch (AccessDeniedException ex) {
+                throw accessDeniedException(dir);
             } catch (IOException ex) {
                 throw new UncheckedIOException(format("Directory '%s' could not be created", dir), ex);
             }
         }
         return dir;
+    }
+
+    // For example the directory of the network belongs to root after a start as root. The user can fix it, so it is no
+    // unexpected error.
+    private static ConfigException accessDeniedException(File dir) {
+        return new ConfigException("Directory '%s' could not be created because access is denied. Check the owner and " +
+                "the permissions of '%s' and of the directories above it.", dir, dir.getAbsoluteFile().getParentFile());
     }
 
 

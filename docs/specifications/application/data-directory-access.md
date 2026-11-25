@@ -35,6 +35,9 @@ data and the logs.
   directory, it logs a warning, leaves everything below that directory as it is, sets the modes of
   the other directories and starts as before. A file system without these permissions, such as the
   one of Windows, keeps its own rules.
+- If the node cannot create the data directory, or one of the directories above, because access is
+  denied, for example below a network directory which a start as root created, it does not start
+  and says which directory it is. The desktop application shows the error in a dialog.
 - The node sets the modes of the directory that `--appDataDir` names and of everything below it, so
   the data directory must be a directory of its own.
 
