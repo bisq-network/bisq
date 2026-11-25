@@ -471,16 +471,6 @@ public abstract class WalletService {
                 .collect(Collectors.toList()));
     }
 
-    @Nullable
-    public TransactionConfidence getConfidenceForAddressFromBlockHeight(Address address, long targetHeight) {
-        return getMostRecentConfidence(getTransactionsForAddress(address).stream()
-                .map(tx -> getTransactionConfidence(tx, address))
-                .filter(Objects::nonNull)
-                .filter(con -> con.getConfidenceType() == PENDING ||
-                        (con.getConfidenceType() == BUILDING && con.getAppearedAtChainHeight() > targetHeight))
-                .collect(Collectors.toList()));
-    }
-
     private SetMultimap<Address, Transaction> getAddressToMatchingTxSetMultimap() {
         return addressToMatchingTxSetCache.updateAndGet(map -> map != null ? map : computeAddressToMatchingTxSetMultimap());
     }

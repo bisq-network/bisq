@@ -61,7 +61,6 @@ class WalletServiceAddressTransactionsTest {
         when(service.wallet.getTransactions(false)).thenReturn(Set.of(laterPayment, payout));
 
         assertSame(laterPayment.getConfidence(), service.getConfidenceForAddress(address));
-        assertSame(laterPayment.getConfidence(), service.getConfidenceForAddressFromBlockHeight(address, 100));
         assertEquals(Set.of(laterPayment, payout), service.getTransactionsForAddress(address));
     }
 }
