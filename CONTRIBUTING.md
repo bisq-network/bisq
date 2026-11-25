@@ -71,6 +71,15 @@ From https://cbea.ms/posts/git-commit/#seven-rules:
 
 *) See [here](https://stackoverflow.com/a/45563628/8340320) for how to enforce these two checks in IntelliJ IDEA.
 
+For each nontrivial commit, include a body that helps a future reader understand the change without the pull request or chat history:
+
+- Explain the problem or previous behavior and its consequences.
+- Explain what changed and why that approach was chosen.
+- Include relevant constraints, tradeoffs, or compatibility effects when supported by the change.
+- Describe behavior covered by tests when it helps explain the change.
+- Keep the explanation proportional to the change. A subject alone is sufficient for a self-explanatory trivial change.
+- Do not invent motivations, test results, or other details. Avoid simply listing changed files or repeating the diff.
+
 See also [bisq-network/style#9](https://github.com/bisq-network/style/issues/9).
 
 ### Sign your commits with GPG

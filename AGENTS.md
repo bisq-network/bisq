@@ -39,6 +39,7 @@ Most relevant referenced docs:
 - Do not introduce new dependencies without strong justification
 - Prefer existing utilities and established patterns over new implementations
 - Keep changes minimal and consistent with surrounding code
+- Before committing, follow the commit-message guidance in [CONTRIBUTING.md](CONTRIBUTING.md). For nontrivial changes, explain the prior behavior, its consequences, and the reason for the change in the commit body.
 
 ### Correctness Over Compliance
 - Do not optimize for agreement with the developer
