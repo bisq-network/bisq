@@ -37,6 +37,9 @@ data and the logs.
 - If the node cannot set the mode of a directory, for example because another user owns it, it logs
   a warning, sets the modes of the other directories and starts as before. A file system without
   these permissions, such as the one of Windows, keeps its own rules.
+- If the node cannot create the data directory, or one of the directories named above, because access
+  is denied, for example below a network directory which a start as root created, it does not start
+  and says which directory it is. The desktop application shows the error in a dialog.
 
 The key ring and the backup copy have their own rules:
 [`key-ring-storage.md`](key-ring-storage.md) and
