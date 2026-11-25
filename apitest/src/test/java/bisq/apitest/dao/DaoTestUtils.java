@@ -200,7 +200,11 @@ public class DaoTestUtils {
         allowProposalsToPropagate();
     }
 
-    /** Overridden by tests, which check whether BREAK1 pauses without waiting for it. */
+    /**
+     * Without a pause, the seed node and arb once received Alice's proposals 1.6 s after the first BLIND_VOTE
+     * block in {@code VoteResultAfterRestartTest}. The seed node hashed none of them, and the DAO state of both
+     * split from Alice and Bob. Overridden by tests, which check whether BREAK1 pauses without waiting for it.
+     */
     void allowProposalsToPropagate() {
         log.info("Allowing {} ms in BREAK1 for proposals to propagate", PROPOSAL_BROADCAST_MS);
         try {
