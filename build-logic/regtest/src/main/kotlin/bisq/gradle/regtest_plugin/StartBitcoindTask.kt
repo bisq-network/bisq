@@ -57,6 +57,7 @@ abstract class StartBitcoindTask : DefaultTask() {
             "-regtest",
 
             "-port=${port.get()}",
+            "-bind=127.0.0.1:${port.get()}",
             "-bind=127.0.0.1:${onionPort.get()}=onion",
 
             "-prune=0",

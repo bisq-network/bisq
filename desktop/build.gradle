@@ -60,3 +60,42 @@ dependencies {
 test {
     systemProperty 'jdk.attach.allowAttachSelf', true
 }
+
+def registerAppTask(String taskName, String nodePort, String dataDir, String appName, boolean isFullNode = false) {
+    tasks.register(taskName, JavaExec) {
+        group = 'application'
+        dependsOn ':initialDaoSetup'
+
+        classpath = sourceSets.main.runtimeClasspath
+        mainClass = application.mainClass
+        jvmArgs = application.applicationDefaultJvmArgs
+        workingDir = rootProject.projectDir
+
+        def taskArgs = [
+            "--baseCurrencyNetwork=BTC_REGTEST",
+            "--useLocalhostForP2P=true",
+            "--useDevPrivilegeKeys=true",
+            "--nodePort=$nodePort",
+            "--appDataDir=$dataDir",
+            "--appName=$appName"
+        ]
+
+        if (isFullNode) {
+            taskArgs += [
+                "--fullDaoNode=true",
+                "--isBmFullNode=true",
+                "--rpcUser=bisqdao",
+                "--rpcPassword=bsq",
+                "--rpcBlockNotificationPort=5122",
+                "--genesisBlockHeight=111",
+                "--genesisTxId=30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf"
+            ]
+        }
+
+        args = taskArgs
+    }
+}
+
+registerAppTask('startMediator', '4444', '.localnet/mediator', 'Mediator')
+registerAppTask('startAlice', '5555', '.localnet/alice', 'Alice', true)
+registerAppTask('startBob', '6666', '.localnet/bob', 'Bob')
