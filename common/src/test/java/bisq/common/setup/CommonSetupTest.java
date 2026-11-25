@@ -53,7 +53,7 @@ class CommonSetupTest {
         Path appDataDir = Files.createDirectories(tmp.resolve("Bisq"));
         Files.setPosixFilePermissions(appDataDir, PosixFilePermissions.fromString("rwxr-xr-x"));
 
-        CommonSetup.restrictAppDataDirToOwner(appDataDir.toFile());
+        restrictAppDataDirToOwner(appDataDir);
 
         assertEquals(PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(appDataDir));
     }
@@ -76,7 +76,7 @@ class CommonSetupTest {
         }
         Files.setPosixFilePermissions(wallet, PosixFilePermissions.fromString("rw-r--r--"));
 
-        CommonSetup.restrictAppDataDirToOwner(appDataDir.toFile());
+        restrictAppDataDirToOwner(appDataDir);
 
         for (Path directory : directories) {
             assertEquals(PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(directory),
@@ -98,7 +98,7 @@ class CommonSetupTest {
         Path appDataDir = tmp.resolve("Bisq");
         createSymbolicLinkOrSkip(appDataDir, realAppDataDir);
 
-        CommonSetup.restrictAppDataDirToOwner(appDataDir.toFile());
+        restrictAppDataDirToOwner(appDataDir);
 
         for (Path directory : directories) {
             assertEquals(PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(directory),
@@ -116,9 +116,10 @@ class CommonSetupTest {
         for (Path directory : outsideDirectories) {
             Files.setPosixFilePermissions(directory, PosixFilePermissions.fromString("rwxr-xr-x"));
         }
-        createSymbolicLinkOrSkip(appDataDir.resolve("wallet"), outside.getParent());
+        Path networkDir = Files.createDirectory(appDataDir.resolve("btc_mainnet"));
+        createSymbolicLinkOrSkip(networkDir.resolve("wallet"), outside.getParent());
 
-        CommonSetup.restrictAppDataDirToOwner(appDataDir.toFile());
+        restrictAppDataDirToOwner(appDataDir);
 
         assertEquals(PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(appDataDir));
         for (Path directory : outsideDirectories) {
@@ -132,9 +133,9 @@ class CommonSetupTest {
     void aDirectoryWhichCannotBeReadBecomesOwnerOnlyWithItsSubtree(@TempDir Path tmp) throws IOException {
         assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
         Path appDataDir = Files.createDirectories(tmp.resolve("Bisq"));
-        Path inner = Files.createDirectories(appDataDir.resolve("a/inner"));
+        Path inner = Files.createDirectories(appDataDir.resolve("btc_mainnet/a/inner"));
         Path unreadable = inner.getParent();
-        Path readable = Files.createDirectories(appDataDir.resolve("b/c"));
+        Path readable = Files.createDirectories(appDataDir.resolve("btc_mainnet/b/c"));
         for (Path directory : List.of(inner, readable.getParent(), readable)) {
             Files.setPosixFilePermissions(directory, PosixFilePermissions.fromString("rwxr-xr-x"));
         }
@@ -143,7 +144,7 @@ class CommonSetupTest {
             // Only meaningful where the owner cannot list the directory, which is not the case for root
             assumeTrue(unreadable.toFile().listFiles() == null);
 
-            CommonSetup.restrictAppDataDirToOwner(appDataDir.toFile());
+            restrictAppDataDirToOwner(appDataDir);
 
             for (Path directory : List.of(appDataDir, unreadable, inner, readable.getParent(), readable)) {
                 assertEquals(PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(directory),
@@ -164,7 +165,7 @@ class CommonSetupTest {
         try {
             assumeTrue(appDataDir.toFile().listFiles() == null);
 
-            CommonSetup.restrictAppDataDirToOwner(appDataDir.toFile());
+            restrictAppDataDirToOwner(appDataDir);
 
             for (Path directory : List.of(appDataDir, inner)) {
                 assertEquals(PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(directory),
@@ -176,8 +177,49 @@ class CommonSetupTest {
     }
 
     @Test
+    void aNetworkDirectoryWhichIsALinkIsNotFollowed(@TempDir Path tmp) throws IOException {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        Path appDataDir = Files.createDirectories(tmp.resolve("Bisq"));
+        Path outside = Files.createDirectories(tmp.resolve("outside"));
+        Files.setPosixFilePermissions(outside, PosixFilePermissions.fromString("rwxr-xr-x"));
+        createSymbolicLinkOrSkip(appDataDir.resolve("btc_mainnet"), outside);
+
+        restrictAppDataDirToOwner(appDataDir);
+
+        assertEquals(PosixFilePermissions.fromString("rwxr-xr-x"), Files.getPosixFilePermissions(outside));
+    }
+
+    // For example --appDataDir=.local, or an empty --appName
+    @Test
+    void directoriesWhichAreNotOfTheNetworkKeepTheirModes(@TempDir Path tmp) throws IOException {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        Path appDataDir = Files.createDirectories(tmp.resolve(".local"));
+        Path networkDir = Files.createDirectory(appDataDir.resolve("btc_mainnet"));
+        Path shared = Files.createDirectories(appDataDir.resolve("share/containers"));
+        List<Path> otherDirectories = List.of(shared.getParent(), shared);
+        for (Path directory : otherDirectories) {
+            Files.setPosixFilePermissions(directory, PosixFilePermissions.fromString("rwxrwxr-x"));
+        }
+
+        restrictAppDataDirToOwner(appDataDir);
+
+        for (Path directory : List.of(appDataDir, networkDir)) {
+            assertEquals(PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(directory),
+                    directory.toString());
+        }
+        for (Path directory : otherDirectories) {
+            assertEquals(PosixFilePermissions.fromString("rwxrwxr-x"), Files.getPosixFilePermissions(directory),
+                    directory.toString());
+        }
+    }
+
+    @Test
     void aMissingAppDataDirIsOnlyLogged(@TempDir Path tmp) {
-        assertDoesNotThrow(() -> CommonSetup.restrictAppDataDirToOwner(tmp.resolve("missing").toFile()));
+        assertDoesNotThrow(() -> restrictAppDataDirToOwner(tmp.resolve("missing")));
+    }
+
+    private static void restrictAppDataDirToOwner(Path appDataDir) {
+        CommonSetup.restrictAppDataDirToOwner(appDataDir.toFile(), appDataDir.resolve("btc_mainnet").toFile());
     }
 
     private static void createSymbolicLinkOrSkip(Path link, Path target) {
