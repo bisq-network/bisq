@@ -460,31 +460,25 @@ public abstract class WalletService {
     // TransactionConfidence
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public Set<Transaction> getTransactionsForAddress(Address address) {
+        return wallet == null ? Set.of() : getAddressToMatchingTxSetMultimap().get(address);
+    }
+
     @Nullable
     public TransactionConfidence getConfidenceForAddress(Address address) {
-        List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
-        if (wallet != null) {
-            Set<Transaction> transactions = getAddressToMatchingTxSetMultimap().get(address);
-            transactionConfidenceList.addAll(transactions.stream().map(tx ->
-                    getTransactionConfidence(tx, address)).collect(Collectors.toList()));
-        }
-        return getMostRecentConfidence(transactionConfidenceList);
+        return getMostRecentConfidence(getTransactionsForAddress(address).stream()
+                .map(tx -> getTransactionConfidence(tx, address))
+                .collect(Collectors.toList()));
     }
 
     @Nullable
     public TransactionConfidence getConfidenceForAddressFromBlockHeight(Address address, long targetHeight) {
-        List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
-        if (wallet != null) {
-            Set<Transaction> transactions = getAddressToMatchingTxSetMultimap().get(address);
-            // "acceptable confidence" is either a new (pending) Tx, or a Tx confirmed after target block height
-            transactionConfidenceList.addAll(transactions.stream()
-                    .map(tx -> getTransactionConfidence(tx, address))
-                    .filter(Objects::nonNull)
-                    .filter(con -> con.getConfidenceType() == PENDING ||
-                            (con.getConfidenceType() == BUILDING && con.getAppearedAtChainHeight() > targetHeight))
-                    .collect(Collectors.toList()));
-        }
-        return getMostRecentConfidence(transactionConfidenceList);
+        return getMostRecentConfidence(getTransactionsForAddress(address).stream()
+                .map(tx -> getTransactionConfidence(tx, address))
+                .filter(Objects::nonNull)
+                .filter(con -> con.getConfidenceType() == PENDING ||
+                        (con.getConfidenceType() == BUILDING && con.getAppearedAtChainHeight() > targetHeight))
+                .collect(Collectors.toList()));
     }
 
     private SetMultimap<Address, Transaction> getAddressToMatchingTxSetMultimap() {
