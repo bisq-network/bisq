@@ -212,6 +212,35 @@ class MediatedPayoutSeenInWalletDuringRefundTest {
                 .closeDisputedTrade(trade.getId(), Trade.DisputeState.MEDIATION_CLOSED);
     }
 
+    // After a resync of the wallet, the deposit tx is only in the wallet once the wallet has synced its block. The
+    // mediated payout completes the trade also then, and the startup sets no error on the trade.
+    @Test
+    void confirmedPayoutCompletesTheTradeWhenTheDepositTxIsOnlyInTheWalletAfterStartup() {
+        Trade trade = tradeWithoutDepositTx(Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER);
+        String depositTxId = depositTx.getTxId().toString();
+        trade.setDepositTxId(depositTxId);
+        when(btcWalletService.getTransaction(depositTxId)).thenReturn(null);
+
+        new DisputeProtocol(trade).onInitialized();
+
+        assertNull(trade.getErrorMessage());
+        AddressConfidenceListener listener = capturedListener();
+        mediatedPayoutTx.getConfidence().setAppearedAtChainHeight(101);
+        listener.onTransactionConfidenceChanged(mediatedPayoutTx.getConfidence());
+        assertNull(trade.getPayoutTx());
+
+        // The confidence event of the deposit tx does not touch the payout address
+        when(btcWalletService.getTransaction(depositTxId)).thenReturn(depositTx);
+        when(btcWalletService.getTransactionsForAddress(SELLER_PAYOUT_ADDRESS)).thenReturn(Set.of(mediatedPayoutTx));
+        listener.onTransactionConfidenceChanged(null);
+
+        assertSame(mediatedPayoutTx, trade.getPayoutTx());
+        assertEquals(MediationResultState.PAYOUT_TX_SEEN_IN_NETWORK, trade.getMediationResultState());
+        verify(trade.getProcessModel().getTradeManager())
+                .closeDisputedTrade(trade.getId(), Trade.DisputeState.MEDIATION_CLOSED);
+        assertNull(trade.getErrorMessage());
+    }
+
     // Arbitration includes the legacy arbitration, which has no mediated payout
     @ParameterizedTest
     @EnumSource(Trade.DisputeState.class)
@@ -236,6 +265,15 @@ class MediatedPayoutSeenInWalletDuringRefundTest {
     // Seller as maker in FIAT_SENT who has accepted the mediation result (own signature), with the contract, the
     // deposit tx and the mediation amounts the listener needs to check a payout
     private Trade trade(Trade.DisputeState disputeState) {
+        Trade trade = tradeWithoutDepositTx(disputeState);
+        trade.applyDepositTx(depositTx);
+        // applyDepositTx marks the deposit as confirmed; keep the trade in FIAT_SENT with the refund dispute state
+        trade.setState(Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG);
+        trade.setDisputeState(disputeState);
+        return trade;
+    }
+
+    private Trade tradeWithoutDepositTx(Trade.DisputeState disputeState) {
         Trade trade = MediationTestTrades.sellerAsMakerTrade(provider,
                 Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG, disputeState);
         ProcessModel processModel = trade.getProcessModel();
@@ -247,10 +285,6 @@ class MediatedPayoutSeenInWalletDuringRefundTest {
         tradingPeer.setMultiSigPubKey(BUYER_MULTI_SIG_KEY.getPubKey());
         tradingPeer.setPayoutAddressString(BUYER_PAYOUT_ADDRESS.toString());
         trade.setContract(contract(trade, processModel.getPubKeyRing()));
-        trade.applyDepositTx(depositTx);
-        // applyDepositTx marks the deposit as confirmed; keep the trade in FIAT_SENT with the refund dispute state
-        trade.setState(Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG);
-        trade.setDisputeState(disputeState);
         return trade;
     }
 
