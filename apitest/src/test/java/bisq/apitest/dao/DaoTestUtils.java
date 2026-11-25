@@ -197,6 +197,11 @@ public class DaoTestUtils {
                 && bobCycleInfo.getNumProposalsInCurrentCycle() == 0) {
             return;
         }
+        allowProposalsToPropagate();
+    }
+
+    /** Overridden by tests, which check whether BREAK1 pauses without waiting for it. */
+    void allowProposalsToPropagate() {
         log.info("Allowing {} ms in BREAK1 for proposals to propagate", PROPOSAL_BROADCAST_MS);
         try {
             Thread.sleep(PROPOSAL_BROADCAST_MS);
