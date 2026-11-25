@@ -31,6 +31,7 @@ import java.nio.channels.Channels;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
@@ -395,7 +396,8 @@ public class FileUtil {
      * Makes the directory and every directory below it accessible to its owner only (rwx------), with the rules of
      * {@link #restrictToOwner}. A failure is logged, and the other directories still get the mode. Files keep their
      * modes. A link below the directory is not followed, so directories outside it keep their modes; a directory which
-     * is itself a link is followed.
+     * is itself a link is followed. A directory which its owner cannot read, for example one with the mode 0300, gets
+     * the mode first, so that its subtree gets it as well.
      * <p>
      * As {@link #copyDirectory(File, File)}, the walk reads the attributes of an entry and then uses its path, so a link
      * which replaces a directory between the two steps would be followed. Call it only while no other process writes
@@ -405,17 +407,42 @@ public class FileUtil {
         if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
             return;
         }
+        Path root;
         try {
-            java.nio.file.Files.walkFileTree(directory.toRealPath(), new SimpleFileVisitor<>() {
+            root = directory.toRealPath();
+        } catch (IOException e) {
+            log.warn("Could not make {} accessible to its owner only: {}", directory, e.toString());
+            return;
+        }
+        if (java.nio.file.Files.isDirectory(root)) {
+            restrictToOwner(root, "rwx------");
+            restrictDirectoriesBelowToOwner(root);
+        }
+    }
+
+    // The directory itself has the mode already
+    private static void restrictDirectoriesBelowToOwner(Path directory) {
+        try {
+            java.nio.file.Files.walkFileTree(directory, new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attributes) {
-                    restrictToOwner(dir, "rwx------");
+                    if (!dir.equals(directory)) {
+                        restrictToOwner(dir, "rwx------");
+                    }
                     return FileVisitResult.CONTINUE;
                 }
 
                 @Override
                 public FileVisitResult visitFileFailed(Path file, IOException e) {
-                    log.warn("Could not make {} accessible to its owner only: {}", file, e.toString());
+                    // A directory which cannot be opened gets no preVisitDirectory. Once it has the mode, a walk of its
+                    // own can open it. The directory which this walk starts at already has the mode, so a failure there
+                    // is final, which ends the retries.
+                    if (!file.equals(directory) && java.nio.file.Files.isDirectory(file, LinkOption.NOFOLLOW_LINKS)) {
+                        restrictToOwner(file, "rwx------");
+                        restrictDirectoriesBelowToOwner(file);
+                    } else {
+                        log.warn("Could not make {} accessible to its owner only: {}", file, e.toString());
+                    }
                     return FileVisitResult.CONTINUE;
                 }
 
@@ -429,7 +456,8 @@ public class FileUtil {
                 }
             });
         } catch (IOException e) {
-            log.warn("Could not make {} accessible to its owner only: {}", directory, e.toString());
+            log.warn("Could not make the directories below {} accessible to their owner only: {}", directory,
+                    e.toString());
         }
     }
 

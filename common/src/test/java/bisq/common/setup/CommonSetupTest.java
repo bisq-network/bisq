@@ -127,29 +127,51 @@ class CommonSetupTest {
         }
     }
 
-    // A directory which cannot be read does not stop the other directories from becoming owner-only
+    // A directory which its owner cannot read, but others can enter, becomes owner-only with the directories below it
     @Test
-    void aDirectoryWhichCannotBeReadIsOnlyLogged(@TempDir Path tmp) throws IOException {
+    void aDirectoryWhichCannotBeReadBecomesOwnerOnlyWithItsSubtree(@TempDir Path tmp) throws IOException {
         assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
         Path appDataDir = Files.createDirectories(tmp.resolve("Bisq"));
-        Path unreadable = Files.createDirectories(appDataDir.resolve("a"));
+        Path inner = Files.createDirectories(appDataDir.resolve("a/inner"));
+        Path unreadable = inner.getParent();
         Path readable = Files.createDirectories(appDataDir.resolve("b/c"));
-        for (Path directory : List.of(readable.getParent(), readable)) {
+        for (Path directory : List.of(inner, readable.getParent(), readable)) {
             Files.setPosixFilePermissions(directory, PosixFilePermissions.fromString("rwxr-xr-x"));
         }
-        Files.setPosixFilePermissions(unreadable, PosixFilePermissions.fromString("-wx------"));
+        Files.setPosixFilePermissions(unreadable, PosixFilePermissions.fromString("-wx--x--x"));
         try {
             // Only meaningful where the owner cannot list the directory, which is not the case for root
             assumeTrue(unreadable.toFile().listFiles() == null);
 
-            assertDoesNotThrow(() -> CommonSetup.restrictAppDataDirToOwner(appDataDir.toFile()));
+            CommonSetup.restrictAppDataDirToOwner(appDataDir.toFile());
 
-            for (Path directory : List.of(appDataDir, readable.getParent(), readable)) {
+            for (Path directory : List.of(appDataDir, unreadable, inner, readable.getParent(), readable)) {
                 assertEquals(PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(directory),
                         directory.toString());
             }
         } finally {
             Files.setPosixFilePermissions(unreadable, PosixFilePermissions.fromString("rwx------"));
+        }
+    }
+
+    @Test
+    void anAppDataDirWhichCannotBeReadBecomesOwnerOnlyWithItsSubtree(@TempDir Path tmp) throws IOException {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        Path appDataDir = Files.createDirectories(tmp.resolve("Bisq"));
+        Path inner = Files.createDirectories(appDataDir.resolve("btc_mainnet"));
+        Files.setPosixFilePermissions(inner, PosixFilePermissions.fromString("rwxr-xr-x"));
+        Files.setPosixFilePermissions(appDataDir, PosixFilePermissions.fromString("-wx--x--x"));
+        try {
+            assumeTrue(appDataDir.toFile().listFiles() == null);
+
+            CommonSetup.restrictAppDataDirToOwner(appDataDir.toFile());
+
+            for (Path directory : List.of(appDataDir, inner)) {
+                assertEquals(PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(directory),
+                        directory.toString());
+            }
+        } finally {
+            Files.setPosixFilePermissions(appDataDir, PosixFilePermissions.fromString("rwx------"));
         }
     }
 

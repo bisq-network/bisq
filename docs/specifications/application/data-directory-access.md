@@ -17,7 +17,9 @@ data and the logs.
   of the data directory.
 - On a file system with POSIX permissions the node sets the mode of the data directory and of every
   directory below it to `0700` at every start, right after the log is set up and before Tor starts,
-  so that only their owner can enter them. This includes the directories of an earlier version.
+  so that only their owner can enter them. This includes the directories of an earlier version, and
+  a directory which its owner cannot read, such as one with the mode `0300`, together with the
+  directories below it.
 - The files keep the modes they are created with, by default those of the process. The modes of the
   directories keep them from other users.
 - Directories which the node creates while it runs, for example for the backups of the wallets, may
