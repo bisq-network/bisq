@@ -26,7 +26,6 @@ import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.config.Config;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -44,7 +43,6 @@ import org.jetbrains.annotations.NotNull;
 public class GetDataRequestHandler {
     private static final long TIMEOUT = 240;
 
-    private static final int MAX_ENTRIES = Config.DEFAULT_GET_DATA_REQUEST_HANDLER_MAX_ENTRIES;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -73,10 +71,6 @@ public class GetDataRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public GetDataRequestHandler(NetworkNode networkNode, P2PDataStorage dataStorage, Listener listener) {
-        this(networkNode, dataStorage, listener, MAX_ENTRIES, false);
-    }
 
     /**
      * @param isSeedNode whether we are a seed node. Only the response of a seed node contains the
