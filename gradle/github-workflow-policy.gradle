@@ -43,12 +43,14 @@ tasks.named('verifyGithubActionsSecurity') {
 
             workflow.jobs.each { jobName, job ->
                 job.steps?.each { step ->
+                    // GitHub resolves action names regardless of case.
+                    def uses = step.uses?.toString()?.toLowerCase()
                     // Expressions expand into the script text before it runs. Pass them through env instead.
-                    def script = step.uses?.startsWith('actions/github-script@') ? step.with?.get('script') : null
+                    def script = uses?.startsWith('actions/github-script@') ? step.with?.get('script') : null
                     if ([step.run, script].any { it?.toString()?.contains('${{') }) {
                         violations << "${file.name}: ${jobName}: pass expressions through env in run and script steps"
                     }
-                    if (step.uses?.startsWith('gradle/actions/setup-gradle@') &&
+                    if (uses?.startsWith('gradle/actions/setup-gradle@') &&
                             step.with?.get('validate-wrappers')?.toString() != 'true') {
                         violations << "${file.name}: ${jobName}: enable validate-wrappers on setup-gradle"
                     }

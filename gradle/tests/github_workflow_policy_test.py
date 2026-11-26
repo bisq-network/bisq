@@ -40,7 +40,7 @@ class WorkflowPolicyTest(unittest.TestCase):
                 "  example:\n"
                 "    runs-on: ubuntu-24.04\n"
                 "    steps:\n"
-                "      - uses: gradle/actions/setup-gradle@" + "0" * 40 + "\n"
+                "      - uses: Gradle/Actions/setup-gradle@" + "0" * 40 + "\n"
                 "      - run: echo \"${{ github.head_ref }}\"\n"
             )
             (workflows / "fixture-comment.yml").write_text(
@@ -50,7 +50,7 @@ class WorkflowPolicyTest(unittest.TestCase):
                 "  comment:\n"
                 "    runs-on: ubuntu-24.04\n"
                 "    steps:\n"
-                "      - uses: actions/github-script@" + "0" * 40 + "\n"
+                "      - uses: Actions/GitHub-Script@" + "0" * 40 + "\n"
                 "        with:\n"
                 "          script: console.log('${{ github.head_ref }}')\n"
             )
