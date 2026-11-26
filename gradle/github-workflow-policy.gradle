@@ -7,6 +7,11 @@ buildscript {
     dependencies { classpath 'org.yaml:snakeyaml:2.6' }
 }
 
+// Outside contributors cannot trigger these events with secrets or a write token. Every other
+// event, for example pull_request_target, workflow_run, issues or issue_comment, runs in the
+// base repository context and needs a reviewed workflow.
+def unprivilegedTriggers = ['push', 'pull_request', 'schedule', 'workflow_dispatch', 'workflow_call']
+
 // These workflows intentionally handle privileged events. Review changes to their jobs and
 // permissions before updating the SHA-256 of the LF-normalized workflow.
 def reviewedWorkflows = [
@@ -31,9 +36,9 @@ tasks.named('verifyGithubActionsSecurity') {
             // SnakeYAML reads the unquoted YAML 1.1 key 'on' as Boolean.TRUE.
             def events = workflow.get('on') ?: workflow.get(true)
             def triggers = events instanceof Map ? events.keySet() : (events instanceof List ? events : [events])
-            if (triggers.any { it in ['pull_request_target', 'workflow_run'] } &&
-                    text.digest('SHA-256') != reviewedWorkflows[file.name]) {
-                violations << "${file.name}: privileged trigger requires a reviewed workflow digest"
+            def digest = text.digest('SHA-256')
+            if (triggers.any { !(it in unprivilegedTriggers) } && digest != reviewedWorkflows[file.name]) {
+                violations << "${file.name}: privileged trigger requires a reviewed workflow digest, current ${digest}"
             }
 
             workflow.jobs.each { jobName, job ->

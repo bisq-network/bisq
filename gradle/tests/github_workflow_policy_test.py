@@ -43,6 +43,17 @@ class WorkflowPolicyTest(unittest.TestCase):
                 "      - uses: gradle/actions/setup-gradle@" + "0" * 40 + "\n"
                 "      - run: echo \"${{ github.event.action }}\"\n"
             )
+            (workflows / "fixture-comment.yml").write_text(
+                "on: issue_comment\n"
+                "permissions: {}\n"
+                "jobs:\n"
+                "  comment:\n"
+                "    runs-on: ubuntu-24.04\n"
+                "    steps:\n"
+                "      - uses: actions/github-script@" + "0" * 40 + "\n"
+                "        with:\n"
+                "          script: console.log('${{ github.head_ref }}')\n"
+            )
             result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             self.assertNotEqual(result.returncode, 0)
             for expected in (
@@ -51,6 +62,7 @@ class WorkflowPolicyTest(unittest.TestCase):
                 "fixture.yml: declare top-level permissions",
                 "fixture.yml: example: enable validate-wrappers",
                 "fixture.yml: example: pass event data through env",
+                "fixture-comment.yml: privileged trigger",
             ):
                 self.assertIn(expected, result.stdout)
 
