@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -191,6 +192,53 @@ public class BisqSetupTest {
             UserThread.setTimerClass(FrameRateTimer.class);
             ManualTimer.clear();
         }
+    }
+
+    // Without the option a start with terms not yet accepted waits for the user
+    @Test
+    void asksForTheTermsBeforeTheNextStep() {
+        Preferences preferences = mock(Preferences.class);
+        BisqSetup bisqSetup = createBisqSetup(preferences);
+        AtomicReference<Runnable> acceptTerms = new AtomicReference<>();
+        bisqSetup.setDisplayTacHandler(acceptTerms::set);
+        AtomicInteger nextStepCount = new AtomicInteger();
+
+        bisqSetup.maybeShowTac(nextStepCount::incrementAndGet);
+
+        assertEquals(0, nextStepCount.get(), "the setup does not continue before the user accepted the terms");
+        acceptTerms.get().run();
+        assertEquals(1, nextStepCount.get());
+        verify(preferences).setTacAcceptedV1_10_1(true);
+    }
+
+    // The option is the acceptance of the user: the setup stores it and continues without asking
+    @Test
+    void acceptsAndStoresTheTermsWithTheOption() {
+        Preferences preferences = mock(Preferences.class);
+        Config config = new Config("--" + Config.ACCEPT_TERMS + "=true");
+        BisqSetup bisqSetup = createBisqSetup(preferences, mock(LocalBitcoinNode.class), config,
+                mock(P2PService.class), mock(P2PNetworkSetup.class));
+        bisqSetup.setDisplayTacHandler(acceptedHandler -> fail("the terms window is not shown"));
+        AtomicInteger nextStepCount = new AtomicInteger();
+
+        bisqSetup.maybeShowTac(nextStepCount::incrementAndGet);
+
+        assertEquals(1, nextStepCount.get());
+        verify(preferences).setTacAcceptedV1_10_1(true);
+    }
+
+    @Test
+    void continuesAtOnceWhenTheTermsWereAccepted() {
+        Preferences preferences = mock(Preferences.class);
+        when(preferences.isTacAcceptedV1_10_1()).thenReturn(true);
+        BisqSetup bisqSetup = createBisqSetup(preferences);
+        bisqSetup.setDisplayTacHandler(acceptedHandler -> fail("the terms window is not shown"));
+        AtomicInteger nextStepCount = new AtomicInteger();
+
+        bisqSetup.maybeShowTac(nextStepCount::incrementAndGet);
+
+        assertEquals(1, nextStepCount.get());
+        verify(preferences, never()).setTacAcceptedV1_10_1(anyBoolean());
     }
 
     private static BisqSetup createBisqSetup(Preferences preferences) {

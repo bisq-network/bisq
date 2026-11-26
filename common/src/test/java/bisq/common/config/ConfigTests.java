@@ -442,6 +442,12 @@ public class ConfigTests {
     }
 
     @Test
+    public void whenAcceptTermsOptionIsSet_thenAcceptTermsPropertyReflectsItsValue() {
+        assertFalse(new Config().acceptTerms);
+        assertTrue(configWithOpts(opt(ACCEPT_TERMS, true)).acceptTerms);
+    }
+
+    @Test
     public void whenIgnoreNetworkFilterOptionIsSet_thenIgnoreNetworkFilterPropertyReflectsItsValue() {
         assertFalse(new Config().ignoreNetworkFilter);
         assertTrue(configWithOpts(opt(IGNORE_NETWORK_FILTER, true)).ignoreNetworkFilter);
