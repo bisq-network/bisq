@@ -1,3 +1,12 @@
+<!--
+Report security issues and proposed fixes privately. Use "Report a vulnerability" at
+https://github.com/bisq-network/bisq/security/advisories
+
+New contributors: Bisq has paused paid development work for new contributors and routine review of their PRs.
+Before starting work, check review capacity and funding with the maintainers. Payment requires DAO approval.
+https://bisq.network/blog/open-source-development-in-the-age-of-ai/
+-->
+
 Please fill in the following data to request for a new asset to be listed on Bisq. For more details, be sure to read [the full documentation](https://docs.bisq.network/exchange/howto/list-asset.html) on adding a new asset.
 
 ### 1. Asset name

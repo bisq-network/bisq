@@ -17,8 +17,8 @@ Here you could also request access to TestPad (https://bisq.ontestpad.com).
 
 ## Compensation
 
-Testing activities are eligible for [compensation](https://bisq.wiki/Making_a_compensation_request).
-When submitting a compensation request, please include links to artifacts on TestPad (results/reports) indicating the activities that were performed (e.g. tests that were executed), as well as any bugs that were discovered and entered as a result of testing.
+If you expect payment for testing, confirm funding with the relevant maintainers before you start. The [contribution guidelines](../CONTRIBUTING.md#compensation) explain how to request compensation and how the DAO approves it.
+When submitting a compensation request, please include links to artifacts on TestPad (results/reports) indicating the activities that were performed (e.g. tests that were executed), and links to any public bug reports. Keep security findings private.
 
 ## Testing Process
 
@@ -66,9 +66,11 @@ To execute a test run:
     - **Query:** you are unsure about the test and require further information.
     - **Exclude:** the test does not need to be performed for a particular reason.
 
-  - If necessary, use the `Comments` field to add any comments, notes and actual test results. This is especially beneficial to provide details if a test did not pass.
+  - If you suspect a security issue, keep the details out of TestPad and public issues or pull requests. Report it privately through [Security Advisories](https://github.com/bisq-network/bisq/security/advisories).
 
-  - If applicable, link an existing or create a new issue (defect) if it was found during the test run execution.
+  - For other findings, use the `Comments` field to add any comments, notes and actual test results. This is especially beneficial to provide details if a test did not pass.
+
+  - For a non-security bug, link the existing issue or open a new one.
 
 ### Creating Issues
 

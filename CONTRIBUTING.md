@@ -1,13 +1,15 @@
 # Contributing to Bisq
 
-Anyone is welcome to contribute to Bisq. This document provides an overview of how we work. If you're looking for somewhere to start contributing, check out [critical bugs](https://bisq.wiki/Critical_Bugs) or see [good first issue](https://github.com/bisq-network/bisq/issues?q=is%3Aopen+is%3Aissue+label%3A"good+first+issue") list.
+Bisq welcomes bug reports and feedback. If you are new to Bisq, please talk to the relevant maintainers before starting development work. Bisq has paused taking on new contributors for paid development and routinely reviewing their pull requests. Maintainers may make exceptions for high-value contributions. See the [announcement on contribution rules and compensation](https://bisq.network/blog/open-source-development-in-the-age-of-ai/).
+
+Report any suspected security issue privately using **Report a vulnerability** on the [Security Advisories page](https://github.com/bisq-network/bisq/security/advisories). Keep security reports and proposed fixes out of public issues, pull requests, and discussions. See the [security policy](SECURITY.md) for what to include in a private report.
 
 
 ## Communication Channels
 
 Most communication about Bisq happens on [Matrix](https://bisq.chat), follow [instructions in the wiki](https://bisq.wiki/Matrix_bisq.chat) to join the Bisq space; there is also a [forum](https://bisq.community/) and a [subreddit](https://www.reddit.com/r/bisq/).
 
-Discussion about code changes happens in GitHub issues and pull requests.
+Discussion about non-security code changes happens in GitHub issues and pull requests.
 
 Discussion about larger changes to the way Bisq works happens in issues the [bisq-network/proposals](https://github.com/bisq-network/proposals/issues) repository. See https://bisq.wiki/Proposals for details.
 
@@ -43,12 +45,9 @@ Please note that Pull Requests marked `NACK` and/or GitHub's `Change requested` 
 
 ## Compensation
 
-Bisq is not a company, but operates as a _decentralized autonomous organization_ (DAO).
+Bisq's development teams work within budgets set by project priorities. Before starting work for which you expect payment, ask the relevant maintainers whether the work is a priority, whether someone can review it, and whether funding is available.
 
-Since our [Q1 2020 update](https://bisq.network/blog/q1-2020-update/) contributions are NOT eligible for compensation unless they are allocated as part of the development budget. Fixes for [critical bugs](https://bisq.wiki/Critical_Bugs) are eligible for compensation when delivered.
-In any case please contact the team lead for development (@ripcurlx) upfront if you want to get compensated for your contributions.
-
-For any work that was approved and merged into Bisq's `master` branch, you can [submit a compensation request](https://bisq.wiki/Making_a_compensation_request) and earn BSQ (the Bisq DAO native token). Learn more about the Bisq DAO and BSQ [here](https://bisq.wiki/Introduction_to_the_DAO).
+For agreed, budgeted work, you can [request compensation in BSQ](https://bisq.wiki/Making_a_compensation_request). The [Bisq DAO](https://bisq.wiki/Introduction_to_the_DAO) decides whether to approve each request. A merged pull request or a [critical bug fix](https://bisq.wiki/Critical_Bugs) does not guarantee payment.
 
 
 ## Style and Coding Conventions
