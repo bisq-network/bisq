@@ -56,7 +56,7 @@ final class MediationTestTrades {
                 null /* arbitratorNodeAddress */,
                 null /* mediatorNodeAddress */,
                 null /* refundAgentNodeAddress */,
-                null /* btcWalletService */,
+                provider.getBtcWalletService(),
                 processModel,
                 "uid");
         trade.setState(state);

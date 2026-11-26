@@ -41,6 +41,7 @@ public abstract class SetupPayoutTxListener extends TradeTask {
     // Use instance fields to not get eaten up by the GC
     private Subscription tradeStateSubscription;
     private AddressConfidenceListener confidenceListener;
+    private boolean waitingForDepositTx;
 
     public SetupPayoutTxListener(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
@@ -62,19 +63,18 @@ public abstract class SetupPayoutTxListener extends TradeTask {
                         walletService.getAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT).orElse(null),
                         "Payout address entry must exist. tradeId=%s",
                         id).getAddress();
-                // During a wallet rescan the trade can still be in its persisted, confirmed phase while the
-                // wallet has not reached the deposit block. Watch for the payout as the scan advances.
-                Transaction depositTx = trade.getDepositTx();
-                TransactionConfidence confidence = null;
-                if (depositTx != null &&
-                        depositTx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
-                    confidence = walletService.getConfidenceForAddressFromBlockHeight(address,
-                            depositTx.getConfidence().getAppearedAtChainHeight());
-                }
-                if (!isInNetwork(confidence) || !applyConfidence(confidence)) {
+                waitingForDepositTx = trade.getDepositTx() == null;
+                if (waitingForDepositTx || !applyPayoutFromWallet(walletService, address)) {
                     confidenceListener = new AddressConfidenceListener(address) {
                         @Override
                         public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
+                            if (waitingForDepositTx) {
+                                if (trade.getDepositTx() == null)
+                                    return;
+                                waitingForDepositTx = false;
+                                if (applyPayoutFromWallet(walletService, address))
+                                    return;
+                            }
                             if (isInNetwork(confidence))
                                 applyConfidence(confidence);
                         }
@@ -97,6 +97,16 @@ public abstract class SetupPayoutTxListener extends TradeTask {
         } catch (Throwable t) {
             failed(t);
         }
+    }
+
+    private boolean applyPayoutFromWallet(BtcWalletService walletService, Address address) {
+        // A later payment can reuse the address. Validation identifies the payout by the deposit output it spends.
+        for (Transaction tx : walletService.getTransactionsForAddress(address)) {
+            TransactionConfidence confidence = tx.getConfidence();
+            if (isInNetwork(confidence) && applyConfidence(confidence))
+                return true;
+        }
+        return false;
     }
 
     private boolean applyConfidence(TransactionConfidence confidence) {

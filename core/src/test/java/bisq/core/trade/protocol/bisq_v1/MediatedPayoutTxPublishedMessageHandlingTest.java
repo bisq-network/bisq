@@ -50,6 +50,7 @@ import static org.mockito.Mockito.when;
 class MediatedPayoutTxPublishedMessageHandlingTest {
     private static final NodeAddress PEER = new NodeAddress("peer.onion:9999");
     private static final Sha256Hash PEERS_PAYOUT_TX_ID = Sha256Hash.of(new byte[]{1});
+    private static final String DEPOSIT_TX_ID = Sha256Hash.of(new byte[]{2}).toString();
 
     private final BtcWalletService btcWalletService = mock(BtcWalletService.class);
 
@@ -155,6 +156,20 @@ class MediatedPayoutTxPublishedMessageHandlingTest {
         assertEquals(List.of(ProcessMediatedPayoutTxPublishedMessage.class), protocol.executedTasks);
     }
 
+    // After a resync of the wallet, the deposit tx is only in the wallet once the wallet has synced its block. The
+    // payout in the message can only be checked against it, so the message is not processed until then.
+    @Test
+    void messageIsRejectedWhileTheDepositTxIsNotInTheWallet() {
+        Trade trade = trade(Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG,
+                Trade.DisputeState.MEDIATION_CLOSED, false);
+        when(btcWalletService.getTransaction(DEPOSIT_TX_ID)).thenReturn(null);
+        RecordingDisputeProtocol protocol = new RecordingDisputeProtocol(trade);
+
+        protocol.handle(message(trade), PEER);
+
+        assertTrue(protocol.executedTasks.isEmpty());
+    }
+
     private static MediatedPayoutTxPublishedMessage message(Trade trade) {
         return new MediatedPayoutTxPublishedMessage(trade.getId(), new byte[]{1}, PEER, "uid");
     }
@@ -172,6 +187,8 @@ class MediatedPayoutTxPublishedMessageHandlingTest {
         when(peersPayoutTx.getTxId()).thenReturn(PEERS_PAYOUT_TX_ID);
         when(btcWalletService.getTxFromSerializedTx(any())).thenReturn(peersPayoutTx);
         Trade trade = MediationTestTrades.sellerAsMakerTrade(provider, state, disputeState);
+        trade.setDepositTxId(DEPOSIT_TX_ID);
+        when(btcWalletService.getTransaction(DEPOSIT_TX_ID)).thenReturn(mock(Transaction.class));
         if (hasOwnPayout) {
             Transaction payoutTx = mock(Transaction.class);
             when(payoutTx.getTxId()).thenReturn(Sha256Hash.ZERO_HASH);

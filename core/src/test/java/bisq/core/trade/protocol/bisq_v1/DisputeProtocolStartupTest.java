@@ -57,10 +57,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -132,7 +132,8 @@ class DisputeProtocolStartupTest {
 
         new DisputeProtocol(trade).onInitialized();
 
-        verify(btcWalletService, never()).getConfidenceForAddressFromBlockHeight(any(Address.class), anyLong());
+        // A pending deposit has no block height, but a payout already in the wallet can be checked against it
+        verify(btcWalletService, times(depositInWallet ? 1 : 0)).getTransactionsForAddress(PAYOUT_ADDRESS);
         verify(btcWalletService).addAddressConfidenceListener(any(AddressConfidenceListener.class));
         verify(trade, never()).setErrorMessage(anyString());
     }

@@ -244,6 +244,9 @@ public class DisputeProtocol extends TradeProtocol {
                 // example by the refund agent, or the wallet does not know our payout yet, and the message must not
                 // set a payout.
                 .preCondition(trade.getTradePhase() != Trade.Phase.PAYOUT_PUBLISHED || trade.getPayoutTx() != null)
+                // After a resync of the wallet, the deposit tx is only in the wallet once the wallet has synced its
+                // block, and the payout can only be checked against it
+                .preCondition(trade.getPayoutTx() != null || trade.getDepositTx() != null)
                 // During a refund request only a payout that our wallet has as confirmed
                 .preCondition(trade.getDisputeState().acceptsMediatedPayout(
                         () -> isConfirmedInWallet(message.getPayoutTx()))))
