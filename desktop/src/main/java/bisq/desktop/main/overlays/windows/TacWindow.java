@@ -24,6 +24,7 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.ImageUtil;
 
+import bisq.core.app.TermsAndConditions;
 import bisq.core.locale.Res;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -54,7 +55,6 @@ import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
@@ -95,8 +95,7 @@ public class TacWindow extends Overlay<TacWindow> {
     private static final String WARNING_GREEN_ICON_ID = "image-warning-green";
     private static final String WARNING_YELLOW_ICON_ID = "image-warning-yellow";
     private static final String INFO_GREEN_ICON_ID = "image-info-green";
-    @VisibleForTesting
-    static final int NUM_LEGAL_SECTIONS = 7;
+    // In the order of TermsAndConditions.RISKS
     @VisibleForTesting
     static final List<RiskRow> RISK_ROWS = List.of(new RiskRow(TAC_DECENTRALIZED_ICON_ID, "p2p"),
             new RiskRow(WARNING_GREEN_ICON_ID, "financial"),
@@ -290,7 +289,7 @@ public class TacWindow extends Overlay<TacWindow> {
         copyIcon.setTooltip(new Tooltip(Res.get("shared.copyToClipboard")));
         FormBuilder.getIconForLabel(AwesomeIcon.COPY, copyIcon, "1.1em");
         copyIcon.addEventHandler(MOUSE_CLICKED,
-                mouseEvent -> copyToClipboardWithTooltip(getAgreementText(), mouseEvent));
+                mouseEvent -> copyToClipboardWithTooltip(TermsAndConditions.getText(), mouseEvent));
         BorderPane.setAlignment(copyIcon, Pos.CENTER_RIGHT);
 
         // Keeps the title centered
@@ -301,24 +300,6 @@ public class TacWindow extends Overlay<TacWindow> {
         titleBar.setCenter(title);
         titleBar.setRight(copyIcon);
         return titleBar;
-    }
-
-    // The text of both pages in the order they show it, without the page subtitles, the acknowledgments and the buttons
-    @VisibleForTesting
-    String getAgreementText() {
-        List<String> paragraphs = new ArrayList<>();
-        paragraphs.add(Res.get("tacWindow.headline"));
-        paragraphs.add(Res.get("tacWindow.risk.headline"));
-        for (RiskRow riskRow : RISK_ROWS) {
-            paragraphs.add(getRiskTitle(riskRow) + System.lineSeparator() + getRiskBody(riskRow));
-        }
-        paragraphs.add(Res.get("tacWindow.risk.warning"));
-        paragraphs.add(Res.get("tacWindow.legal.headline"));
-        for (int i = 1; i <= NUM_LEGAL_SECTIONS; i++) {
-            paragraphs.add(i + ". " + getLegalSectionTitle(i) + System.lineSeparator() + getLegalSectionBody(i));
-        }
-        paragraphs.add(Res.get("tacWindow.legal.acknowledgment"));
-        return String.join(System.lineSeparator() + System.lineSeparator(), paragraphs);
     }
 
     private VBox createRiskOverview() {
@@ -334,18 +315,10 @@ public class TacWindow extends Overlay<TacWindow> {
             }
             RiskRow riskRow = RISK_ROWS.get(i);
             section.getChildren().add(createRiskDetailRow(riskRow.iconId(),
-                    getRiskTitle(riskRow),
-                    getRiskBody(riskRow)));
+                    TermsAndConditions.getRiskTitle(riskRow.name()),
+                    TermsAndConditions.getRiskBody(riskRow.name())));
         }
         return section;
-    }
-
-    private static String getRiskTitle(RiskRow riskRow) {
-        return Res.get("tacWindow.risk." + riskRow.name() + ".title");
-    }
-
-    private static String getRiskBody(RiskRow riskRow) {
-        return Res.get("tacWindow.risk." + riskRow.name() + ".body");
     }
 
     private HBox createRiskDetailRow(String iconId, String title, String body) {
@@ -519,18 +492,11 @@ public class TacWindow extends Overlay<TacWindow> {
     private VBox createLegalContent() {
         VBox content = new VBox(10);
         content.getStyleClass().add("tac-agreement-legal-scroll-content");
-        for (int i = 1; i <= NUM_LEGAL_SECTIONS; i++) {
-            content.getChildren().add(createLegalSection(i + ".", getLegalSectionTitle(i), getLegalSectionBody(i)));
+        for (int i = 1; i <= TermsAndConditions.NUM_LEGAL_SECTIONS; i++) {
+            content.getChildren().add(createLegalSection(i + ".", TermsAndConditions.getLegalSectionTitle(i),
+                    TermsAndConditions.getLegalSectionBody(i)));
         }
         return content;
-    }
-
-    private static String getLegalSectionTitle(int section) {
-        return Res.get("tacWindow.legal.section" + section + ".title");
-    }
-
-    private static String getLegalSectionBody(int section) {
-        return Res.get("tacWindow.legal.section" + section + ".body");
     }
 
     private HBox createLegalSection(String number, String title, String body) {
