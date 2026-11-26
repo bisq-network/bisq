@@ -381,10 +381,15 @@ GPU.
 4. Checks the files against `SHA256SUMS-<artifact>`.
 5. Installs the package:
    - DEB: `apt-get install` of the package together with `xvfb`, `xauth` and `libgtk-3-0t64`.
-   - RPM: `rpm -i --nodeps` on Ubuntu. This tests the package contents, not its dependencies on a Red Hat based
-     system.
+   - RPM: `rpm -i --nodeps` on Ubuntu, together with `xdg-utils`, the one package which the RPM requires. This
+     tests the package contents, not its dependencies on a Red Hat based system. `rpm` only warns when a script of
+     the package fails, so the step fails on that warning.
    - DMG: mounts the image read-only and copies `Bisq.app` to `$RUNNER_TEMP`.
    - EXE: silent installation with `/quiet /norestart` and a verbose installer log, limited to 10 minutes.
+
+   On Linux the job first creates `/usr/share/applications` and `/usr/share/desktop-directories`. The scripts of
+   the packages add the menu entry with `xdg-desktop-menu`, which fails without these directories of a desktop
+   system, and the runner has no desktop.
 
    The step fails if the installed `Bisq` executable is missing.
 6. Starts Bisq with `--appDataDir=$RUNNER_TEMP/bisq-data --acceptTerms=true`. On Linux it runs under `xvfb-run`.
@@ -394,8 +399,8 @@ GPU.
    and the reason.
 8. Stops Bisq. On Windows it also stops the `tor` process.
 9. On failure, copies only the `*.log*` files of the data directory (the data directory also holds the wallet and
-   onion service keys). It uploads them with the launcher output and, on Windows, the installer log as
-   `smoke-test-logs-<artifact>-<package>-<SHA of this run>`, kept for 5 days.
+   onion service keys). It uploads them with the launcher output and, for the RPM and on Windows, the output of
+   the installation as `smoke-test-logs-<artifact>-<package>-<SHA of this run>`, kept for 5 days.
 
 ## Build and Smoke Test Installers (`installers-build-and-smoke-test.yml`)
 

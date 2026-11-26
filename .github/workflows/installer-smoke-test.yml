@@ -121,6 +121,13 @@ jobs:
           shasum -a 256 -c "$CHECKSUMS"
         fi
 
+    # The scripts of the packages add the menu entry with xdg-desktop-menu, which fails without the menu directories
+    # of a desktop system. The runner has no desktop.
+    - name: Create the menu directories of a desktop system
+      if: runner.os == 'Linux'
+      shell: bash
+      run: sudo mkdir -p /usr/share/applications /usr/share/desktop-directories
+
     - name: Install DEB
       if: matrix.package == 'deb'
       shell: bash
@@ -141,9 +148,16 @@ jobs:
       shell: bash
       run: |
         sudo apt-get update
-        sudo apt-get install -y --no-install-recommends rpm xvfb xauth libgtk-3-0t64
-        sudo rpm -i --nodeps installers/bisq-*.rpm
-        app="$(rpm -ql bisq | grep '/bin/Bisq$' || true)"
+        # xdg-utils is the one package which the RPM requires
+        sudo apt-get install -y --no-install-recommends rpm xvfb xauth libgtk-3-0t64 xdg-utils
+        # rpm only warns and exits with 0 when a script of the package fails
+        sudo rpm -i --nodeps installers/bisq-*.rpm 2>&1 | tee "$RUNNER_TEMP/smoke-test-logs/install.log"
+        if grep -q 'scriptlet failed' "$RUNNER_TEMP/smoke-test-logs/install.log"; then
+          echo "::error::A script of the RPM failed"
+          exit 1
+        fi
+        # With sudo, as for the installation: on Ubuntu each user has an RPM database in the home directory
+        app="$(sudo rpm -ql bisq | grep '/bin/Bisq$' || true)"
         if [ ! -x "$app" ]; then
           echo "::error::The RPM installed no executable bin/Bisq"
           exit 1
