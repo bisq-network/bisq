@@ -61,8 +61,9 @@ class WorkflowPolicyTest(unittest.TestCase):
                 "fixture.yml: privileged trigger",
                 "fixture.yml: declare top-level permissions",
                 "fixture.yml: example: enable validate-wrappers",
-                "fixture.yml: example: pass event data through env",
+                "fixture.yml: example: pass expressions through env",
                 "fixture-comment.yml: privileged trigger",
+                "fixture-comment.yml: comment: pass expressions through env",
             ):
                 self.assertIn(expected, result.stdout)
 
