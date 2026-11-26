@@ -1,0 +1,359 @@
+name: Smoke Test Installers
+
+# Installs each installer of a Build Installers run, starts the application with a fresh data directory and waits
+# until Tor runs in its sandbox, the onion service is published, and the P2P network and the wallet are ready. The
+# test does not wait for the synchronisation of the network data. It fails if the log has an ERROR line, if the
+# application exits, or if it is not ready within the timeout. On failure the logs are uploaded and the run shows
+# the reason.
+on:
+  workflow_dispatch:
+    inputs:
+      build-run-id:
+        description: 'ID of the Build Installers run whose installers are tested'
+        required: true
+        type: string
+      timeout-seconds:
+        description: 'Seconds the application gets to become ready'
+        required: false
+        default: 180
+        type: number
+  workflow_call:
+    inputs:
+      # Empty: the installers of the calling run
+      build-run-id:
+        required: false
+        default: ''
+        type: string
+      timeout-seconds:
+        required: false
+        default: 180
+        type: number
+
+permissions:
+  contents: read
+  # Downloads the installers of another run
+  actions: read
+
+concurrency:
+  group: installer-smoke-test-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  smoke-test:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux DEB
+            os: ubuntu-24.04
+            artifact: installers-linux-x86_64
+            package: deb
+          - name: Linux RPM
+            os: ubuntu-24.04
+            artifact: installers-linux-x86_64
+            package: rpm
+          - name: macOS Apple Silicon DMG
+            os: macos-15
+            artifact: installers-macos-aarch64
+            package: dmg
+          - name: macOS Intel DMG
+            os: macos-15-intel
+            artifact: installers-macos-x86_64
+            package: dmg
+          - name: Windows EXE
+            os: windows-2025
+            artifact: installers-windows-x86_64
+            package: exe
+    name: ${{ matrix.name }} smoke test
+    env:
+      SMOKE_TEST_TIMEOUT_SECONDS: ${{ inputs.timeout-seconds }}
+      # The runners have no GPU
+      JAVA_TOOL_OPTIONS: -Dprism.order=sw
+    steps:
+    - name: Check readiness timeout
+      shell: bash
+      run: |
+        if ! [[ "$SMOKE_TEST_TIMEOUT_SECONDS" =~ ^[1-9][0-9]*$ ]]; then
+          echo "::error::The readiness timeout must be a positive whole number of seconds"
+          exit 1
+        fi
+
+    - name: Identify the installer build
+      if: inputs.build-run-id != ''
+      id: build-run
+      shell: bash
+      env:
+        BUILD_RUN_ID: ${{ inputs.build-run-id }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        if ! [[ "$BUILD_RUN_ID" =~ ^[0-9]+$ ]]; then
+          echo "::error::Expected a numeric installer build run ID"
+          exit 1
+        fi
+        # A matching artifact name and its own checksums do not identify the workflow that built it.
+        sha=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BUILD_RUN_ID" | jq -er '
+          select(.head_repository.full_name == env.GITHUB_REPOSITORY and .event == "workflow_dispatch")
+          | select(.path == ".github/workflows/installers.yml" or .path == ".github/workflows/installers-build-and-smoke-test.yml")
+          | .head_sha | select(test("^[0-9a-f]{40}$"))
+        ') || { echo "::error::Run $BUILD_RUN_ID must be a manual installer build in $GITHUB_REPOSITORY"; exit 1; }
+        echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+    - name: Download installers
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      with:
+        name: ${{ matrix.artifact }}-${{ steps.build-run.outputs.sha || github.sha }}
+        path: installers
+        github-token: ${{ inputs.build-run-id != '' && github.token || '' }}
+        run-id: ${{ inputs.build-run-id || github.run_id }}
+
+    - name: Verify installer checksums
+      shell: bash
+      env:
+        CHECKSUMS: SHA256SUMS-${{ matrix.artifact }}
+      run: |
+        mkdir -p "$RUNNER_TEMP/smoke-test-logs"
+        cd installers
+        if command -v sha256sum >/dev/null 2>&1; then
+          sha256sum -c "$CHECKSUMS"
+        else
+          shasum -a 256 -c "$CHECKSUMS"
+        fi
+
+    - name: Install DEB
+      if: matrix.package == 'deb'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends xvfb xauth libgtk-3-0t64 ./installers/bisq_*.deb
+        app="$(dpkg -L bisq | grep '/bin/Bisq$' || true)"
+        if [ ! -x "$app" ]; then
+          echo "::error::The DEB installed no executable bin/Bisq"
+          exit 1
+        fi
+        echo "BISQ_APP=$app" >> "$GITHUB_ENV"
+
+    # Ubuntu installs the RPM without its dependencies. This tests the content of the package, not its dependencies
+    # on a Red Hat based system.
+    - name: Install RPM
+      if: matrix.package == 'rpm'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends rpm xvfb xauth libgtk-3-0t64
+        sudo rpm -i --nodeps installers/bisq-*.rpm
+        app="$(rpm -ql bisq | grep '/bin/Bisq$' || true)"
+        if [ ! -x "$app" ]; then
+          echo "::error::The RPM installed no executable bin/Bisq"
+          exit 1
+        fi
+        echo "BISQ_APP=$app" >> "$GITHUB_ENV"
+
+    - name: Install DMG
+      if: matrix.package == 'dmg'
+      shell: bash
+      run: |
+        mount_point="$RUNNER_TEMP/bisq-dmg"
+        hdiutil attach -nobrowse -readonly -mountpoint "$mount_point" installers/Bisq-*.dmg
+        cp -R "$mount_point/Bisq.app" "$RUNNER_TEMP/"
+        hdiutil detach "$mount_point"
+        app="$RUNNER_TEMP/Bisq.app/Contents/MacOS/Bisq"
+        if [ ! -x "$app" ]; then
+          echo "::error::The DMG has no executable Bisq.app/Contents/MacOS/Bisq"
+          exit 1
+        fi
+        echo "BISQ_APP=$app" >> "$GITHUB_ENV"
+
+    # A silent installation needs no window. If the installer waits for input, the step timeout ends it.
+    - name: Install EXE
+      if: matrix.package == 'exe'
+      shell: pwsh
+      timeout-minutes: 10
+      run: |
+        $installer = Get-ChildItem installers -Filter *.exe | Select-Object -First 1
+        $installLog = Join-Path $env:RUNNER_TEMP "smoke-test-logs\install.log"
+        $process = Start-Process -FilePath $installer.FullName `
+          -ArgumentList '/quiet', '/norestart', '/l*v', "`"$installLog`"" -Wait -PassThru
+        if ($process.ExitCode -ne 0) {
+          Write-Output "::error::The installer exited with code $($process.ExitCode)"
+          exit 1
+        }
+        $app = Get-ChildItem -Path $env:LOCALAPPDATA, $env:ProgramFiles -Filter Bisq.exe -Recurse -Depth 2 `
+          -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($null -eq $app) {
+          Write-Output "::error::The installer did not install Bisq.exe"
+          exit 1
+        }
+        "BISQ_APP=$($app.FullName)" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
+
+    - name: Start Bisq
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        launcher=()
+        if [ "$RUNNER_OS" = Linux ]; then
+          launcher=(xvfb-run -a)
+        fi
+        nohup "${launcher[@]}" "$BISQ_APP" --appDataDir="$RUNNER_TEMP/bisq-data" --acceptTerms=true \
+          > "$RUNNER_TEMP/smoke-test-logs/stdout.log" 2>&1 &
+        echo $! > "$RUNNER_TEMP/bisq.pid"
+
+    - name: Start Bisq
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        $logs = Join-Path $env:RUNNER_TEMP smoke-test-logs
+        $dataDir = Join-Path $env:RUNNER_TEMP bisq-data
+        $process = Start-Process -FilePath $env:BISQ_APP `
+          -ArgumentList "--appDataDir=`"$dataDir`"", '--acceptTerms=true' `
+          -RedirectStandardOutput (Join-Path $logs stdout.log) -RedirectStandardError (Join-Path $logs stderr.log) `
+          -PassThru
+        $process.Id | Out-File -FilePath (Join-Path $env:RUNNER_TEMP bisq.pid) -Encoding ascii
+
+    - name: Wait until Tor and the application are ready
+      shell: bash
+      env:
+        JOB_NAME: ${{ matrix.name }}
+      run: |
+        temp_dir="$RUNNER_TEMP"
+        if command -v cygpath >/dev/null 2>&1; then
+          temp_dir="$(cygpath -u "$RUNNER_TEMP")"
+        fi
+        log="$temp_dir/bisq-data/bisq.log"
+        pid="$(tr -d '[:space:]' < "$temp_dir/bisq.pid")"
+        # Tor runs in its sandbox, the onion service is published, the P2P network and the wallet are ready
+        markers=(
+          'Tor runs in the level '
+          'Tor hidden service published after'
+          'walletInitialized=true, p2pNetWorkReady=true'
+        )
+
+        is_running() {
+          if [ "$RUNNER_OS" = Windows ]; then
+            powershell -NoProfile -Command "if (Get-Process -Id $1 -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }"
+          else
+            kill -0 "$1" 2>/dev/null
+          fi
+        }
+
+        fail() {
+          echo "::error::$1"
+          {
+            echo "### ${JOB_NAME}: failed"
+            echo
+            echo "$1"
+            if [ -n "${2:-}" ]; then
+              echo
+              echo '```'
+              echo "$2"
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+        }
+
+        # Output of the launcher, which shows why a start failed before the log was set up
+        launcher_output() {
+          for file in "$temp_dir/smoke-test-logs/stdout.log" "$temp_dir/smoke-test-logs/stderr.log"; do
+            if [ -s "$file" ]; then
+              echo "--- last lines of $(basename "$file")"
+              tail -n 20 "$file"
+            fi
+          done
+        }
+
+        missing_markers() {
+          for marker in "${markers[@]}"; do
+            if ! grep -qF -- "$marker" "$log" 2>/dev/null; then
+              echo "$marker"
+            fi
+          done
+        }
+
+        start=$SECONDS
+        while true; do
+          # Read the markers first: the later ERROR read then covers each line written before the last marker.
+          missing="$(missing_markers)"
+          errors="$(grep -E '\] ERROR ' "$log" 2>/dev/null | head -n 20 || true)"
+          if [ -n "$errors" ]; then
+            fail "The log of Bisq has ERROR lines. First: $(head -n 1 <<< "$errors")" "$errors"
+          fi
+          if ! is_running "$pid"; then
+            reason="Bisq exited during startup."
+            if [ -n "$missing" ]; then
+              reason="$reason Missing log lines: $(paste -sd ';' - <<< "$missing")"
+            fi
+            fail "$reason" "$(printf '%s\n%s' "$missing" "$(launcher_output)")"
+          fi
+          if [ -z "$missing" ]; then
+            break
+          fi
+          if [ $((SECONDS - start)) -ge "$SMOKE_TEST_TIMEOUT_SECONDS" ]; then
+            fail "Bisq was not ready after ${SMOKE_TEST_TIMEOUT_SECONDS} s. Missing log lines: $(paste -sd ';' - <<< "$missing")" \
+              "$(printf '%s\n%s' "$missing" "$(launcher_output)")"
+          fi
+          sleep 5
+        done
+
+        echo "Bisq was ready after $((SECONDS - start)) s"
+        {
+          echo "### ${JOB_NAME}: passed"
+          echo
+          echo "Ready after $((SECONDS - start)) s."
+          echo
+          echo '```'
+          grep -F -e 'Tor runs in the level ' -e 'Tor runs in its sandbox' "$log" | head -n 5
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Stop Bisq
+      if: always() && runner.os != 'Windows'
+      shell: bash
+      run: |
+        # On Linux the saved PID is xvfb-run, so match the data directory of this run instead
+        app_pattern="--appDataDir=$RUNNER_TEMP/bisq-data"
+        if [ -f "$RUNNER_TEMP/bisq.pid" ]; then
+          pkill -TERM -f -- "$app_pattern" || true
+          for _ in $(seq 1 20); do
+            pgrep -f -- "$app_pattern" >/dev/null || break
+            sleep 1
+          done
+          pkill -KILL -f -- "$app_pattern" || true
+        fi
+
+    - name: Stop Bisq
+      if: always() && runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        $pidFile = Join-Path $env:RUNNER_TEMP bisq.pid
+        if (Test-Path $pidFile) {
+          Stop-Process -Id ([int](Get-Content $pidFile)) -ErrorAction SilentlyContinue
+          Stop-Process -Name tor -ErrorAction SilentlyContinue
+        }
+
+    # Only log files: the data directory also holds the keys of the wallet and of the onion service.
+    - name: Collect logs
+      if: failure()
+      shell: bash
+      run: |
+        temp_dir="$RUNNER_TEMP"
+        if command -v cygpath >/dev/null 2>&1; then
+          temp_dir="$(cygpath -u "$RUNNER_TEMP")"
+        fi
+        if [ -d "$temp_dir/bisq-data" ]; then
+          (cd "$temp_dir/bisq-data" && find . -type f -name '*.log*' -print0 | \
+            while IFS= read -r -d '' file; do
+              mkdir -p "$temp_dir/smoke-test-logs/data-dir/$(dirname "$file")"
+              cp "$file" "$temp_dir/smoke-test-logs/data-dir/$file"
+            done)
+        fi
+
+    - name: Upload logs
+      if: failure()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: smoke-test-logs-${{ matrix.artifact }}-${{ matrix.package }}-${{ github.sha }}
+        path: ${{ runner.temp }}/smoke-test-logs
+        if-no-files-found: warn
+        retention-days: 5

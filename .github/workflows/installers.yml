@@ -5,6 +5,8 @@ name: Build Installers
 # needs its own runner. This checks that the installers build. It does not check reproducibility.
 on:
   workflow_dispatch:
+  # Build and Smoke Test Installers calls it
+  workflow_call:
 
 permissions:
   contents: read
