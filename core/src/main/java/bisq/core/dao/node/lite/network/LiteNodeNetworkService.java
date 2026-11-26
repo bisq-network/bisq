@@ -37,9 +37,7 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
 import bisq.common.proto.network.NetworkEnvelope;
-import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -48,10 +46,8 @@ import javax.inject.Inject;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -69,15 +65,14 @@ import org.jetbrains.annotations.Nullable;
 public class LiteNodeNetworkService implements MessageListener, ConnectionListener, PeerManager.Listener {
 
     private static final long RETRY_DELAY_SEC = 10;
-    private static final long CLEANUP_TIMER = 120;
     private static final int MAX_RETRY = 12;
     // We use and relay the announcement of a block which is less than that many blocks behind our chain height.
     // About a week of blocks at the usual Bitcoin block interval.
     static final int MAX_RECENT_BLOCKS = 1024;
 
     private int retryCounter = 0;
+    // Start height of the last block request until it is answered. 0 if there is no such request.
     private int lastRequestedBlockHeight;
-    private int lastReceivedBlockHeight;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -111,9 +106,14 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
 
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
-    // Key is tuple of seedNode address and requested blockHeight
-    private final Map<Tuple2<NodeAddress, Integer>, RequestBlocksHandler> requestBlocksHandlerMap = new HashMap<>();
+    // At most one block request runs. A request for another start height replaces it, and the retries and the tried
+    // seed nodes count per request, so that earlier requests cannot use them up.
+    @Nullable
+    private RequestBlocksHandler requestBlocksHandler;
+    private final Set<NodeAddress> triedSeedNodeAddresses = new HashSet<>();
     private Timer retryTimer;
+    // A retry needs a connection. Without any connection the request waits, and the next connection resumes it.
+    private boolean waitingForConnection;
     private boolean stopped;
     // The accepted announcements by block height. We forget an announcement only when its height has left the
     // window of MAX_RECENT_BLOCKS, so we know every announcement which we would still accept.
@@ -157,7 +157,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         networkNode.removeMessageListener(this);
         networkNode.removeConnectionListener(this);
         peerManager.removeListener(this);
-        closeAllHandlers();
+        closeHandler();
     }
 
     public void addListener(Listener listener) {
@@ -165,18 +165,28 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     }
 
     /**
+     * Starts a new block request with no tried seed nodes and no retries, which replaces the running request. A running
+     * request with the same start height asks for the same blocks already. We keep it with its attempt in flight, its
+     * waiting retry or its wait for a connection, as replacing it would drop an attempt which may be answered soon, or
+     * wait for the retry again.
      *
      * @param startBlockHeight      Block height from where we expect new blocks (current block height in bsqState + 1)
      */
     public void requestBlocks(int startBlockHeight) {
+        if (startBlockHeight == lastRequestedBlockHeight &&
+                (requestBlocksHandler != null || retryTimer != null || waitingForConnection)) {
+            log.info("We have a block request with startBlockHeight={} running already.", startBlockHeight);
+            return;
+        }
+
         lastRequestedBlockHeight = startBlockHeight;
+        stopRequest();
         Optional<Connection> connectionToSeedNodeOptional = networkNode.getConfirmedConnections().stream()
                 .filter(peerManager::isSeedNode)
                 .findAny();
 
         connectionToSeedNodeOptional.flatMap(Connection::getPeersNodeAddressOptional)
                 .ifPresentOrElse(candidate -> {
-                    seedNodeAddresses.remove(candidate);
                     requestBlocks(candidate, startBlockHeight);
                 }, () -> {
                     tryWithNewSeedNode(startBlockHeight);
@@ -191,9 +201,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     public void reset() {
         receivedBlockUidsByHeight.clear();
         lastRequestedBlockHeight = 0;
-        lastReceivedBlockHeight = 0;
-        retryCounter = 0;
-        requestBlocksHandlerMap.values().forEach(RequestBlocksHandler::terminate);
+        stopRequest();
     }
 
 
@@ -203,17 +211,20 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
 
     @Override
     public void onConnection(Connection connection) {
+        // At startup the first connection has no preceding all-connections-lost event.
+        if (waitingForConnection) {
+            tryWithNewSeedNode(lastRequestedBlockHeight);
+        }
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        closeHandler(connection);
+        if (requestBlocksHandler != null) {
+            requestBlocksHandler.onDisconnect(connection);
+        }
 
         if (peerManager.isPeerBanned(closeConnectionReason, connection)) {
-            connection.getPeersNodeAddressOptional().ifPresent(nodeAddress -> {
-                seedNodeAddresses.remove(nodeAddress);
-                removeFromRequestBlocksHandlerMap(nodeAddress);
-            });
+            connection.getPeersNodeAddressOptional().ifPresent(seedNodeAddresses::remove);
         }
     }
 
@@ -225,26 +236,23 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     @Override
     public void onAllConnectionsLost() {
         log.info("onAllConnectionsLost");
-        closeAllHandlers();
+        closeHandler();
         stopRetryTimer();
         stopped = true;
-        tryWithNewSeedNode(lastRequestedBlockHeight);
     }
 
     @Override
     public void onNewConnectionAfterAllConnectionsLost() {
         log.info("onNewConnectionAfterAllConnectionsLost");
-        closeAllHandlers();
         stopped = false;
-        tryWithNewSeedNode(lastRequestedBlockHeight);
+        restartUnansweredRequest();
     }
 
     @Override
     public void onAwakeFromStandby() {
         log.info("onAwakeFromStandby");
-        closeAllHandlers();
         stopped = false;
-        tryWithNewSeedNode(lastRequestedBlockHeight);
+        restartUnansweredRequest();
     }
 
 
@@ -319,31 +327,8 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
             return;
         }
 
-        Tuple2<NodeAddress, Integer> key = new Tuple2<>(peersNodeAddress, startBlockHeight);
-        if (requestBlocksHandlerMap.containsKey(key)) {
-            log.warn("We have started already a requestDataHandshake for startBlockHeight {} to peer. nodeAddress={}\n" +
-                            "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.",
-                    peersNodeAddress, startBlockHeight);
-
-            UserThread.runAfter(() -> {
-                if (requestBlocksHandlerMap.containsKey(key)) {
-                    RequestBlocksHandler handler = requestBlocksHandlerMap.get(key);
-                    handler.terminate();
-                    requestBlocksHandlerMap.remove(key);
-                }
-            }, CLEANUP_TIMER);
-            return;
-        }
-
-        if (startBlockHeight < lastReceivedBlockHeight) {
-            log.warn("startBlockHeight must not be smaller than lastReceivedBlockHeight. That should never happen." +
-                    "startBlockHeight={},lastReceivedBlockHeight={}", startBlockHeight, lastReceivedBlockHeight);
-            DevEnv.logErrorAndThrowIfDevMode("startBlockHeight must be larger than lastReceivedBlockHeight. startBlockHeight=" +
-                    startBlockHeight + " / lastReceivedBlockHeight=" + lastReceivedBlockHeight);
-            return;
-        }
-
-        RequestBlocksHandler requestBlocksHandler = new RequestBlocksHandler(networkNode,
+        triedSeedNodeAddresses.add(peersNodeAddress);
+        RequestBlocksHandler handler = new RequestBlocksHandler(networkNode,
                 peerManager,
                 peersNodeAddress,
                 startBlockHeight,
@@ -354,20 +339,19 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                         stopRetryTimer();
 
                         // need to remove before listeners are notified as they cause the update call
-                        requestBlocksHandlerMap.remove(key);
-                        // we only notify if our request was latest
-                        if (startBlockHeight >= lastReceivedBlockHeight) {
-                            lastReceivedBlockHeight = startBlockHeight;
+                        requestBlocksHandler = null;
+                        lastRequestedBlockHeight = 0;
+                        listeners.forEach(listener -> listener.onRequestedBlocksReceived(getBlocksResponse,
+                                peersNodeAddress,
+                                () -> {
+                                }));
+                    }
 
-                            listeners.forEach(listener -> listener.onRequestedBlocksReceived(getBlocksResponse,
-                                    peersNodeAddress,
-                                    () -> {
-                                    }));
-                        } else {
-                            log.warn("We got a response which is already obsolete because we received a " +
-                                    "response from a request with a higher block height. " +
-                                    "This could theoretically happen, but is very unlikely.");
-                        }
+                    @Override
+                    public void onRequestConnectionClosed() {
+                        log.info("Connection to seed node {} closed before it answered our block request.", peersNodeAddress);
+                        requestBlocksHandler = null;
+                        tryWithNewSeedNode(startBlockHeight);
                     }
 
                     @Override
@@ -376,15 +360,16 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                                 "ErrorMessage={}", peersNodeAddress, errorMessage);
 
                         peerManager.handleConnectionFault(peersNodeAddress);
-                        requestBlocksHandlerMap.remove(key);
+                        requestBlocksHandler = null;
 
                         listeners.forEach(listener -> listener.onFault(errorMessage, connection));
 
                         tryWithNewSeedNode(startBlockHeight);
                     }
                 });
-        requestBlocksHandlerMap.put(key, requestBlocksHandler);
-        requestBlocksHandler.requestBlocks();
+        // Set before sending: if the send future is already done, its callback runs within requestBlocks.
+        requestBlocksHandler = handler;
+        handler.requestBlocks();
     }
 
 
@@ -393,20 +378,17 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void tryWithNewSeedNode(int startBlockHeight) {
-        if (networkNode.getAllConnections().isEmpty()) {
-            return;
-        }
-
-        if (lastRequestedBlockHeight == 0) {
-            return;
-        }
-
-        if (stopped) {
+        if (lastRequestedBlockHeight == 0 || stopped) {
             return;
         }
 
         if (retryTimer != null) {
             log.warn("We have a retry timer already running.");
+            return;
+        }
+
+        waitingForConnection = networkNode.getAllConnections().isEmpty();
+        if (waitingForConnection) {
             return;
         }
 
@@ -424,13 +406,13 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                     stopRetryTimer();
 
                     List<NodeAddress> list = seedNodeAddresses.stream()
+                            .filter(e -> !triedSeedNodeAddresses.contains(e))
                             .filter(e -> peerManager.isSeedNode(e) && !peerManager.isSelf(e))
                             .collect(Collectors.toList());
                     Collections.shuffle(list);
 
                     if (!list.isEmpty()) {
                         NodeAddress nextCandidate = list.get(0);
-                        seedNodeAddresses.remove(nextCandidate);
                         log.info("We try requestBlocks from {} with startBlockHeight={}", nextCandidate, startBlockHeight);
                         requestBlocks(nextCandidate, startBlockHeight);
                     } else {
@@ -448,28 +430,28 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         }
     }
 
-    private void closeHandler(Connection connection) {
-        Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
-        if (peersNodeAddressOptional.isPresent()) {
-            NodeAddress nodeAddress = peersNodeAddressOptional.get();
-            removeFromRequestBlocksHandlerMap(nodeAddress);
-        } else {
-            log.trace("closeHandler: nodeAddress not set in connection {}", connection);
+    // Stops the running block request and clears its retries and tried seed nodes. A late answer or failure of it is
+    // ignored.
+    private void stopRequest() {
+        stopRetryTimer();
+        closeHandler();
+        waitingForConnection = false;
+        retryCounter = 0;
+        triedSeedNodeAddresses.clear();
+    }
+
+    // The attempts of an unanswered request may have failed because we had lost our connections or were in standby,
+    // which tells nothing about the seed nodes. So we request its blocks again with a new request. An answered request
+    // is not repeated: the wallet triggers a new request for any block that is still missing.
+    private void restartUnansweredRequest() {
+        stopRequest();
+        tryWithNewSeedNode(lastRequestedBlockHeight);
+    }
+
+    private void closeHandler() {
+        if (requestBlocksHandler != null) {
+            requestBlocksHandler.terminate();
+            requestBlocksHandler = null;
         }
-    }
-
-    private void removeFromRequestBlocksHandlerMap(NodeAddress nodeAddress) {
-        requestBlocksHandlerMap.entrySet().stream()
-                .filter(e -> e.getKey().first.equals(nodeAddress))
-                .findAny()
-                .ifPresent(e -> {
-                    e.getValue().terminate();
-                    requestBlocksHandlerMap.remove(e.getKey());
-                });
-    }
-
-    private void closeAllHandlers() {
-        requestBlocksHandlerMap.values().forEach(RequestBlocksHandler::terminate);
-        requestBlocksHandlerMap.clear();
     }
 }
