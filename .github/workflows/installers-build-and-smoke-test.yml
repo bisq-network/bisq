@@ -46,4 +46,6 @@ jobs:
     if: ${{ !cancelled() && needs.check-timeout.result == 'success' }}
     uses: ./.github/workflows/installer-smoke-test.yml
     with:
-      timeout-seconds: ${{ inputs.timeout-seconds }}
+      # A number input of workflow_dispatch arrives as a string, which a number input of workflow_call rejects.
+      # check-timeout has already made sure that the value is a whole number.
+      timeout-seconds: ${{ fromJSON(inputs.timeout-seconds) }}
