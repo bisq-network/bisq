@@ -243,6 +243,7 @@ public class BisqProcess extends AbstractLinuxProcess implements LinuxProcess {
                     if (bisqAppConfig.mainClassName.equals(BisqDaemonMain.class.getName())) {
                         add("--apiPassword=" + config.apiPassword);
                         add("--apiPort=" + bisqAppConfig.apiPort);
+                        add("--acceptTerms=true");
                     }
                     break;
                 default:
