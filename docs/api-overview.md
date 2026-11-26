@@ -10,7 +10,14 @@ To run daemon.jar on Mainnet:
 
 `$ java -jar daemon.jar --apiPassword=becareful`
 
-The daemon does not start without `--apiPassword`. The API listens on `127.0.0.1` only. `--apiHost` sets another
+The daemon does not start without `--apiPassword`. It also does not start before you accepted the terms and
+conditions of Bisq: at the first start it prints them and shuts down. Read them, and if you accept them, start once
+with
+
+`$ java -jar daemon.jar --apiPassword=becareful --acceptTerms=true`
+
+The daemon stores the acceptance, so later starts do not need the option. Do not keep the option in a start script,
+or you also accept later versions of the terms without seeing them. The API listens on `127.0.0.1` only. `--apiHost` sets another
 address, but the API has no TLS, so the password and all calls then cross the network in clear text. To use the API
 from another host, prefer an SSH tunnel to the loopback address.
 

@@ -489,8 +489,10 @@ public class Config {
         ArgumentAcceptingOptionSpec<Boolean> acceptTermsOpt =
                 parser.accepts(ACCEPT_TERMS,
                                 "If set to true you accept the terms and conditions of Bisq, which the desktop " +
-                                        "application shows in Settings/About. The acceptance is stored, so later starts " +
-                                        "do not ask again")
+                                        "application shows in Settings/About and a headless application prints when " +
+                                        "they are not accepted. The acceptance is stored, so later starts do not ask " +
+                                        "again. The headless applications, such as the daemon, do not start before the " +
+                                        "terms are accepted")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
