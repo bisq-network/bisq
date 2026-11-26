@@ -1,0 +1,55 @@
+import org.yaml.snakeyaml.LoaderOptions
+import org.yaml.snakeyaml.Yaml
+import org.yaml.snakeyaml.constructor.SafeConstructor
+
+buildscript {
+    repositories { mavenCentral() }
+    dependencies { classpath 'org.yaml:snakeyaml:2.6' }
+}
+
+// These workflows intentionally handle privileged events. Review changes to their jobs and
+// permissions before updating the SHA-256 of the LF-normalized workflow.
+def reviewedWorkflows = [
+        'contribution-notice.yml': '5984d047180f22c6a7ab44c65613a313be0860c2ec167ac6865578e26f0b1cf7'
+]
+
+def workflows = fileTree('.github/workflows') { include '*.yml', '*.yaml' }
+tasks.named('verifyGithubActionsSecurity') {
+    inputs.files(workflows)
+    doLast {
+        def violations = []
+        def options = new LoaderOptions()
+        options.allowDuplicateKeys = false
+        def yaml = new Yaml(new SafeConstructor(options))
+        workflows.files.sort().each { file ->
+            def text = file.getText('UTF-8').replace('\r\n', '\n')
+            def workflow = yaml.load(text)
+            if (workflow.permissions == null) {
+                violations << "${file.name}: declare top-level permissions"
+            }
+
+            // SnakeYAML reads the unquoted YAML 1.1 key 'on' as Boolean.TRUE.
+            def events = workflow.get('on') ?: workflow.get(true)
+            def triggers = events instanceof Map ? events.keySet() : (events instanceof List ? events : [events])
+            if (triggers.any { it in ['pull_request_target', 'workflow_run'] } &&
+                    text.digest('SHA-256') != reviewedWorkflows[file.name]) {
+                violations << "${file.name}: privileged trigger requires a reviewed workflow digest"
+            }
+
+            workflow.jobs.each { jobName, job ->
+                job.steps?.each { step ->
+                    if (step.run =~ /(?is)\$\{\{(?:(?!\}\}).)*?\bgithub\s*(?:\.\s*event\b|\[\s*'event'\s*\])/) {
+                        violations << "${file.name}: ${jobName}: pass event data through env in shell steps"
+                    }
+                    if (step.uses?.startsWith('gradle/actions/setup-gradle@') &&
+                            step.with?.get('validate-wrappers')?.toString() != 'true') {
+                        violations << "${file.name}: ${jobName}: enable validate-wrappers on setup-gradle"
+                    }
+                }
+            }
+        }
+        if (violations) {
+            throw new GradleException(violations.join('\n'))
+        }
+    }
+}

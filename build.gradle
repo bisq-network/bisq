@@ -1999,6 +1999,8 @@ tasks.register('verifyGithubActionsSecurity') {
     }
 }
 
+apply from: "gradle/github-workflow-policy.gradle"
+
 tasks.register('generateJarHashes') {
     group = 'verification'
     description = 'Builds all project Jar task outputs and writes a canonical SHA-256 and size manifest.'
