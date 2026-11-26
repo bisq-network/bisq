@@ -8,6 +8,8 @@
   files, build, signatures, publication, activation heights
  - [release-process.md](release-process.md): Manual build, signing and upload steps of a release
  - [reproducible-builds](reproducible-builds/): Reproducible release-build goals, usage, technical details, and platform notes
+ - [github-actions-workflows.md](github-actions-workflows.md): What each GitHub Actions workflow runs, when and with
+  which results
  - [idea-import.md](idea-import.md): Import Bisq sources into IntelliJ IDEA
  - [Makefile](../Makefile): (new) Set up a self-contained local Bisq network on Bitcoin regtest
  - [dev-setup.md](dev-setup.md): (deprecated) Set up a self-contained local Bisq network on Bitcoin regtest
