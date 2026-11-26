@@ -41,7 +41,7 @@ class WorkflowPolicyTest(unittest.TestCase):
                 "    runs-on: ubuntu-24.04\n"
                 "    steps:\n"
                 "      - uses: gradle/actions/setup-gradle@" + "0" * 40 + "\n"
-                "      - run: echo \"${{ github.event.action }}\"\n"
+                "      - run: echo \"${{ github.head_ref }}\"\n"
             )
             (workflows / "fixture-comment.yml").write_text(
                 "on: issue_comment\n"
