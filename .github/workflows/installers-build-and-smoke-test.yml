@@ -8,7 +8,7 @@ on:
       timeout-seconds:
         description: 'Seconds the application gets to become ready'
         required: false
-        default: 180
+        default: 600
         type: number
 
 permissions:

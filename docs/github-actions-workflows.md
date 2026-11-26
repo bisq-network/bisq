@@ -354,13 +354,15 @@ Downloading these artifacts needs a GitHub login. They are for developers and ar
 ## Smoke Test Installers (`installer-smoke-test.yml`)
 
 Installs each installer from a Build Installers run and starts Bisq with a new data directory. It waits until Tor
-runs in its sandbox, the onion service is published, and the P2P network and the wallet are ready. It does not
-wait for the network data to synchronize.
+runs in its sandbox, the onion service is published, the wallet is set up and Bisq reports the P2P network as
+ready. Bisq does so when it has loaded the initial data from a seed node, and also when it finds no seed node or
+peer, so this line alone does not prove that data arrived. It does not wait for the wallet or the DAO state to
+synchronize.
 
 **Triggers.**
 
 - Manual, with `build-run-id` (required: the ID of a Build Installers or Build and Smoke Test Installers run) and
-  `timeout-seconds` (default 180).
+  `timeout-seconds` (default 600).
 - `workflow_call` with the same inputs. An empty `build-run-id` means the installers of the calling run.
 
 **Permissions.** `contents: read`, and `actions: read` to download the artifacts of another run.
@@ -406,7 +408,7 @@ GPU.
 
 ## Build and Smoke Test Installers (`installers-build-and-smoke-test.yml`)
 
-**Trigger.** Manual only, with `timeout-seconds` (default 180).
+**Trigger.** Manual only, with `timeout-seconds` (default 600).
 
 **Permissions.** `contents: read` and `actions: read`. Called workflows get at most these permissions.
 

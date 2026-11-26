@@ -1,10 +1,11 @@
 name: Smoke Test Installers
 
 # Installs each installer of a Build Installers run, starts the application with a fresh data directory and waits
-# until Tor runs in its sandbox, the onion service is published, and the P2P network and the wallet are ready. The
-# test does not wait for the synchronisation of the network data. It fails if the log has an ERROR line, if the
-# application exits, or if it is not ready within the timeout. On failure the logs are uploaded and the run shows
-# the reason.
+# until Tor runs in its sandbox, the onion service is published, the wallet is set up and Bisq reports the P2P
+# network as ready. Bisq does so when it has loaded the initial data from a seed node, and also when it finds no
+# seed node or peer. The test does not wait for the synchronisation of the wallet or of the DAO state. It fails if
+# the log has an ERROR line, if the application exits, or if it is not ready within the timeout. On failure the logs
+# are uploaded and the run shows the reason.
 on:
   workflow_dispatch:
     inputs:
@@ -15,7 +16,7 @@ on:
       timeout-seconds:
         description: 'Seconds the application gets to become ready'
         required: false
-        default: 180
+        default: 600
         type: number
   workflow_call:
     inputs:
@@ -26,7 +27,7 @@ on:
         type: string
       timeout-seconds:
         required: false
-        default: 180
+        default: 600
         type: number
 
 permissions:
