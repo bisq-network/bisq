@@ -1,6 +1,6 @@
 FROM --platform=linux/amd64 fedora:43 AS build-setup
 
-ARG TAG_NAME=v1.10.12
+ARG TAG_NAME=v1.10.13
 ARG BISQ_REPO=https://github.com/bisq-network/bisq.git
 ARG BITCOIND_REPO=https://github.com/bisq-network/bitcoind.git
 

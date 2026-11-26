@@ -2,8 +2,8 @@
 
 cd "$(dirname "$0")/../../../." || exit 1
 
-oldVersion=1.10.11
-newVersion=1.10.12
+oldVersion=1.10.12
+newVersion=1.10.13
 
 # insert_snapshot_version.sh appends "-SNAPSHOT" to the version in these two files.
 snapshotFiles=(desktop/package/macosx/finalize.sh desktop/src/main/resources/version.txt)

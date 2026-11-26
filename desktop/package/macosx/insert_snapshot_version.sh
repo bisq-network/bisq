@@ -2,7 +2,7 @@
 
 cd "$(dirname "$0")/../../../" || exit 1
 
-version=1.10.12
+version=1.10.13
 
 # replace_version_number.sh turns "$version-SNAPSHOT" into the next version in these two files only.
 finalizeScript=desktop/package/macosx/finalize.sh
