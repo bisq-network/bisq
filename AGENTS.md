@@ -34,6 +34,7 @@ Claude Code uses the same directory through `.claude/skills`.
 - `write-specification` for domain rules and intended behavior
 - `review-feedback` for evaluating reviewer claims
 - `bisq-pr-reviewer` for pull request review
+- `security-review` for security questions, security-relevant reviews and suspected vulnerabilities
 - `canonical-encoding` for byte-level preimage compatibility
 - `release-notes` for release documents and the in-app update text
 
