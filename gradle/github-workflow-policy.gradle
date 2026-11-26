@@ -59,15 +59,25 @@ tasks.named('verifyGithubActionsSecurity') {
 
             workflow.jobs.each { jobName, job ->
                 job.steps?.each { step ->
-                    // GitHub resolves action names regardless of case.
+                    // GitHub resolves action names and input names regardless of case.
                     def uses = step.uses?.toString()?.toLowerCase()
+                    def inputs = step.with
+                    // An expression as the inputs or as an input name hides which input a step sets.
+                    if (inputs != null && !(inputs instanceof Map) ||
+                            inputs instanceof Map && inputs.keySet().any { it?.toString()?.contains('${{') }) {
+                        violations << "${file.name}: ${jobName}: use literal action input names"
+                    }
+                    def input = { name ->
+                        inputs instanceof Map ? inputs.findAll { it.key?.toString()?.equalsIgnoreCase(name) }.values() : []
+                    }
                     // Expressions expand into the script text before it runs. Pass them through env instead.
-                    def script = uses?.startsWith('actions/github-script@') ? step.with?.get('script') : null
-                    if ([step.run, script].any { it?.toString()?.contains('${{') }) {
+                    def scripts = uses?.startsWith('actions/github-script@') ? input('script') : []
+                    if (([step.run] + scripts).any { it?.toString()?.contains('${{') }) {
                         violations << "${file.name}: ${jobName}: pass expressions through env in run and script steps"
                     }
+                    def validateWrappers = input('validate-wrappers')
                     if (uses?.startsWith('gradle/actions/setup-gradle@') &&
-                            step.with?.get('validate-wrappers')?.toString() != 'true') {
+                            (validateWrappers.empty || validateWrappers.any { it?.toString() != 'true' })) {
                         violations << "${file.name}: ${jobName}: enable validate-wrappers on setup-gradle"
                     }
                 }

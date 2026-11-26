@@ -28,7 +28,7 @@ class WorkflowPolicyTest(unittest.TestCase):
             )
             notice = workflows / "contribution-notice.yml"
             notice.write_bytes(notice.read_text(encoding="utf-8").replace("\n", "\r\n").encode())
-            # GitHub reads ON and YES as distinct strings and TRUE as true.
+            # GitHub reads ON and YES as distinct strings, TRUE as true and input names regardless of case.
             (workflows / "fixture-valid.yml").write_text(
                 "on: push\n"
                 "permissions: {}\n"
@@ -41,7 +41,7 @@ class WorkflowPolicyTest(unittest.TestCase):
                 "    steps:\n"
                 "      - uses: gradle/actions/setup-gradle@" + "0" * 40 + "\n"
                 "        with:\n"
-                "          validate-wrappers: TRUE\n"
+                "          Validate-Wrappers: TRUE\n"
             )
             wrapper = ROOT / ("gradlew.bat" if os.name == "nt" else "gradlew")
             command = [str(wrapper), "--offline", "-p", directory, "verifyGithubActionsSecurity"]
@@ -73,12 +73,29 @@ class WorkflowPolicyTest(unittest.TestCase):
                 "on: push\n"
                 "permissions: {}\n"
                 "jobs:\n"
+                "  script-case:\n"
+                "    runs-on: ubuntu-24.04\n"
+                "    steps:\n"
+                "      - uses: actions/github-script@" + "0" * 40 + "\n"
+                "        with:\n"
+                "          Script: console.log('${{ github.head_ref }}')\n"
+                "  script-expression-key:\n"
+                "    runs-on: ubuntu-24.04\n"
+                "    steps:\n"
+                "      - uses: actions/github-script@" + "0" * 40 + "\n"
+                "        with:\n"
+                "          ${{ 'script' }}: console.log(process.env.HEAD_REF)\n"
                 "  wrapper-yes:\n"
                 "    runs-on: ubuntu-24.04\n"
                 "    steps:\n"
                 "      - uses: gradle/actions/setup-gradle@" + "0" * 40 + "\n"
                 "        with:\n"
                 "          validate-wrappers: yes\n"
+                "  wrapper-expression-inputs:\n"
+                "    runs-on: ubuntu-24.04\n"
+                "    steps:\n"
+                "      - uses: gradle/actions/setup-gradle@" + "0" * 40 + "\n"
+                "        with: ${{ fromJSON('{\"validate-wrappers\":\"true\"}') }}\n"
             )
             result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             self.assertNotEqual(result.returncode, 0)
@@ -90,7 +107,10 @@ class WorkflowPolicyTest(unittest.TestCase):
                 "fixture.yml: example: pass expressions through env",
                 "fixture-comment.yml: privileged trigger",
                 "fixture-comment.yml: comment: pass expressions through env",
+                "fixture-inputs.yml: script-case: pass expressions through env",
+                "fixture-inputs.yml: script-expression-key: use literal action input names",
                 "fixture-inputs.yml: wrapper-yes: enable validate-wrappers",
+                "fixture-inputs.yml: wrapper-expression-inputs: use literal action input names",
             ):
                 self.assertIn(expected, result.stdout)
 
