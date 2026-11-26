@@ -1,0 +1,49 @@
+name: Build and Smoke Test Installers
+
+# Builds the installers of all platforms, then installs and starts each of them until Tor and the application are
+# ready. See installers.yml and installer-smoke-test.yml.
+on:
+  workflow_dispatch:
+    inputs:
+      timeout-seconds:
+        description: 'Seconds the application gets to become ready'
+        required: false
+        default: 180
+        type: number
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: installers-build-and-smoke-test-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # The smoke test checks the timeout as well, but only after the build has run
+  check-timeout:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+    - name: Check readiness timeout
+      shell: bash
+      env:
+        SMOKE_TEST_TIMEOUT_SECONDS: ${{ inputs.timeout-seconds }}
+      run: |
+        if ! [[ "$SMOKE_TEST_TIMEOUT_SECONDS" =~ ^[1-9][0-9]*$ ]]; then
+          echo "::error::The readiness timeout must be a positive whole number of seconds"
+          exit 1
+        fi
+
+  build:
+    needs: check-timeout
+    uses: ./.github/workflows/installers.yml
+
+  # Also runs when the build of a platform failed, so that the other platforms are tested. The smoke test of the
+  # failed platform reports that its installers are missing.
+  smoke-test:
+    needs: [check-timeout, build]
+    if: ${{ !cancelled() && needs.check-timeout.result == 'success' }}
+    uses: ./.github/workflows/installer-smoke-test.yml
+    with:
+      timeout-seconds: ${{ inputs.timeout-seconds }}
