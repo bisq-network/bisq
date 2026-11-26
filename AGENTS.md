@@ -25,6 +25,19 @@ Most relevant referenced docs:
 - [API overview](docs/api-overview.md)
 
 
+## Agent skills
+
+Task-specific instructions are in `.agents/skills/<name>/SKILL.md`.
+Claude Code uses the same directory through `.claude/skills`.
+
+- `root-cause-analysis` for nontrivial defects and competing explanations
+- `write-specification` for domain rules and intended behavior
+- `review-feedback` for evaluating reviewer claims
+- `bisq-pr-reviewer` for pull request review
+- `security-review` for security questions, security-relevant reviews and suspected vulnerabilities
+- `canonical-encoding` for byte-level preimage compatibility
+- `release-notes` for release documents and the in-app update text
+
 ## Tech and Runtime Context
 
 - Java (JDK 21)
