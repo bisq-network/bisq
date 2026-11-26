@@ -110,6 +110,12 @@ DAEMON_ARGS=(
   --apiPassword="${API_PASSWORD}"
   --providers="http://127.0.0.1:${FEE_STUB_PORT}/"
 )
+# The command line rejects unknown options, so only a daemon which knows the option gets it. Older
+# releases, which the compat tests run, accept the terms without asking.
+daemon_help="$(/bisq/daemon/bin/daemon --help 2>/dev/null || true)"
+if grep -qF -- '--acceptTerms' <<<"${daemon_help}"; then
+  DAEMON_ARGS+=(--acceptTerms=true)
+fi
 # Each daemon parses chain itself — bypasses lite-node DAO state propagation
 # from seednode. Requires RPC creds to bitcoind.
 if [[ "${FULL_DAO_NODE:-true}" == "true" ]]; then

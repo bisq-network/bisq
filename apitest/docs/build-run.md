@@ -19,6 +19,9 @@ To run the Bisq daemon:
 
 _Note: `$APPDIR` is empty or otherwise contains a Bisq wallet created by the daemon or the UI._
 
+_Note: Without an earlier acceptance the daemon prints the terms and conditions of Bisq and does not start. Start it
+once with `--acceptTerms=true` to accept them._
+
 _Note: Never run the API daemon and Bisq UI on the same host, or you will corrupt your wallet.  It will be possible
 with specific command line options, i.e., unique appDatadir and ports, but this scenario has not been tested yet._
 

@@ -21,6 +21,7 @@ specification says so explicitly instead of describing the implementation as if 
 | [`application/data-directory-backup.md`](application/data-directory-backup.md) | What "Backup now" copies from the data directory, how it treats links and special files, and who can read the backup. |
 | [`application/data-directory-access.md`](application/data-directory-access.md) | Who can read the data directory: the owner-only mode of every directory of it, from their creation and at every start, and why the mode of the data directory alone is not enough. |
 | [`application/key-ring-storage.md`](application/key-ring-storage.md) | Who can read the private keys of the key ring and their rolling backups. |
+| [`application/terms-acceptance.md`](application/terms-acceptance.md) | When a node asks for the acceptance of the terms and conditions, and how the `--acceptTerms` option accepts them without the terms window. |
 
 ### `api/`
 

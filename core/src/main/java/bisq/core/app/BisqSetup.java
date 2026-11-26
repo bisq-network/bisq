@@ -405,9 +405,14 @@ public class BisqSetup {
         }
     }
 
-    private void maybeShowTac(Runnable nextStep) {
+    @VisibleForTesting
+    void maybeShowTac(Runnable nextStep) {
         if (!preferences.isTacAcceptedV1_10_1()) {
-            if (displayTacHandler != null)
+            if (config.acceptTerms) {
+                log.info("The terms and conditions were accepted with --{}=true", Config.ACCEPT_TERMS);
+                preferences.setTacAcceptedV1_10_1(true);
+                nextStep.run();
+            } else if (displayTacHandler != null)
                 displayTacHandler.accept(() -> {
                     preferences.setTacAcceptedV1_10_1(true);
                     nextStep.run();

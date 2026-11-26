@@ -83,6 +83,7 @@ public class Config {
     public static final String USE_DEV_MODE = "useDevMode";
     public static final String USE_DEV_MODE_HEADER = "useDevModeHeader";
     public static final String IGNORE_POPUPS_IN_DEV_MODE = "ignorePopupsInDevMode";
+    public static final String ACCEPT_TERMS = "acceptTerms";
     public static final String TOR_DIR = "torDir";
     public static final String STORAGE_DIR = "storageDir";
     public static final String KEY_STORAGE_DIR = "keyStorageDir";
@@ -224,6 +225,7 @@ public class Config {
     public final boolean useDevMode;
     public final boolean useDevModeHeader;
     public final boolean ignorePopupsInDevMode;
+    public final boolean acceptTerms;
     public final boolean useDevPrivilegeKeys;
     public final boolean allowMainnetSignedWitnessesWithDevPrivilegeKeys;
     public final boolean dumpStatistics;
@@ -483,6 +485,17 @@ public class Config {
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(true);
+
+        ArgumentAcceptingOptionSpec<Boolean> acceptTermsOpt =
+                parser.accepts(ACCEPT_TERMS,
+                                "If set to true you accept the terms and conditions of Bisq, which the desktop " +
+                                        "application shows in Settings/About and a headless application prints when " +
+                                        "they are not accepted. The acceptance is stored, so later starts do not ask " +
+                                        "again. The headless applications, such as the daemon, do not start before the " +
+                                        "terms are accepted")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<Boolean> useDevPrivilegeKeysOpt =
                 parser.accepts(USE_DEV_PRIVILEGE_KEYS, "If set to true all privileged features requiring a private " +
@@ -1058,6 +1071,7 @@ public class Config {
             this.useDevMode = options.valueOf(useDevModeOpt);
             this.useDevModeHeader = options.valueOf(useDevModeHeaderOpt);
             this.ignorePopupsInDevMode = options.valueOf(ignorePopupsInDevModeOpt);
+            this.acceptTerms = options.valueOf(acceptTermsOpt);
             this.useDevPrivilegeKeys = options.valueOf(useDevPrivilegeKeysOpt);
             this.allowMainnetSignedWitnessesWithDevPrivilegeKeys =
                     this.useDevPrivilegeKeys && options.valueOf(allowMainnetSignedWitnessesWithDevPrivilegeKeysOpt);

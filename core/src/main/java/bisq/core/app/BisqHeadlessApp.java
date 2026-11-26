@@ -21,6 +21,7 @@ import bisq.core.trade.TradeManager;
 
 import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.config.Config;
 import bisq.common.file.CorruptedStorageFileHandler;
 import bisq.common.setup.GracefulShutDownHandler;
 
@@ -72,8 +73,12 @@ public class BisqHeadlessApp implements HeadlessApp {
 
     protected void setupHandlers() {
         bisqSetup.setDisplayTacHandler(acceptedHandler -> {
-            log.info("onDisplayTacHandler: We accept the tacs automatically in headless mode");
-            acceptedHandler.run();
+            // Without a window the user reads the terms here and accepts them with the option
+            log.error("The terms and conditions of Bisq are not accepted yet. Read them below and start with " +
+                            "--{}=true to accept them. We shut down.{}{}", Config.ACCEPT_TERMS,
+                    System.lineSeparator() + System.lineSeparator(), TermsAndConditions.getText());
+            gracefulShutDownHandler.gracefulShutDown(() -> {
+            });
         });
         bisqSetup.setLocalBitcoinNodeUnusableHandler((reason, continueWithoutLocalNode) -> {
             // Without a user to ask we do not connect to other Bitcoin nodes
