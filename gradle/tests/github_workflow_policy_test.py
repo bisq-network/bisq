@@ -28,6 +28,21 @@ class WorkflowPolicyTest(unittest.TestCase):
             )
             notice = workflows / "contribution-notice.yml"
             notice.write_bytes(notice.read_text(encoding="utf-8").replace("\n", "\r\n").encode())
+            # GitHub reads ON and YES as distinct strings and TRUE as true.
+            (workflows / "fixture-valid.yml").write_text(
+                "on: push\n"
+                "permissions: {}\n"
+                "env:\n"
+                "  ON: one\n"
+                "  YES: two\n"
+                "jobs:\n"
+                "  build:\n"
+                "    runs-on: ubuntu-24.04\n"
+                "    steps:\n"
+                "      - uses: gradle/actions/setup-gradle@" + "0" * 40 + "\n"
+                "        with:\n"
+                "          validate-wrappers: TRUE\n"
+            )
             wrapper = ROOT / ("gradlew.bat" if os.name == "nt" else "gradlew")
             command = [str(wrapper), "--offline", "-p", directory, "verifyGithubActionsSecurity"]
             subprocess.run(command, check=True)
@@ -54,6 +69,17 @@ class WorkflowPolicyTest(unittest.TestCase):
                 "        with:\n"
                 "          script: console.log('${{ github.head_ref }}')\n"
             )
+            (workflows / "fixture-inputs.yml").write_text(
+                "on: push\n"
+                "permissions: {}\n"
+                "jobs:\n"
+                "  wrapper-yes:\n"
+                "    runs-on: ubuntu-24.04\n"
+                "    steps:\n"
+                "      - uses: gradle/actions/setup-gradle@" + "0" * 40 + "\n"
+                "        with:\n"
+                "          validate-wrappers: yes\n"
+            )
             result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             self.assertNotEqual(result.returncode, 0)
             for expected in (
@@ -64,6 +90,7 @@ class WorkflowPolicyTest(unittest.TestCase):
                 "fixture.yml: example: pass expressions through env",
                 "fixture-comment.yml: privileged trigger",
                 "fixture-comment.yml: comment: pass expressions through env",
+                "fixture-inputs.yml: wrapper-yes: enable validate-wrappers",
             ):
                 self.assertIn(expected, result.stdout)
 

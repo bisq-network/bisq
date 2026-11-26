@@ -1,6 +1,10 @@
+import org.yaml.snakeyaml.DumperOptions
 import org.yaml.snakeyaml.LoaderOptions
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.SafeConstructor
+import org.yaml.snakeyaml.nodes.Tag
+import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.resolver.Resolver
 
 buildscript {
     repositories { mavenCentral() }
@@ -18,6 +22,17 @@ def reviewedWorkflows = [
         'contribution-notice.yml': '5984d047180f22c6a7ab44c65613a313be0860c2ec167ac6865578e26f0b1cf7'
 ]
 
+// GitHub resolves plain scalars with the YAML 1.2 core schema. The YAML 1.1 default of SnakeYAML reads on, yes or
+// off as booleans, so it would accept validate-wrappers: yes and merge distinct keys such as ON and YES. The policy
+// reads no numbers, so every other plain scalar stays a string.
+class GithubScalarResolver extends Resolver {
+    @Override
+    protected void addImplicitResolvers() {
+        addImplicitResolver(Tag.BOOL, ~/^(?:true|True|TRUE|false|False|FALSE)$/, 'tTfF')
+        addImplicitResolver(Tag.NULL, ~/^(?:|~|null|Null|NULL)$/, '~nN\u0000')
+    }
+}
+
 def workflows = fileTree('.github/workflows') { include '*.yml', '*.yaml' }
 tasks.named('verifyGithubActionsSecurity') {
     inputs.files(workflows)
@@ -25,7 +40,9 @@ tasks.named('verifyGithubActionsSecurity') {
         def violations = []
         def options = new LoaderOptions()
         options.allowDuplicateKeys = false
-        def yaml = new Yaml(new SafeConstructor(options))
+        def dumperOptions = new DumperOptions()
+        def yaml = new Yaml(new SafeConstructor(options), new Representer(dumperOptions), dumperOptions, options,
+                new GithubScalarResolver())
         workflows.files.sort().each { file ->
             def text = file.getText('UTF-8').replace('\r\n', '\n')
             def workflow = yaml.load(text)
@@ -33,8 +50,7 @@ tasks.named('verifyGithubActionsSecurity') {
                 violations << "${file.name}: declare top-level permissions"
             }
 
-            // SnakeYAML reads the unquoted YAML 1.1 key 'on' as Boolean.TRUE.
-            def events = workflow.get('on') ?: workflow.get(true)
+            def events = workflow.on
             def triggers = events instanceof Map ? events.keySet() : (events instanceof List ? events : [events])
             def digest = text.digest('SHA-256')
             if (triggers.any { !(it in unprivilegedTriggers) } && digest != reviewedWorkflows[file.name]) {
