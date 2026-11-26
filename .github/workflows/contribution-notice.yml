@@ -1,0 +1,39 @@
+name: Contribution notice
+
+on:
+  issues:
+    types: [opened]
+  # Use the base repository's workflow so it can comment on fork PRs.
+  # Keep this job independent of the contributor's code.
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  comment:
+    if: github.repository == 'bisq-network/bisq'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Post contribution and security guidance
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+          NOTICE: |-
+            **Security issues belong in a private report.** Keep security details and proposed fixes out of public issues, pull requests, and comments. Use **Report a vulnerability** on the [Bisq Security Advisories page](https://github.com/bisq-network/bisq/security/advisories).
+
+            Bisq has temporarily paused paid development for new contributors and routine review of their pull requests. Before starting work, ask the relevant maintainers about priorities, review capacity, and funding. Compensation requires DAO approval. Read the [announcement on contribution rules and compensation](https://bisq.network/blog/open-source-development-in-the-age-of-ai/).
+
+            <!-- bisq-contribution-notice -->
+        run: |
+          endpoint="repos/$GITHUB_REPOSITORY/issues/$NUMBER/comments"
+          if [[ "$GITHUB_RUN_ATTEMPT" -gt 1 ]]; then
+            existing=$(gh api "$endpoint" --paginate --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- bisq-contribution-notice -->"))) | .id')
+            if [[ -n "$existing" ]]; then
+              exit 0
+            fi
+          fi
+          gh api "$endpoint" -f body="$NOTICE" --silent

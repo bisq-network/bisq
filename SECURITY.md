@@ -22,10 +22,8 @@
   Please do **not** report security vulnerabilities through public GitHub issues,
   pull requests, Discussions, Matrix rooms, forums, or social media.
 
-  Report suspected vulnerabilities privately through GitHub's **Report a
-  vulnerability** flow on this repository's Security page. If that option is not
-  available, open a minimal public issue asking maintainers to enable a private
-  security reporting channel, but do not include exploit details.
+  To report a suspected security issue privately, select **Report a vulnerability**
+  on Bisq's [Security Advisories page](https://github.com/bisq-network/bisq/security/advisories).
 
   Include as much detail as possible:
 
@@ -56,6 +54,7 @@
   before public disclosure. For severe or actively exploited issues, coordinate
   timing with maintainers so public details do not increase harm to users.
 
-  Bisq does not currently guarantee a bug bounty. Security work that qualifies as
-  a critical bug fix may be eligible for Bisq DAO compensation according to the
-  project's contributor and critical-bug processes.
+  Bisq does not guarantee a bug bounty or payment for a fix. If you intend to
+  develop a fix for compensation, discuss funding with the maintainers in the
+  private advisory before starting. The [contribution guidelines](CONTRIBUTING.md#compensation)
+  explain the budget and DAO approval process.

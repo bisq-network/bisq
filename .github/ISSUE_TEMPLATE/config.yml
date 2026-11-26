@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Report a security issue privately
+    url: https://github.com/bisq-network/bisq/security/advisories
+    about: Select "Report a vulnerability" to send details privately to Bisq maintainers.
   - name: 💡 Feature Request
     url: https://github.com/bisq-network/bisq/discussions
     about: Request new features or upgrades to existing tools

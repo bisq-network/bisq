@@ -5,11 +5,5 @@ labelPRBasedOnFilePath:
     is:no-priority:
         - assets/**/*
 
-firstPRWelcomeComment: >
-    **Thanks for opening this pull request!**<br/><br/>**Please note:** Bisq has temporarily paused accepting new contributors for compensated development and routinely reviewing their PRs. New contributors should not assume that a submitted PR will be reviewed or compensated. Before investing substantial time, please contact the relevant maintainers to discuss priorities, review capacity, and whether funded work is available. See [Open Source Software Development in the Age of AI](https://bisq.network/blog/open-source-development-in-the-age-of-ai/) for the background.<br/><br/>Please check out our [contributor checklist](https://bisq.wiki/Contributor_checklist) and check if *CI* or *Codacy* found any issues with your PR. Also make sure your commits are signed, and that you applied [Bisq's code style](https://github.com/bisq-network/style/issues) and [formatting](.editorconfig).
-
 firstPRMergeComment: >
     Awesome work, congrats on your first merged pull request!
-
-firstIssueWelcomeComment: >
-    **Thanks for opening your first issue here!**<br/><br/>Be sure to follow the issue template. Your issue will be reviewed by a maintainer and labeled for further action.
