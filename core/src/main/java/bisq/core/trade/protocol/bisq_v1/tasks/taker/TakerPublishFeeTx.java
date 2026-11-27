@@ -96,9 +96,11 @@ public class TakerPublishFeeTx extends TradeTask {
         if (!completed) {
             log.error(exception.toString());
             exception.printStackTrace();
-            trade.setErrorMessage("An error occurred.\n" +
-                    "Error message:\n"
-                    + exception.getMessage());
+            if (!isCanceled()) {
+                trade.setErrorMessage("An error occurred.\n" +
+                        "Error message:\n"
+                        + exception.getMessage());
+            }
             failed(exception);
         } else {
             log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
