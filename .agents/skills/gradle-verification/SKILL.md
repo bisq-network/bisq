@@ -10,7 +10,7 @@ The build verifies every dependency by PGP signature or SHA-256, and the wrapper
 ## Dependencies and plugins
 
 * A new dependency needs strong justification (see `AGENTS.md`). Prefer an existing library of the build.
-* Follow [refreshing build dependencies](../../../gradle/README.md#verifying-and-refreshing-build-dependencies). Refresh the keyring before writing metadata, then set `<key-servers enabled="false"/>` again.
+* Follow [refreshing build dependencies](../../../gradle/README.md#verifying-and-refreshing-build-dependencies). Refresh the keyring before writing metadata, then set `<key-servers enabled="false"/>` again. Only when a missing entry stops Gradle during configuration, write the bootstrap metadata first as the README describes, then run the whole refresh sequence.
 * Review every key the refresh adds to `gradle/verification-keyring.keys` and every new `<trusting>` entry. Check that the key belongs to the publisher of the artifact.
 * A checksum-only artifact needs an allowlist entry with a rationale in `gradle/dependency-checksum-fallback-allowlist.tsv`. A version change of a checksum-only dependency, for example `bitcoinj` or `jsonrpc4j` from JitPack, replaces its entries. See [updating the allowlist](../../../gradle/README.md#updating-the-allowlist-after-a-dependency-change).
 * JavaFX needs entries for every platform classifier by hand. See [updating JavaFX](../../../gradle/README.md#updating-javafx).
