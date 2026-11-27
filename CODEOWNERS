@@ -1,14 +1,87 @@
-# This doc specifies who gets requested to review GitHub pull requests.
-# See https://help.github.com/articles/about-codeowners/.
+# Security policy, review tooling and authoritative domain specifications.
+/CODEOWNERS @HenrikJannsen @alvasw
+/.github/ @HenrikJannsen @alvasw
+/SECURITY.md @HenrikJannsen @alvasw
+/AGENTS.md @HenrikJannsen @alvasw
+/CLAUDE.md @HenrikJannsen @alvasw
+/.agents/ @HenrikJannsen @alvasw
+/.claude/ @HenrikJannsen @alvasw
+/docs/specifications/ @HenrikJannsen @alvasw
 
-/core/main/java/bisq/core/dao/ @ManfredKarrer
+# Shared cryptography, serialization, configuration and storage.
+/common/src/*/java/ @HenrikJannsen @alvasw
+/persistence/ @HenrikJannsen @alvasw
+logback.xml @HenrikJannsen @alvasw
 
-# For seednode configuration changes
-/seednode/bisq-seednode.env @wiz
-/seednode/bisq-seednode.service @wiz
-/seednode/bitcoin.conf @wiz
-/seednode/bitcoin.service @wiz
-/seednode/docker-compose.yml @wiz
-/seednode/install_seednode_debian.sh @wiz
-/seednode/torrc @wiz
-/seednode/uninstall_seednode_debian.sh @wiz
+# Wallets, trades, disputes, DAO consensus, privileged messages and price feeds.
+/core/src/*/java/ @HenrikJannsen @alvasw
+/core/src/test/resources/ @HenrikJannsen @alvasw
+/core/src/main/resources/bisq.policy @HenrikJannsen @alvasw
+/core/src/main/resources/bisq.properties @HenrikJannsen @alvasw
+/core/src/main/resources/*.seednodes @HenrikJannsen @alvasw
+/core/src/main/resources/*.trusted_bsq_block_providers @HenrikJannsen @alvasw
+/core/src/main/resources/dao/ @HenrikJannsen @alvasw
+/core/src/main/resources/denylist/ @HenrikJannsen @alvasw
+/core/src/main/resources/wallet/ @HenrikJannsen @alvasw
+
+# Asset address validation and registration.
+/assets/src/*/java/ @HenrikJannsen @alvasw
+/assets/src/main/resources/META-INF/services/ @HenrikJannsen @alvasw
+
+# Peer and RPC protocols, bundled network data, clients and service nodes.
+/p2p/ @HenrikJannsen @alvasw
+/proto/ @HenrikJannsen @alvasw
+/proto-grpc/ @HenrikJannsen @alvasw
+/bridge/ @HenrikJannsen @alvasw
+/cli/ @HenrikJannsen @alvasw
+/daemon/ @HenrikJannsen @alvasw
+/restapi/ @HenrikJannsen @alvasw
+/seednode/ @HenrikJannsen @alvasw
+/btcnodemonitor/ @HenrikJannsen @alvasw
+/inventory/ @HenrikJannsen @alvasw
+/statsnode/ @HenrikJannsen @alvasw
+
+# Desktop actions involving funds, account secrets, disputes and network access.
+/desktop/src/*/java/bisq/desktop/main/account/ @HenrikJannsen @alvasw
+/desktop/src/*/java/bisq/desktop/main/dao/ @HenrikJannsen @alvasw
+/desktop/src/*/java/bisq/desktop/main/funds/ @HenrikJannsen @alvasw
+/desktop/src/*/java/bisq/desktop/main/offer/bisq_v1/ @HenrikJannsen @alvasw
+/desktop/src/*/java/bisq/desktop/main/offer/bsq_swap/ @HenrikJannsen @alvasw
+/desktop/src/*/java/bisq/desktop/main/portfolio/ @HenrikJannsen @alvasw
+/desktop/src/*/java/bisq/desktop/main/support/ @HenrikJannsen @alvasw
+/desktop/src/*/java/bisq/desktop/main/settings/network/ @HenrikJannsen @alvasw
+/desktop/src/*/java/bisq/desktop/main/settings/preferences/ @HenrikJannsen @alvasw
+/desktop/src/*/java/bisq/desktop/main/overlays/windows/ @HenrikJannsen @alvasw
+/desktop/src/*/java/bisq/desktop/main/MainViewModel.java @HenrikJannsen @alvasw
+/desktop/src/*/java/bisq/desktop/util/GUIUtil*.java @HenrikJannsen @alvasw
+/desktop/src/*/java/bisq/desktop/util/validation/ @HenrikJannsen @alvasw
+
+# Build inputs, bundled binaries, launchers and CI test infrastructure.
+*.gradle @HenrikJannsen @alvasw
+*.gradle.kts @HenrikJannsen @alvasw
+gradle.properties @HenrikJannsen @alvasw
+/gradlew* @HenrikJannsen @alvasw
+/gradle/ @HenrikJannsen @alvasw
+/build-logic/ @HenrikJannsen @alvasw
+/.gitmodules @HenrikJannsen @alvasw
+/bitcoind @HenrikJannsen @alvasw
+/tor @HenrikJannsen @alvasw
+/.gitattributes @HenrikJannsen @alvasw
+/.dockerignore @HenrikJannsen @alvasw
+/Makefile @HenrikJannsen @alvasw
+/docker/ @HenrikJannsen @alvasw
+/scripts/ @HenrikJannsen @alvasw
+/apitest/ @HenrikJannsen @alvasw
+/regtest/ @HenrikJannsen @alvasw
+
+# Installer packaging, signing keys and update verification.
+/desktop/package/ @HenrikJannsen @alvasw
+/desktop/src/main/resources/keys/ @HenrikJannsen @alvasw
+/desktop/src/main/resources/version.txt @HenrikJannsen @alvasw
+/desktop/src/test/resources/downloadUpdate/ @HenrikJannsen @alvasw
+/reproducible-build/ @HenrikJannsen @alvasw
+/updater/ @HenrikJannsen @alvasw
+/docs/in-app-update-download.md @HenrikJannsen @alvasw
+/docs/release-*.md @HenrikJannsen @alvasw
+/docs/reproducible-builds/ @HenrikJannsen @alvasw
+/docs/verify-download-files.md @HenrikJannsen @alvasw
