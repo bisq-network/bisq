@@ -23,6 +23,6 @@ Follow the step-by-step instructions at https://bisq.network/get-started.
 
 ## Contribute to Bisq
 
-Read the [contribution and compensation guidelines](CONTRIBUTING.md) before starting work. The [developer docs](docs/README.md) cover setup and testing.
+Read the [contribution and compensation guidelines](CONTRIBUTING.md) before starting work. Every contributed commit requires a [DCO sign-off and a GPG signature](CONTRIBUTING.md#sign-off-on-and-gpg-sign-every-commit). The [developer docs](docs/README.md) cover setup and testing.
 
 For any suspected security issue, use **Report a vulnerability** on the [Security Advisories page](https://github.com/bisq-network/bisq/security/advisories). Keep the report and any proposed fix private.

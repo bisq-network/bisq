@@ -20,8 +20,8 @@ All Bisq contributors submit changes via pull requests. The workflow is as follo
 
  - Fork the repository
  - Create a topic branch from the `master` branch
- - Commit patches
- - Squash redundant or unnecessary commits
+ - [Sign off on and GPG-sign every commit](#sign-off-on-and-gpg-sign-every-commit)
+ - Squash redundant or unnecessary commits, preserving contributors' sign-offs and GPG-signing the resulting commits
  - Submit a pull request from your topic branch back to the `master` branch of the main repository
  - Make changes to the pull request if reviewers request them and __**request a re-review**__
 
@@ -81,10 +81,14 @@ For each nontrivial commit, include a body that helps a future reader understand
 
 See also [bisq-network/style#9](https://github.com/bisq-network/style/issues/9).
 
-### Sign your commits with GPG
+### Sign off on and GPG-sign every commit
 
-See https://github.com/blog/2144-gpg-signature-verification for background and
-https://help.github.com/articles/signing-commits-with-gpg/ for instructions.
+Each commit you submit must include a `Signed-off-by` trailer and a GPG signature. Use `git commit -s -S` to add both.
+
+- `-s` adds `Signed-off-by: Your Name <you@example.org>` to the commit message using your Git committer name and email. By signing off, you certify that your contribution meets the terms of the [Developer Certificate of Origin 1.1](DCO).
+- `-S` signs the commit with your GPG key. See [GitHub's instructions for signing commits](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits).
+
+If your latest local commit is missing either, run `git commit --amend --no-edit -s -S`.
 
 ### Use an editor that supports Editorconfig
 
