@@ -10,7 +10,7 @@ digests and JDK patch versions change with Dependabot updates. Read them in the 
 |---|---|---|---|
 | [`build.yml`](../.github/workflows/build.yml) | Build Bisq | every push, every pull request | Builds, tests and runs the release gates on Linux, macOS and Windows; uploads Java release evidence |
 | [`codeql.yml`](../.github/workflows/codeql.yml) | CodeQL | push and pull request to `master` and `release-candidate-*`, weekly, manual | CodeQL analysis of the Java code and of the workflow files |
-| [`contribution-notice.yml`](../.github/workflows/contribution-notice.yml) | Contribution notice | new issue, new pull request | Posts the security and contribution notice as a comment |
+| [`contribution-notice.yml`](../.github/workflows/contribution-notice.yml) | Contribution notice | new issue, new pull request | Posts guidance on a new contributor's first issue or pull request |
 | [`e2e-tests.yml`](../.github/workflows/e2e-tests.yml) | e2e-tests | pull requests that touch the listed paths, manual | DAO and trade end-to-end tests against a Docker regtest network |
 | [`e2e-tests-compat.yml`](../.github/workflows/e2e-tests-compat.yml) | e2e-tests-compat | manual | The end-to-end tests with one peer on a release version |
 | [`installer-evidence.yml`](../.github/workflows/installer-evidence.yml) | Installer Evidence | manual | Builds the installers of each platform and uploads installer evidence |
@@ -163,18 +163,19 @@ The job does not check out or run code from the pull request.
 
 **Permissions.** `issues: write` and `pull-requests: write`.
 
-**Job `comment`.** Runs only in `bisq-network/bisq`, so forks skip it. Runs on `ubuntu-24.04` with a 5-minute
-timeout. The single step calls `gh api` to post the notice as a comment on the issue or pull request. The number
-comes from the event through an environment variable. The notice tells the reader:
+**Job `comment`.** Runs in `bisq-network/bisq` for human authors whose GitHub association is `NONE`, `FIRST_TIMER`
+or `FIRST_TIME_CONTRIBUTOR`. On `ubuntu-24.04`, with a 5-minute timeout, it looks up the author's oldest issue or
+pull request in the repository. Open and closed submissions of both kinds count together. It posts the notice only
+if the number from the opening event matches that first submission. The notice explains
 
-- to report security issues privately through the Bisq Security Advisories page and to keep security details out
+- how to report security issues privately through the Bisq Security Advisories page and keep security details out
   of public issues, pull requests and comments
 - that paid development for new contributors and routine review of their pull requests are paused, that they should
   ask maintainers about priorities, review capacity and funding first, and that compensation needs DAO approval
 
-The comment ends with the HTML marker `<!-- bisq-contribution-notice -->`. On a re-run (run attempt above 1) the step
-looks for a comment by `github-actions[bot]` with that marker and posts nothing if one exists. The job does not filter
-by author, so it does not skip bot pull requests either.
+Runs for the same issue or pull request number are serialized. Before posting, the step checks for a comment by
+`github-actions[bot]` with the marker `<!-- bisq-contribution-notice -->`. This keeps the notice from appearing
+twice when a run is retried or an issue is converted to a pull request.
 
 ## e2e-tests (`e2e-tests.yml`)
 

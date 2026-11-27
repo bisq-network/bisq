@@ -12,15 +12,24 @@ permissions:
   issues: write
   pull-requests: write
 
+concurrency:
+  group: contribution-notice-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
 jobs:
   comment:
-    if: github.repository == 'bisq-network/bisq'
+    if: >-
+      github.repository == 'bisq-network/bisq' &&
+      (github.event.issue.user.type || github.event.pull_request.user.type) == 'User' &&
+      contains(fromJSON('["NONE", "FIRST_TIMER", "FIRST_TIME_CONTRIBUTOR"]'),
+               github.event.issue.author_association || github.event.pull_request.author_association)
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Post contribution and security guidance
         env:
           GH_TOKEN: ${{ github.token }}
+          AUTHOR: ${{ github.event.issue.user.login || github.event.pull_request.user.login }}
           NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
           NOTICE: |-
             **Security issues belong in a private report.** Keep security details and proposed fixes out of public issues, pull requests, and comments. Use **Report a vulnerability** on the [Bisq Security Advisories page](https://github.com/bisq-network/bisq/security/advisories).
@@ -29,11 +38,17 @@ jobs:
 
             <!-- bisq-contribution-notice -->
         run: |
-          endpoint="repos/$GITHUB_REPOSITORY/issues/$NUMBER/comments"
-          if [[ "$GITHUB_RUN_ATTEMPT" -gt 1 ]]; then
-            existing=$(gh api "$endpoint" --paginate --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- bisq-contribution-notice -->"))) | .id')
-            if [[ -n "$existing" ]]; then
-              exit 0
-            fi
+          issues="repos/$GITHUB_REPOSITORY/issues"
+          # GitHub's issues endpoint includes pull requests.
+          first_number=$(gh api --method GET "$issues" -f creator="$AUTHOR" -f state=all \
+            -f sort=created -f direction=asc -F per_page=1 --jq '.[0].number')
+          if [[ "$first_number" != "$NUMBER" ]]; then
+            exit 0
+          fi
+
+          endpoint="$issues/$NUMBER/comments"
+          existing=$(gh api "$endpoint" --paginate --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- bisq-contribution-notice -->"))) | .id')
+          if [[ -n "$existing" ]]; then
+            exit 0
           fi
           gh api "$endpoint" -f body="$NOTICE" --silent
