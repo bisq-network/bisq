@@ -1,10 +1,11 @@
 name: Smoke Test Installers
 
 # Installs each installer of a Build Installers run, starts the application with a fresh data directory and waits
-# until Tor runs in its sandbox, the onion service is published, and the P2P network and the wallet are ready. The
-# test does not wait for the synchronisation of the network data. It fails if the log has an ERROR line, if the
-# application exits, or if it is not ready within the timeout. On failure the logs are uploaded and the run shows
-# the reason.
+# until Tor runs in its sandbox, the onion service is published, the wallet is set up and Bisq reports the P2P
+# network as ready. Bisq does so when it has loaded the initial data from a seed node, and also when it finds no
+# seed node or peer. The test does not wait for the synchronisation of the wallet or of the DAO state. It fails if
+# the log has an ERROR line, if the application exits, or if it is not ready within the timeout. On failure the logs
+# are uploaded and the run shows the reason.
 on:
   workflow_dispatch:
     inputs:
@@ -15,7 +16,7 @@ on:
       timeout-seconds:
         description: 'Seconds the application gets to become ready'
         required: false
-        default: 180
+        default: 600
         type: number
   workflow_call:
     inputs:
@@ -26,7 +27,7 @@ on:
         type: string
       timeout-seconds:
         required: false
-        default: 180
+        default: 600
         type: number
 
 permissions:
@@ -121,6 +122,13 @@ jobs:
           shasum -a 256 -c "$CHECKSUMS"
         fi
 
+    # The scripts of the packages add the menu entry with xdg-desktop-menu, which fails without the menu directories
+    # of a desktop system. The runner has no desktop.
+    - name: Create the menu directories of a desktop system
+      if: runner.os == 'Linux'
+      shell: bash
+      run: sudo mkdir -p /usr/share/applications /usr/share/desktop-directories
+
     - name: Install DEB
       if: matrix.package == 'deb'
       shell: bash
@@ -141,9 +149,16 @@ jobs:
       shell: bash
       run: |
         sudo apt-get update
-        sudo apt-get install -y --no-install-recommends rpm xvfb xauth libgtk-3-0t64
-        sudo rpm -i --nodeps installers/bisq-*.rpm
-        app="$(rpm -ql bisq | grep '/bin/Bisq$' || true)"
+        # xdg-utils is the one package which the RPM requires
+        sudo apt-get install -y --no-install-recommends rpm xvfb xauth libgtk-3-0t64 xdg-utils
+        # rpm only warns and exits with 0 when a script of the package fails
+        sudo rpm -i --nodeps installers/bisq-*.rpm 2>&1 | tee "$RUNNER_TEMP/smoke-test-logs/install.log"
+        if grep -q 'scriptlet failed' "$RUNNER_TEMP/smoke-test-logs/install.log"; then
+          echo "::error::A script of the RPM failed"
+          exit 1
+        fi
+        # With sudo, as for the installation: on Ubuntu each user has an RPM database in the home directory
+        app="$(sudo rpm -ql bisq | grep '/bin/Bisq$' || true)"
         if [ ! -x "$app" ]; then
           echo "::error::The RPM installed no executable bin/Bisq"
           exit 1
@@ -187,41 +202,24 @@ jobs:
         }
         "BISQ_APP=$($app.FullName)" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
 
-    - name: Start Bisq
-      if: runner.os != 'Windows'
-      shell: bash
-      run: |
-        launcher=()
-        if [ "$RUNNER_OS" = Linux ]; then
-          launcher=(xvfb-run -a)
-        fi
-        nohup "${launcher[@]}" "$BISQ_APP" --appDataDir="$RUNNER_TEMP/bisq-data" --acceptTerms=true \
-          > "$RUNNER_TEMP/smoke-test-logs/stdout.log" 2>&1 &
-        echo $! > "$RUNNER_TEMP/bisq.pid"
-
-    - name: Start Bisq
-      if: runner.os == 'Windows'
-      shell: pwsh
-      run: |
-        $logs = Join-Path $env:RUNNER_TEMP smoke-test-logs
-        $dataDir = Join-Path $env:RUNNER_TEMP bisq-data
-        $process = Start-Process -FilePath $env:BISQ_APP `
-          -ArgumentList "--appDataDir=`"$dataDir`"", '--acceptTerms=true' `
-          -RedirectStandardOutput (Join-Path $logs stdout.log) -RedirectStandardError (Join-Path $logs stderr.log) `
-          -PassThru
-        $process.Id | Out-File -FilePath (Join-Path $env:RUNNER_TEMP bisq.pid) -Encoding ascii
-
-    - name: Wait until Tor and the application are ready
+    # One step starts Bisq, waits and stops it, so that no process has to outlive its step. On Windows the runner
+    # ends the processes which a step leaves behind if they hold its output streams.
+    - name: Start Bisq and wait until Tor and the application are ready
       shell: bash
       env:
         JOB_NAME: ${{ matrix.name }}
       run: |
         temp_dir="$RUNNER_TEMP"
-        if command -v cygpath >/dev/null 2>&1; then
+        app="$BISQ_APP"
+        data_dir="$RUNNER_TEMP/bisq-data"
+        if [ "$RUNNER_OS" = Windows ]; then
+          # Git Bash starts the application by its POSIX path and passes the Windows path of the data directory
           temp_dir="$(cygpath -u "$RUNNER_TEMP")"
+          app="$(cygpath -u "$BISQ_APP")"
+          data_dir="$(cygpath -w "$data_dir")"
         fi
         log="$temp_dir/bisq-data/bisq.log"
-        pid="$(tr -d '[:space:]' < "$temp_dir/bisq.pid")"
+        launcher_log="$temp_dir/smoke-test-logs/stdout.log"
         # Tor runs in its sandbox, the onion service is published, the P2P network and the wallet are ready
         markers=(
           'Tor runs in the level '
@@ -229,11 +227,19 @@ jobs:
           'walletInitialized=true, p2pNetWorkReady=true'
         )
 
-        is_running() {
+        stop_bisq() {
           if [ "$RUNNER_OS" = Windows ]; then
-            powershell -NoProfile -Command "if (Get-Process -Id $1 -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }"
+            # The launcher and the application are both named Bisq. Tor is stopped as well, in case it outlives them.
+            powershell -NoProfile -Command 'Stop-Process -Name Bisq, tor -Force -ErrorAction SilentlyContinue' || true
           else
-            kill -0 "$1" 2>/dev/null
+            # On Linux the started process is xvfb-run, so match the data directory of this run instead
+            app_pattern="--appDataDir=$data_dir"
+            pkill -TERM -f -- "$app_pattern" || true
+            for _ in $(seq 1 20); do
+              pgrep -f -- "$app_pattern" >/dev/null || break
+              sleep 1
+            done
+            pkill -KILL -f -- "$app_pattern" || true
           fi
         }
 
@@ -255,12 +261,10 @@ jobs:
 
         # Output of the launcher, which shows why a start failed before the log was set up
         launcher_output() {
-          for file in "$temp_dir/smoke-test-logs/stdout.log" "$temp_dir/smoke-test-logs/stderr.log"; do
-            if [ -s "$file" ]; then
-              echo "--- last lines of $(basename "$file")"
-              tail -n 20 "$file"
-            fi
-          done
+          if [ -s "$launcher_log" ]; then
+            echo "--- last lines of $(basename "$launcher_log")"
+            tail -n 20 "$launcher_log"
+          fi
         }
 
         missing_markers() {
@@ -271,6 +275,14 @@ jobs:
           done
         }
 
+        launcher=()
+        if [ "$RUNNER_OS" = Linux ]; then
+          launcher=(xvfb-run -a)
+        fi
+        "${launcher[@]}" "$app" --appDataDir="$data_dir" --acceptTerms=true > "$launcher_log" 2>&1 &
+        pid=$!
+        trap stop_bisq EXIT
+
         start=$SECONDS
         while true; do
           # Read the markers first: the later ERROR read then covers each line written before the last marker.
@@ -279,7 +291,7 @@ jobs:
           if [ -n "$errors" ]; then
             fail "The log of Bisq has ERROR lines. First: $(head -n 1 <<< "$errors")" "$errors"
           fi
-          if ! is_running "$pid"; then
+          if ! kill -0 "$pid" 2>/dev/null; then
             reason="Bisq exited during startup."
             if [ -n "$missing" ]; then
               reason="$reason Missing log lines: $(paste -sd ';' - <<< "$missing")"
@@ -306,31 +318,6 @@ jobs:
           grep -F -e 'Tor runs in the level ' -e 'Tor runs in its sandbox' "$log" | head -n 5
           echo '```'
         } >> "$GITHUB_STEP_SUMMARY"
-
-    - name: Stop Bisq
-      if: always() && runner.os != 'Windows'
-      shell: bash
-      run: |
-        # On Linux the saved PID is xvfb-run, so match the data directory of this run instead
-        app_pattern="--appDataDir=$RUNNER_TEMP/bisq-data"
-        if [ -f "$RUNNER_TEMP/bisq.pid" ]; then
-          pkill -TERM -f -- "$app_pattern" || true
-          for _ in $(seq 1 20); do
-            pgrep -f -- "$app_pattern" >/dev/null || break
-            sleep 1
-          done
-          pkill -KILL -f -- "$app_pattern" || true
-        fi
-
-    - name: Stop Bisq
-      if: always() && runner.os == 'Windows'
-      shell: pwsh
-      run: |
-        $pidFile = Join-Path $env:RUNNER_TEMP bisq.pid
-        if (Test-Path $pidFile) {
-          Stop-Process -Id ([int](Get-Content $pidFile)) -ErrorAction SilentlyContinue
-          Stop-Process -Name tor -ErrorAction SilentlyContinue
-        }
 
     # Only log files: the data directory also holds the keys of the wallet and of the onion service.
     - name: Collect logs

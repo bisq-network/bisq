@@ -354,13 +354,15 @@ Downloading these artifacts needs a GitHub login. They are for developers and ar
 ## Smoke Test Installers (`installer-smoke-test.yml`)
 
 Installs each installer from a Build Installers run and starts Bisq with a new data directory. It waits until Tor
-runs in its sandbox, the onion service is published, and the P2P network and the wallet are ready. It does not
-wait for the network data to synchronize.
+runs in its sandbox, the onion service is published, the wallet is set up and Bisq reports the P2P network as
+ready. Bisq does so when it has loaded the initial data from a seed node, and also when it finds no seed node or
+peer, so this line alone does not prove that data arrived. It does not wait for the wallet or the DAO state to
+synchronize.
 
 **Triggers.**
 
 - Manual, with `build-run-id` (required: the ID of a Build Installers or Build and Smoke Test Installers run) and
-  `timeout-seconds` (default 180).
+  `timeout-seconds` (default 600).
 - `workflow_call` with the same inputs. An empty `build-run-id` means the installers of the calling run.
 
 **Permissions.** `contents: read`, and `actions: read` to download the artifacts of another run.
@@ -381,25 +383,32 @@ GPU.
 4. Checks the files against `SHA256SUMS-<artifact>`.
 5. Installs the package:
    - DEB: `apt-get install` of the package together with `xvfb`, `xauth` and `libgtk-3-0t64`.
-   - RPM: `rpm -i --nodeps` on Ubuntu. This tests the package contents, not its dependencies on a Red Hat based
-     system.
+   - RPM: `rpm -i --nodeps` on Ubuntu, together with `xdg-utils`, the one package which the RPM requires. This
+     tests the package contents, not its dependencies on a Red Hat based system. `rpm` only warns when a script of
+     the package fails, so the step fails on that warning.
    - DMG: mounts the image read-only and copies `Bisq.app` to `$RUNNER_TEMP`.
    - EXE: silent installation with `/quiet /norestart` and a verbose installer log, limited to 10 minutes.
 
+   On Linux the job first creates `/usr/share/applications` and `/usr/share/desktop-directories`. The scripts of
+   the packages add the menu entry with `xdg-desktop-menu`, which fails without these directories of a desktop
+   system, and the runner has no desktop.
+
    The step fails if the installed `Bisq` executable is missing.
-6. Starts Bisq with `--appDataDir=$RUNNER_TEMP/bisq-data --acceptTerms=true`. On Linux it runs under `xvfb-run`.
-7. Reads `bisq.log` every 5 seconds. The job passes once the log contains all three lines `Tor runs in the level `,
-   `Tor hidden service published after` and `walletInitialized=true, p2pNetWorkReady=true`. It fails at once on a
-   line containing `] ERROR `, when the process exits, or when the timeout passes. The job summary shows the result
-   and the reason.
-8. Stops Bisq. On Windows it also stops the `tor` process.
-9. On failure, copies only the `*.log*` files of the data directory (the data directory also holds the wallet and
-   onion service keys). It uploads them with the launcher output and, on Windows, the installer log as
-   `smoke-test-logs-<artifact>-<package>-<SHA of this run>`, kept for 5 days.
+6. Starts Bisq, waits and stops it in one step, so that no process has to outlive its step. On Windows the runner
+   ends the processes which a step leaves behind if they hold its output streams.
+   - Starts Bisq with `--appDataDir=$RUNNER_TEMP/bisq-data --acceptTerms=true`. On Linux it runs under `xvfb-run`.
+   - Reads `bisq.log` every 5 seconds. The job passes once the log contains all three lines
+     `Tor runs in the level `, `Tor hidden service published after` and
+     `walletInitialized=true, p2pNetWorkReady=true`. It fails at once on a line containing `] ERROR `, when the
+     process exits, or when the timeout passes. The job summary shows the result and the reason.
+   - Stops Bisq when the step ends. On Windows it also stops the `tor` process.
+7. On failure, copies only the `*.log*` files of the data directory (the data directory also holds the wallet and
+   onion service keys). It uploads them with the launcher output and, for the RPM and on Windows, the output of
+   the installation as `smoke-test-logs-<artifact>-<package>-<SHA of this run>`, kept for 5 days.
 
 ## Build and Smoke Test Installers (`installers-build-and-smoke-test.yml`)
 
-**Trigger.** Manual only, with `timeout-seconds` (default 180).
+**Trigger.** Manual only, with `timeout-seconds` (default 600).
 
 **Permissions.** `contents: read` and `actions: read`. Called workflows get at most these permissions.
 
