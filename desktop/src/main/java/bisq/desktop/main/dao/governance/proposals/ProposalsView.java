@@ -76,6 +76,7 @@ import bisq.desktop.components.controls.BisqJfxButton;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -91,6 +92,7 @@ import javafx.geometry.Insets;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 
@@ -217,6 +219,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         UserThread.execute(() -> {
             if (root.getScene() != null)
                 updateTableHeight(root.getScene().getHeight());
+            bindRootHeightToViewport();
         });
 
         stakeInputTextField.textProperty().addListener(stakeListener);
@@ -248,6 +251,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         selectedProposalSubscription.unsubscribe();
 
         sortedList.comparatorProperty().unbind();
+        root.minHeightProperty().unbind();
 
         daoFacade.getActiveOrMyUnconfirmedProposals().removeListener(proposalListChangeListener);
         daoFacade.getAllBallots().removeListener(ballotListChangeListener);
@@ -646,6 +650,20 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         return daoFacade.isInPhaseButNotLastBlock(DaoPhase.Phase.BLIND_VOTE);
     }
 
+    // The enclosing ScrollPane does not fit content to its height, so let the root fill the
+    // viewport and the proposals table (Vgrow ALWAYS) take the remaining vertical space.
+    private void bindRootHeightToViewport() {
+        Node node = root.getParent();
+        while (node != null && !(node instanceof ScrollPane))
+            node = node.getParent();
+        if (node == null)
+            return;
+        ScrollPane scrollPane = (ScrollPane) node;
+        root.minHeightProperty().bind(Bindings.createDoubleBinding(
+                () -> scrollPane.getViewportBounds().getHeight(),
+                scrollPane.viewportBoundsProperty()));
+    }
+
     private void updateTableHeight(double height) {
         double newTableViewHeight = proposalTableViewHeight.apply(height);
         if (tableView.getHeight() != newTableViewHeight) {
@@ -673,7 +691,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         createProposalColumns();
         GridPane.setRowIndex(tableView, gridRow);
         GridPane.setHgrow(tableView, Priority.ALWAYS);
-        GridPane.setVgrow(tableView, Priority.SOMETIMES);
+        GridPane.setVgrow(tableView, Priority.ALWAYS);
         GridPane.setMargin(tableView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, -10, 5, -10));
         root.getChildren().add(tableView);
 
