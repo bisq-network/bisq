@@ -151,6 +151,8 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private String shownVoteOnProposalWindowForTxId = "";
 
     private TableGroupHeadline proposalsHeadline;
+    @Nullable
+    private ScrollPane fittedScrollPane;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +204,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         daoFacade.addBsqStateListener(this);
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-        UserThread.execute(() -> setFitToHeight(true));
+        UserThread.execute(this::fitScrollPaneToHeight);
 
         stakeInputTextField.textProperty().addListener(stakeListener);
         voteButton.setOnAction(e -> onVote());
@@ -233,7 +235,11 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         selectedProposalSubscription.unsubscribe();
 
         sortedList.comparatorProperty().unbind();
-        setFitToHeight(false);
+        // root is already detached when deactivate runs, so reset the ScrollPane we stored
+        if (fittedScrollPane != null) {
+            fittedScrollPane.setFitToHeight(false);
+            fittedScrollPane = null;
+        }
 
         daoFacade.getActiveOrMyUnconfirmedProposals().removeListener(proposalListChangeListener);
         daoFacade.getAllBallots().removeListener(ballotListChangeListener);
@@ -635,12 +641,14 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     // The enclosing ScrollPane is shared with other governance views and only fits its content to
     // the width. Fit it to the height while this view is shown, so the proposals table (Vgrow ALWAYS)
     // takes the remaining vertical space. Content taller than the viewport still scrolls.
-    private void setFitToHeight(boolean value) {
+    private void fitScrollPaneToHeight() {
         Node node = root.getParent();
         while (node != null && !(node instanceof ScrollPane))
             node = node.getParent();
-        if (node != null)
-            ((ScrollPane) node).setFitToHeight(value);
+        if (node != null) {
+            fittedScrollPane = (ScrollPane) node;
+            fittedScrollPane.setFitToHeight(true);
+        }
     }
 
 
