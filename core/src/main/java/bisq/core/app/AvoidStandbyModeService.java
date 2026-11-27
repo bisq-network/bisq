@@ -48,7 +48,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
@@ -167,9 +166,10 @@ public class AvoidStandbyModeService {
                     sourceDataLine.drain();
                 }
             }
+        } catch (LineUnavailableException e) {
+            log.warn("Bisq cannot prevent standby because no compatible audio output is available. {}", e.getMessage());
         } catch (Exception e) {
-            log.error(e.toString());
-            e.printStackTrace();
+            log.error("Cannot play the audio file used to prevent standby", e);
         }
     }
 
@@ -184,8 +184,14 @@ public class AvoidStandbyModeService {
     }
 
     private SourceDataLine getSourceDataLine(AudioFormat audioFormat) throws LineUnavailableException {
-        DataLine.Info dataLineInfo = new DataLine.Info(SourceDataLine.class, audioFormat);
-        return (SourceDataLine) AudioSystem.getLine(dataLineInfo);
+        try {
+            return AudioSystem.getSourceDataLine(audioFormat);
+        } catch (IllegalArgumentException e) {
+            // Java Sound uses IllegalArgumentException when no mixer supports the requested format.
+            LineUnavailableException unavailable = new LineUnavailableException(e.getMessage());
+            unavailable.initCause(e);
+            throw unavailable;
+        }
     }
 
     private Optional<String> inhibitorPath() {
