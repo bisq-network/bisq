@@ -14,7 +14,7 @@ Canonical encoding produces deterministic bytes for hash and signature preimages
 ## The Rules You Must Not Break
 
 1. **Determinism.** The same object state produces the same bytes on every node. The bytes must not depend on the protobuf library, Java map iteration or anything except the encoded values.
-2. **Protobuf parity.** The production paths were migrated from protobuf hashing in one step only because the canonical bytes equal `toProtoMessage().toByteArray()` for the accepted object shapes: same field numbers, types, omission of defaults and envelopes. A purpose-specific schema may deviate only where the legacy preimage did, for example `DaoState.STATE_HASH_CHAIN_SCHEMA`, which keeps only the last block and the legacy map order; such a deviation is stated in a comment and asserted by a test.
+2. **Protobuf parity.** Canonical bytes must match the protobuf bytes used by the legacy hash or signature path, including field numbers, types, omission of defaults and envelopes. For most classes the reference is `toProtoMessage().toByteArray()`. Document and test any differences from ordinary serialization. For example, the DAO state hash chain includes only the last block and preserves legacy map order.
 3. **No silent change of hashed bytes.** A changed schema changes DAO state and monitoring hashes, proposal and blind-vote hashes, P2P storage keys and sequence signatures, filter and alert signatures, offer hashes or payment account contract hashes. A change is acceptable only with byte identity for released data or an agreed activation (for example an activation block or schema version for DAO data). Do not decide an activation on your own.
 
 The framework is not a general protobuf encoder and has no decoder. It supports only what Bisq preimages use. If a field needs a missing feature (for example `uint64`, `sint32`, `sint64`, `float`, fixed-width integers, `Any`, packed repeated types other than `int32`, maps with non-string keys, or explicit presence for a field whose present value can be the default), stop and report it; do not work around it. Adding a feature requires writer tests and an update of the design document.
@@ -63,7 +63,7 @@ A typical class (`NodeAddress`):
 | Base message with `oneof message { Sub sub = n; ... }` | Base builder method plus `extend(n, getter, Sub.EXTENSION_SCHEMA)` per subtype; the getter returns `null` for other subtypes, so only the active extension is written | `Proposal.getProposalSchemaBuilder()` with `CompensationProposal` and the other proposal types |
 | `toProtoMessage` returns an envelope such as `StoragePayload` | `CanonicalSchema.oneof("StoragePayload", n, builder)` | `Alert`, `Filter`, `TempProposalPayload` |
 | `map<string, string>` | `mapStringToString(n, getter, entryIterator)` | extra data of `Alert` and `Proposal` with `TreeMapIterator.naturalOrder()` |
-| Map whose legacy bytes depend on `Collectors.toMap` order | `LegacyCollectorsToMapIterator`, documented in the schema | `DaoState` hash-chain maps |
+| Map whose legacy bytes depend on `Collectors.toMap` order | `LegacyCollectorsToMapIterator`, documented in the schema | `DaoState.SCHEMA` and `DaoState.STATE_HASH_CHAIN_SCHEMA` both use legacy order for `unspentTxOutputMap`, `spentInfoMap` and `issuanceMap` |
 | A wrapper whose field is a payload that owns its preimage | Delegate with `CanonicalWriter.writeCompose(n, payload.encodeCanonical(canonicalEncoder))` | `P2PDataStorage.DataAndSeqNrPair` |
 
 ## Rules for Changing an Existing Encoding
@@ -90,7 +90,8 @@ A typical class (`NodeAddress`):
 
 Follow the existing tests, for example `TxOutputCanonicalEncoderTest`, `DaoStateCanonicalEncoderTest` and `PaymentAccountPayloadCanonicalEncoderTest`:
 
-- **Parity:** build the protobuf message, create the model with `fromProto`, and assert that `toProtoMessage().toByteArray()` equals `encodeCanonical(CanonicalEncoder.DEFAULT)`. Cover all fields set, nullable and default fields unset, every subtype, and empty and multi-entry maps and lists.
+- **Parity.** Build the protobuf message and create the model with `fromProto`. For classes that use ordinary protobuf serialization as their preimage, assert that `toProtoMessage().toByteArray()` equals `encodeCanonical(CanonicalEncoder.DEFAULT)`. Cover all fields set, nullable and default fields unset, every subtype, and empty and multi-entry maps and lists.
+- **DAO state hash-chain parity.** Compare `encodeCanonicalForStateHashChain(CanonicalEncoder.DEFAULT)` with `getSerializedStateForHashChainLegacy()` on the same state. Use multiple blocks and map keys whose legacy order differs from sorted order. Ordinary `DaoState.toProtoMessage()` writes all blocks and sorts the maps by key. The default canonical schema also writes all blocks but uses legacy map order.
 - **Schema lock:** assert the schema version, field numbers, field types and rules, so that an unintended schema change fails a test.
 - **Order:** for maps, test entries whose insertion order differs from the selected order.
 
