@@ -401,7 +401,15 @@ GPU.
      `Tor hidden service published after` and `walletInitialized=true, p2pNetWorkReady=true`, until the process
      exits, or until the timeout passes. An ERROR line does not end the wait, so that the result also shows whether
      Bisq becomes ready. The job passes if Bisq still runs, the log contains the three lines and no line containing
-     `] ERROR `. The job summary shows the result and each reason of a failure.
+     `] ERROR ` other than two which the runner or the network cause, matched by logger and message:
+     - `o.b.n.BlockingClient: Error trying to open/read from connection: `: a connection of bitcoinj to a Bitcoin
+       node failed, and bitcoinj connects to another node. Over Tor a node is often not reached within the 120
+       seconds which Bisq gives a connection.
+     - `b.c.a.AvoidStandbyModeService: java.lang.IllegalArgumentException: No line matching interface `: Bisq
+       plays a silent sound which keeps the computer from standby, and Java Sound finds no audio output on the
+       Windows runner.
+
+     The job summary shows the result, each reason of a failure and the ignored ERROR lines.
    - Stops Bisq when the step ends. On Windows it also stops the `tor` process.
 7. On failure, copies only the `*.log*` files of the data directory (the data directory also holds the wallet and
    onion service keys). It uploads them with the launcher output and, for the RPM and on Windows, the output of

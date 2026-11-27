@@ -4,8 +4,9 @@ name: Smoke Test Installers
 # until Tor runs in its sandbox, the onion service is published, the wallet is set up and Bisq reports the P2P
 # network as ready. Bisq does so when it has loaded the initial data from a seed node, and also when it finds no
 # seed node or peer. The test does not wait for the synchronisation of the wallet or of the DAO state. It fails if
-# the log has an ERROR line, if the application exits, or if it is not ready within the timeout. On failure the logs
-# are uploaded and the run shows the reason.
+# the application exits, if it is not ready within the timeout, or if the log has an ERROR line other than those
+# which the runner or the network cause (ignored_errors). On failure the logs are uploaded and the run shows the
+# reason.
 on:
   workflow_dispatch:
     inputs:
@@ -226,6 +227,18 @@ jobs:
           'Tor hidden service published after'
           'walletInitialized=true, p2pNetWorkReady=true'
         )
+        # ERROR lines which the runner or the network cause, not the installer. bitcoinj logs each failed connection
+        # to a Bitcoin node and connects to another one, and over Tor a node is often not reached within 120 s.
+        # Bisq plays a silent sound which keeps the computer from standby, and Java Sound finds no audio output on
+        # the Windows runner.
+        ignored_errors=(
+          '] ERROR o.b.n.BlockingClient: Error trying to open/read from connection: '
+          '] ERROR b.c.a.AvoidStandbyModeService: java.lang.IllegalArgumentException: No line matching interface '
+        )
+        ignored_args=()
+        for pattern in "${ignored_errors[@]}"; do
+          ignored_args+=(-e "$pattern")
+        done
 
         stop_bisq() {
           if [ "$RUNNER_OS" = Windows ]; then
@@ -255,8 +268,20 @@ jobs:
               echo "$2"
               echo '```'
             fi
+            ignored_summary
           } >> "$GITHUB_STEP_SUMMARY"
           exit 1
+        }
+
+        ignored_summary() {
+          if [ -n "$ignored" ]; then
+            echo
+            echo "Ignored ERROR lines, which the runner or the network cause: $(grep -c '' <<< "$ignored")"
+            echo
+            echo '```'
+            head -n 5 <<< "$ignored"
+            echo '```'
+          fi
         }
 
         # Output of the launcher, which shows why a start failed before the log was set up
@@ -317,7 +342,9 @@ jobs:
         done
         elapsed=$((SECONDS - start))
         # Read after the markers, so that it covers each line written before the last marker
-        errors="$(grep -F -- '] ERROR ' "$log" 2>/dev/null || true)"
+        all_errors="$(grep -F -- '] ERROR ' "$log" 2>/dev/null || true)"
+        errors="$(grep -vF "${ignored_args[@]}" <<< "$all_errors" || true)"
+        ignored="$(grep -F "${ignored_args[@]}" <<< "$all_errors" || true)"
 
         reason=""
         if [ "$state" = exited ]; then
@@ -344,6 +371,7 @@ jobs:
           echo '```'
           grep -F -e 'Tor runs in the level ' -e 'Tor runs in its sandbox' "$log" | head -n 5
           echo '```'
+          ignored_summary
         } >> "$GITHUB_STEP_SUMMARY"
 
     # Only log files: the data directory also holds the keys of the wallet and of the onion service.
