@@ -31,10 +31,12 @@ Task-specific instructions are in `.agents/skills/<name>/SKILL.md`.
 Claude Code discovers the same skills through the `.claude/skills` directory symlink.
 On Windows, enable Developer Mode or use an account with permission to create symlinks.
 For a new checkout, run `git clone -c core.symlinks=true --recurse-submodules https://github.com/bisq-network/bisq`.
-If an existing checkout has a plain file containing `../.agents/skills`, run these commands from the repository root to restore the link.
+If an existing checkout has a plain file containing `../.agents/skills`, run these commands from the repository root to replace it with the link.
+Removing the file first makes Git recreate it even when `core.fsmonitor` reports the path as unchanged.
 
 ```sh
 git config --local core.symlinks true
+rm .claude/skills
 git restore -- .claude/skills
 ```
 
