@@ -38,6 +38,7 @@ Claude Code uses the same directory through `.claude/skills`.
 - `canonical-encoding` for byte-level preimage compatibility
 - `release-notes` for release documents and the in-app update text
 - `gradle-verification` for dependency, plugin and Gradle wrapper changes under dependency verification
+- `github-workflows` for GitHub Actions workflow changes and their security rules
 
 ## Tech and Runtime Context
 
