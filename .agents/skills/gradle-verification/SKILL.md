@@ -21,7 +21,8 @@ The build verifies every dependency by PGP signature or SHA-256, and the wrapper
 
 * Follow [upgrading the Gradle version](../../../gradle/README.md#how-to-upgrade-the-gradle-version) step by step. A generic upgrade misses required steps, among them the `VALIDSIG` check against the release key fingerprint (the key changed with 9.7.1), `gradle/wrapper/gradle-wrapper.sha256`, `releaseBuild.gradleVersion` with the release checklist, and the trust for the Develocity plugin of the new version.
 * Never hand-edit the wrapper jar or scripts. Generate them from the verified distribution, and update the approved checksums only for reviewed files.
-* If the build no longer configures with the new version, stop, restore every file the upgrade changed and report what breaks. Adapt build scripts only after the developer agrees.
+* The README steps for the new version include verification entries: the release key in the keyring from 9.7.1 on and the Develocity plugin trust, which `--scan` builds need. A configuration failure caused by a missing one of these is part of the procedure; add it as the README describes.
+* If the build fails to configure for any other reason, stop, restore every file the upgrade changed and report what breaks. Adapt build scripts only after the developer agrees.
 
 ## Verify
 
