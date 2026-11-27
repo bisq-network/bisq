@@ -19,7 +19,7 @@ def unprivilegedTriggers = ['push', 'pull_request', 'schedule', 'workflow_dispat
 // These workflows intentionally handle privileged events. Review changes to their jobs and
 // permissions before updating the SHA-256 of the LF-normalized workflow.
 def reviewedWorkflows = [
-        'contribution-notice.yml': '5984d047180f22c6a7ab44c65613a313be0860c2ec167ac6865578e26f0b1cf7'
+        'contribution-notice.yml': '26cdccf70a278637213a2c57b6ecfeb7462e41898e6803a2e574123ec8292f95'
 ]
 
 // GitHub resolves plain scalars with the YAML 1.2 core schema. The YAML 1.1 default of SnakeYAML reads on, yes or
