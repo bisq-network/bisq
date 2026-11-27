@@ -397,10 +397,19 @@ GPU.
 6. Starts Bisq, waits and stops it in one step, so that no process has to outlive its step. On Windows the runner
    ends the processes which a step leaves behind if they hold its output streams.
    - Starts Bisq with `--appDataDir=$RUNNER_TEMP/bisq-data --acceptTerms=true`. On Linux it runs under `xvfb-run`.
-   - Reads `bisq.log` every 5 seconds. The job passes once the log contains all three lines
-     `Tor runs in the level `, `Tor hidden service published after` and
-     `walletInitialized=true, p2pNetWorkReady=true`. It fails at once on a line containing `] ERROR `, when the
-     process exits, or when the timeout passes. The job summary shows the result and the reason.
+   - Reads `bisq.log` every 5 seconds until it contains all three lines `Tor runs in the level `,
+     `Tor hidden service published after` and `walletInitialized=true, p2pNetWorkReady=true`, until the process
+     exits, or until the timeout passes. An ERROR line does not end the wait, so that the result also shows whether
+     Bisq becomes ready. The job passes if Bisq still runs, the log contains the three lines and no line containing
+     `] ERROR ` other than two which the runner or the network cause, matched by logger and message:
+     - `o.b.n.BlockingClient: Error trying to open/read from connection: `: a connection of bitcoinj to a Bitcoin
+       node failed, and bitcoinj connects to another node. Over Tor a node is often not reached within the 120
+       seconds which Bisq gives a connection.
+     - `b.c.a.AvoidStandbyModeService: java.lang.IllegalArgumentException: No line matching interface `: Bisq
+       plays a silent sound which keeps the computer from standby, and Java Sound finds no audio output on the
+       Windows runner.
+
+     The job summary shows the result, each reason of a failure and the ignored ERROR lines.
    - Stops Bisq when the step ends. On Windows it also stops the `tor` process.
 7. On failure, copies only the `*.log*` files of the data directory (the data directory also holds the wallet and
    onion service keys). It uploads them with the launcher output and, for the RPM and on Windows, the output of
