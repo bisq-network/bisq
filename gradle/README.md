@@ -473,5 +473,5 @@ A `--dry-run` does not run the task actions and cannot find these problems.
 | `verifyGradleWrapperSecurity` | wrapper checksums and the pinned distribution address |
 | `verifyReleaseEnvironment` | running Gradle and Java against the pins in `gradle.properties` |
 | `verifyDependencySignaturePolicy` | every checksum-only artifact is in the allowlist |
-| `verifyGithubActionsSecurity` | workflows pin actions by commit hash and use no floating versions |
+| `verifyGithubActionsSecurity` | workflow rules in [the workflow guide](../docs/github-actions-workflows.md#verifygithubactionssecurity), among them actions pinned by commit hash and no floating versions |
 | `verifyReleaseBuild` | runs the full release payload verification and writes the evidence |
