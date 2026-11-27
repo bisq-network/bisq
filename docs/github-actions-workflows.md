@@ -60,8 +60,12 @@ These rules apply to the workflow files. `verifyGithubActionsSecurity` enforces 
 ### verifyGithubActionsSecurity
 
 `verifyReleaseBuild` runs `verifyGithubActionsSecurity`, so Build Bisq fails when a workflow breaks one of the rules
-below. It does not check permissions, the wrapper checksum step or artifact settings. The task reads every `*.yml`
-and `*.yaml` file in `.github/workflows` line by line and reports:
+below. It checks only that top-level permissions exist, not their values or the permissions of jobs, and it does not
+check the wrapper checksum step or artifact settings. The task checks every `*.yml` and `*.yaml` file in
+`.github/workflows` in two passes. The second pass runs only when the first finds nothing, so rerun the task after
+each fix.
+
+The first pass, in `build.gradle`, reads each file line by line and reports:
 
 - a `uses:` reference other than a local `./` path without a 40-character commit SHA
 - an `actions/checkout` step without `persist-credentials: false`
@@ -74,6 +78,17 @@ and `*.yaml` file in `.github/workflows` line by line and reports:
   mounts the whole checkout into the container
 - a missing `concurrency` group with `cancel-in-progress: false` in `release-builder.yml` and
   `installer-evidence.yml`
+
+The second pass, in [`gradle/github-workflow-policy.gradle`](../gradle/github-workflow-policy.gradle), parses each
+file as YAML, reads booleans and nulls by the YAML 1.2 rules that GitHub uses, rejects duplicate keys and reports:
+
+- a workflow without top-level `permissions`
+- a trigger other than `push`, `pull_request`, `schedule`, `workflow_dispatch` and `workflow_call`, unless the
+  SHA-256 of the file with LF line endings matches its entry in `reviewedWorkflows`. Only `contribution-notice.yml`
+  has one. Review the jobs and permissions of a changed privileged workflow before updating its digest.
+- a step whose `with` is not a map, or whose input names contain an expression
+- an expression (`${{`) in a `run` step or in the `script` input of `actions/github-script`; pass it through `env`
+- a `gradle/actions/setup-gradle` step without `validate-wrappers: true`
 
 ## Build Bisq (`build.yml`)
 

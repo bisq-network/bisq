@@ -37,6 +37,8 @@ Claude Code uses the same directory through `.claude/skills`.
 - `security-review` for security questions, security-relevant reviews and suspected vulnerabilities
 - `canonical-encoding` for byte-level preimage compatibility
 - `release-notes` for release documents and the in-app update text
+- `gradle-verification` for dependency, plugin and Gradle wrapper changes under dependency verification
+- `github-workflows` for GitHub Actions workflow changes and their security rules
 
 ## Tech and Runtime Context
 
@@ -76,6 +78,8 @@ Ensure that:
 - No unnecessary complexity or abstraction was introduced
 - No hidden assumptions were made
 - The result would pass a strict code review
+- Every claim that a build, test or check passes rests on a run of it in this session, with its output read; say which checks did not run
+- No failing test, check or verification was deleted, disabled, weakened or skipped to get a green result
 
 ### Failure Handling
 - If the task cannot be completed safely or clearly, **do not proceed with a speculative or partial solution**
