@@ -28,7 +28,9 @@ The build verifies every dependency by PGP signature or SHA-256, and the wrapper
 
 Run the tasks of the [related verification tasks](../../../gradle/README.md#related-verification-tasks) table that the change touches:
 
-* dependency change: `resolveAndVerifyDependencies`, `verifyDependencySignaturePolicy` and `dependencySignatureReport`
-* wrapper change: `shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256`, `verifyGradleWrapperSecurity`, `verifyReleaseEnvironment`, `resolveAndVerifyDependencies` and `./gradlew help --scan`, which is the only local run that shows a missing Develocity trust
+* dependency change: `resolveAndVerifyDependencies`, `verifyDependencySignaturePolicy`, `dependencySignatureReport` and `./gradlew help --scan` after the metadata or the keyring was rewritten
+* wrapper change: `shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256`, `verifyGradleWrapperSecurity`, `verifyReleaseEnvironment`, `resolveAndVerifyDependencies` and `./gradlew help --scan`
+
+Only a run with `--scan` resolves the Develocity plugin, as Build Bisq does, so it is the only local run that shows a missing Develocity trust.
 
 "Configuration cache entry discarded" is expected for the dependency tasks; read the task output and `BUILD SUCCESSFUL`.
