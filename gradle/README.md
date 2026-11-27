@@ -441,8 +441,8 @@ Do these steps in the same commit as the version change:
    rationale appear there as `Missing allowlist rationale`; there must be none.
 5. Run `./gradlew verifyDependencySignaturePolicy` again. It must end with `BUILD SUCCESSFUL`.
 
-Commit `libs.versions.toml`, `verification-metadata.xml`, the allowlist and
-`docs/dependency-signature-report.md` together.
+Commit `libs.versions.toml`, `verification-metadata.xml`, `verification-keyring.keys` when the refresh
+changed it, the allowlist and `docs/dependency-signature-report.md` together.
 
 ## A note on the configuration cache
 

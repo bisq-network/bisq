@@ -37,6 +37,7 @@ Claude Code uses the same directory through `.claude/skills`.
 - `security-review` for security questions, security-relevant reviews and suspected vulnerabilities
 - `canonical-encoding` for byte-level preimage compatibility
 - `release-notes` for release documents and the in-app update text
+- `gradle-verification` for dependency, plugin and Gradle wrapper changes under dependency verification
 
 ## Tech and Runtime Context
 
