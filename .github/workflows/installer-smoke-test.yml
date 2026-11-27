@@ -267,6 +267,20 @@ jobs:
           fi
         }
 
+        failure_details() {
+          if [ -n "$missing" ]; then
+            echo "--- missing log lines"
+            echo "$missing"
+          fi
+          if [ -n "$errors" ]; then
+            echo "--- first ERROR lines"
+            head -n 20 <<< "$errors"
+          fi
+          if [ "$state" != ready ]; then
+            launcher_output
+          fi
+        }
+
         missing_markers() {
           for marker in "${markers[@]}"; do
             if ! grep -qF -- "$marker" "$log" 2>/dev/null; then
@@ -283,36 +297,49 @@ jobs:
         pid=$!
         trap stop_bisq EXIT
 
+        # An ERROR line does not end the wait, so that the result also shows whether Bisq becomes ready
         start=$SECONDS
+        state=ready
         while true; do
-          # Read the markers first: the later ERROR read then covers each line written before the last marker.
           missing="$(missing_markers)"
-          errors="$(grep -E '\] ERROR ' "$log" 2>/dev/null | head -n 20 || true)"
-          if [ -n "$errors" ]; then
-            fail "The log of Bisq has ERROR lines. First: $(head -n 1 <<< "$errors")" "$errors"
-          fi
           if ! kill -0 "$pid" 2>/dev/null; then
-            reason="Bisq exited during startup."
-            if [ -n "$missing" ]; then
-              reason="$reason Missing log lines: $(paste -sd ';' - <<< "$missing")"
-            fi
-            fail "$reason" "$(printf '%s\n%s' "$missing" "$(launcher_output)")"
+            state=exited
+            break
           fi
           if [ -z "$missing" ]; then
             break
           fi
           if [ $((SECONDS - start)) -ge "$SMOKE_TEST_TIMEOUT_SECONDS" ]; then
-            fail "Bisq was not ready after ${SMOKE_TEST_TIMEOUT_SECONDS} s. Missing log lines: $(paste -sd ';' - <<< "$missing")" \
-              "$(printf '%s\n%s' "$missing" "$(launcher_output)")"
+            state=timeout
+            break
           fi
           sleep 5
         done
+        elapsed=$((SECONDS - start))
+        # Read after the markers, so that it covers each line written before the last marker
+        errors="$(grep -F -- '] ERROR ' "$log" 2>/dev/null || true)"
 
-        echo "Bisq was ready after $((SECONDS - start)) s"
+        reason=""
+        if [ "$state" = exited ]; then
+          reason="Bisq exited during startup."
+        elif [ "$state" = timeout ]; then
+          reason="Bisq was not ready after ${SMOKE_TEST_TIMEOUT_SECONDS} s."
+        fi
+        if [ -n "$missing" ]; then
+          reason="${reason:+$reason }Missing log lines: $(paste -sd ';' - <<< "$missing")."
+        fi
+        if [ -n "$errors" ]; then
+          reason="${reason:+$reason }The log of Bisq has ERROR lines. First: $(head -n 1 <<< "$errors")"
+        fi
+        if [ -n "$reason" ]; then
+          fail "$reason" "$(failure_details)"
+        fi
+
+        echo "Bisq was ready after ${elapsed} s"
         {
           echo "### ${JOB_NAME}: passed"
           echo
-          echo "Ready after $((SECONDS - start)) s."
+          echo "Ready after ${elapsed} s."
           echo
           echo '```'
           grep -F -e 'Tor runs in the level ' -e 'Tor runs in its sandbox' "$log" | head -n 5

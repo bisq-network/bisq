@@ -397,10 +397,11 @@ GPU.
 6. Starts Bisq, waits and stops it in one step, so that no process has to outlive its step. On Windows the runner
    ends the processes which a step leaves behind if they hold its output streams.
    - Starts Bisq with `--appDataDir=$RUNNER_TEMP/bisq-data --acceptTerms=true`. On Linux it runs under `xvfb-run`.
-   - Reads `bisq.log` every 5 seconds. The job passes once the log contains all three lines
-     `Tor runs in the level `, `Tor hidden service published after` and
-     `walletInitialized=true, p2pNetWorkReady=true`. It fails at once on a line containing `] ERROR `, when the
-     process exits, or when the timeout passes. The job summary shows the result and the reason.
+   - Reads `bisq.log` every 5 seconds until it contains all three lines `Tor runs in the level `,
+     `Tor hidden service published after` and `walletInitialized=true, p2pNetWorkReady=true`, until the process
+     exits, or until the timeout passes. An ERROR line does not end the wait, so that the result also shows whether
+     Bisq becomes ready. The job passes if Bisq still runs, the log contains the three lines and no line containing
+     `] ERROR `. The job summary shows the result and each reason of a failure.
    - Stops Bisq when the step ends. On Windows it also stops the `tor` process.
 7. On failure, copies only the `*.log*` files of the data directory (the data directory also holds the wallet and
    onion service keys). It uploads them with the launcher output and, for the RPM and on Windows, the output of
