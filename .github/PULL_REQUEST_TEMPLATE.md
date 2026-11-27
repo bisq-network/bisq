@@ -8,6 +8,7 @@ https://bisq.network/blog/open-source-development-in-the-age-of-ai/
 -->
 
 <!-- Describe the change and how you tested it.
-Before requesting review, check CI, sign your commits, and follow the contributor checklist:
+Before requesting review, check CI and confirm every commit has a Signed-off-by trailer and a GPG
+signature (git commit -s -S). Follow the contributor checklist at
 https://bisq.wiki/Contributor_checklist
 -->

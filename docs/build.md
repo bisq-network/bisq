@@ -70,7 +70,7 @@ To use the main branch:
 
    ```sh
    git add tor
-   git commit
+   git commit -s -S
    ```
 
 **Change the Tor code.** `tor/` is a repository of its own. Commit the change in `tor/` on a branch and push it to the
@@ -115,7 +115,7 @@ git diff --submodule=log tor
 Git restricts local file transport for submodules by default; `-c protocol.file.allow=always` allows it for that
 command. Without `--remote`, `submodule update` checks out the commit recorded by Bisq. Uncommitted changes in the
 local repository are not included. Build and test, then record the new Tor commit in Bisq with `git add tor` and
-`git commit`, as described above. Other developers need access to that Tor commit before they can use the update.
+`git commit -s -S`, as described above. Other developers need access to that Tor commit before they can use the update.
 
 Do not run `git submodule sync` for Tor after configuring these overrides, including the recursive command in step 1
 above: it overwrites both local URLs with the URL from `.gitmodules`.
