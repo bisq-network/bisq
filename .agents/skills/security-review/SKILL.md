@@ -16,7 +16,7 @@ Report suspected vulnerabilities only as described in [the security policy](../.
 * Try to disprove each candidate before reporting it: look for the check on another layer, the caller that never passes the dangerous value, the configuration that is never reachable on mainnet.
 * Classify the result:
   * **confirmed**: complete source trace and an observed minimal effect in a local test.
-  * **needs validation**: the decisive fact is outside the repository (seed node operation, key custody of role holders, Tor or OS behavior, packaging, hosted CI settings). State the missing fact and a safe way to check it.
+  * **needs validation**: the decisive fact is outside the repository (seed node operation, key custody of role holders, Tor or OS behavior, packaging, hosted CI settings), or the source trace identifies a concrete effect but the reviewer cannot run the local test needed to observe it. State which fact or effect remains unverified and how to check it safely.
   * **rejected**: the candidate was disproved. Record why, so it is not raised again.
 * Describe impact in the terms of the security policy (funds, privacy, signatures, settlement, availability, active exploitation). Use the `root-cause-analysis` skill to find the step that makes the problem possible, and question the feature or specification when it is the cause.
 
