@@ -19,11 +19,14 @@ package bisq.core.btc.wallet;
 
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.exceptions.InsufficientFundsException;
+import bisq.core.btc.exceptions.ReceiverAmountBelowDustException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
+import bisq.core.btc.exceptions.WithdrawalEstimationException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.model.WithdrawalEstimate;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 import bisq.core.provider.fee.FeeService;
@@ -50,6 +53,7 @@ import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.script.ScriptPattern;
 import org.bitcoinj.wallet.CoinSelection;
+import org.bitcoinj.wallet.CoinSelector;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
 
@@ -63,6 +67,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -81,6 +86,7 @@ import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 public class BtcWalletService extends WalletService {
     private static final Logger log = LoggerFactory.getLogger(BtcWalletService.class);
@@ -1077,51 +1083,171 @@ public class BtcWalletService extends WalletService {
         }
     }
 
-    public Transaction getFeeEstimationTransactionForMultipleAddresses(Set<String> fromAddresses,
-                                                                       String toAddress,
-                                                                       Coin amount,
-                                                                       Coin txFeeForWithdrawalPerVbyte)
+    /**
+     * Estimates a withdrawal from the given addresses as docs/specifications/wallet/btc-withdrawal-amount.md specifies
+     * it. Sending the estimate's sender's amount with its fee by {@link #sendFundsForMultipleAddresses} creates the
+     * estimated transaction again as long as the wallet does not change.
+     *
+     * @param amount the receiver's amount if feeExcluded is set, otherwise the sender's amount, which includes the fee
+     */
+    public WithdrawalEstimate getWithdrawalEstimate(Set<String> fromAddresses,
+                                                    String toAddress,
+                                                    Coin amount,
+                                                    boolean feeExcluded,
+                                                    Coin feePerVbyte)
             throws AddressFormatException, AddressEntryException, InsufficientFundsException {
-        Set<AddressEntry> addressEntries = fromAddresses.stream()
-                .map(address -> {
-                    Optional<AddressEntry> addressEntryOptional = findAddressEntry(address, AddressEntry.Context.AVAILABLE);
-                    if (!addressEntryOptional.isPresent())
-                        addressEntryOptional = findAddressEntry(address, AddressEntry.Context.OFFER_FUNDING);
-                    if (!addressEntryOptional.isPresent())
-                        addressEntryOptional = findAddressEntry(address, AddressEntry.Context.TRADE_PAYOUT);
-                    if (!addressEntryOptional.isPresent())
-                        addressEntryOptional = findAddressEntry(address, AddressEntry.Context.ARBITRATOR);
-                    return addressEntryOptional;
-                })
-                .flatMap(Optional::stream)
-                .collect(Collectors.toSet());
-        if (addressEntries.isEmpty())
-            throw new AddressEntryException("No Addresses for withdraw  found in our wallet");
-
+        checkArgument(feePerVbyte.isPositive(), "The fee rate must be positive");
+        BtcCoinSelector selector = getCoinSelectorForMultipleAddresses(fromAddresses);
+        List<TransactionOutput> spendableCoins = getSortedSpendableCoins(selector, wallet.calculateAllSpendCandidates(true, true));
+        CoinSelector estimateSelector = (target, candidates) -> {
+            List<TransactionOutput> currentCoins = getSortedSpendableCoins(selector, candidates);
+            if (!currentCoins.equals(spendableCoins))
+                throw new WithdrawalEstimationException("The coins changed during the fee estimation");
+            return selector.selectInOrder(target, currentCoins);
+        };
         try {
-            Coin fee;
-            int counter = 0;
-            int txVsize = 0;
-            Transaction tx;
-            do {
-                counter++;
-                fee = txFeeForWithdrawalPerVbyte.multiply(txVsize);
-                SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, fee, null, aesKey);
-                wallet.completeTx(sendRequest);
-                tx = sendRequest.tx;
-                txVsize = tx.getVsize();
-                printTx("FeeEstimationTransactionForMultipleAddresses", tx);
-            }
-            while (feeEstimationNotSatisfied(counter, tx));
-            if (counter == 10)
-                log.error("Could not calculate the fee. Tx=" + tx);
-
-            return tx;
+            return feeExcluded ?
+                    getWithdrawalEstimateWithFeeExcluded(estimateSelector, spendableCoins, toAddress, amount, feePerVbyte) :
+                    getWithdrawalEstimateWithFeeIncluded(estimateSelector, toAddress, amount, feePerVbyte);
         } catch (InsufficientMoneyException e) {
             throw new InsufficientFundsException("The fees for that transaction exceed the available funds " +
                     "or the resulting output value is below the min. dust value:\n" +
                     "Missing " + (e.missing != null ? e.missing.toFriendlyString() : "null"));
         }
+    }
+
+    // The sender spends the amount, the receiver gets it minus the fee. If the coins selected for the amount exceed it
+    // by less than the dust limit, that remainder cannot be returned. It pays the fee first, and the receiver gets the
+    // amount minus the rest of the fee.
+    private WithdrawalEstimate getWithdrawalEstimateWithFeeIncluded(CoinSelector selector,
+                                                                    String toAddress,
+                                                                    Coin amount,
+                                                                    Coin feePerVbyte)
+            throws InsufficientMoneyException {
+        Transaction tx = completeWithdrawalTx(selector, toAddress, amount, Coin.ZERO);
+        Coin change = tx.getInputSum().subtract(amount);
+        Coin remainder = Restrictions.isDust(change) ? change : Coin.ZERO;
+        Coin sendersAmount = amount.add(remainder);
+        Coin maxFee = sendersAmount.subtract(Restrictions.getMinNonDustOutput());
+
+        // In every round the receiver's amount and the fee add up to the amount and the remainder, so the coin
+        // selection stays the same
+        int maxRounds = getMaxFeeEstimationRounds(tx.getInputs().size());
+        Coin fee = remainder;
+        for (int round = 1; round <= maxRounds; round++) {
+            tx = completeWithdrawalTx(selector, toAddress, sendersAmount.subtract(fee), fee);
+            // The coin selection refuses changed coins, so every round spends the coins of the first completion: the
+            // fee is the requested one, a change output is at least the dust limit, and a remainder leaves no change
+            // output
+            checkState(tx.getFee().equals(fee) && getDust(tx).isZero()
+                            && (remainder.isZero() || tx.getOutputs().size() == 1),
+                    "The fee estimation completed an unexpected transaction");
+            int vsize = tx.getVsize();
+            if (!fee.divide(vsize).isLessThan(feePerVbyte)) {
+                return toWithdrawalEstimate(tx, remainder);
+            }
+            if (fee.equals(maxFee))
+                throw new ReceiverAmountBelowDustException();
+
+            // At the dust limit a shorter signature can make the withdrawal affordable.
+            // Compare rates first so an unaffordable API rate cannot overflow the fee.
+            fee = feePerVbyte.isGreaterThan(maxFee.divide(vsize)) ? maxFee : feePerVbyte.multiply(vsize);
+        }
+        log.error("Could not estimate the fee. Tx={}", tx);
+        throw new WithdrawalEstimationException("Could not estimate the fee");
+    }
+
+    // The receiver gets the amount, the sender spends it plus the fee. If the selected addresses cannot pay the fee and
+    // a change output of at least the dust limit, the withdrawal spends all their coins without a change output, and
+    // the rest is the fee.
+    private WithdrawalEstimate getWithdrawalEstimateWithFeeExcluded(CoinSelector selector,
+                                                                    List<TransactionOutput> spendableCoins,
+                                                                    String toAddress,
+                                                                    Coin amount,
+                                                                    Coin feePerVbyte)
+            throws InsufficientMoneyException {
+        int maxRounds = getMaxFeeEstimationRounds(spendableCoins.size());
+        Coin fee = Coin.ZERO;
+        // A change below the dust limit, which bitcoinj added to the fee or kept as change output
+        Coin changeBelowDust = Coin.ZERO;
+        for (int round = 1; ; round++) {
+            if (round > maxRounds)
+                throw new WithdrawalEstimationException("Could not estimate the fee");
+            Transaction tx;
+            try {
+                tx = completeWithdrawalTx(selector, toAddress, amount, fee);
+            } catch (InsufficientMoneyException e) {
+                if (fee.isZero()) {
+                    throw e;
+                }
+                break;
+            }
+            changeBelowDust = tx.getFee().subtract(fee).add(getDust(tx));
+            if (changeBelowDust.isPositive()) {
+                break;
+            }
+            Coin feeForSize = feePerVbyte.multiply(tx.getVsize());
+            if (!fee.isLessThan(feeForSize)) {
+                return toWithdrawalEstimate(tx, Coin.ZERO);
+            }
+            // Before dropping change or adding another input, sign with the largest fee that still
+            // returns non-dust change from these inputs. Its signature can be shorter.
+            Coin feeWithMinChange = tx.getInputSum().subtract(amount).subtract(Restrictions.getMinNonDustOutput());
+            if (feeWithMinChange.isGreaterThan(fee) && feeWithMinChange.isLessThan(feeForSize)) {
+                Transaction boundaryTx = completeWithdrawalTx(selector, toAddress, amount, feeWithMinChange);
+                if (boundaryTx.getFee().equals(feeWithMinChange) && getDust(boundaryTx).isZero()
+                        && !feeWithMinChange.isLessThan(feePerVbyte.multiply(boundaryTx.getVsize()))) {
+                    return toWithdrawalEstimate(boundaryTx, Coin.ZERO);
+                }
+            }
+            fee = feeForSize;
+        }
+
+        Coin spendableValue = Coin.valueOf(spendableCoins.stream().mapToLong(output -> output.getValue().value).sum());
+        Coin feeWithoutChange = spendableValue.subtract(amount);
+        Transaction tx = completeWithdrawalTx(selector, toAddress, amount, feeWithoutChange);
+        // The coin selection refuses changed coins, so the transaction spends all coins of the start of the estimation
+        // without a change output
+        checkState(tx.getOutputs().size() == 1 && tx.getFee().equals(feeWithoutChange),
+                "The fee estimation completed an unexpected transaction");
+        Coin feeForSize = feePerVbyte.multiply(tx.getVsize());
+        if (feeWithoutChange.isLessThan(feeForSize)) {
+            throw new InsufficientMoneyException(feeForSize.subtract(feeWithoutChange));
+        }
+        // A change of the first round, which had no fee, also pays the fee for the size
+        Coin feeAboveSize = feeWithoutChange.subtract(feeForSize);
+        return toWithdrawalEstimate(tx, changeBelowDust.isGreaterThan(feeAboveSize) ? feeAboveSize : changeBelowDust);
+    }
+
+    // The inputs pay the receiver's amount and the fee. bitcoinj adds a rest below its change limit (537 sat for a
+    // segwit change address) to the fee and returns a larger rest as a change output, also one below our dust limit.
+    private Transaction completeWithdrawalTx(CoinSelector selector,
+                                             String toAddress,
+                                             Coin receiverAmount,
+                                             Coin fee) throws InsufficientMoneyException {
+        SendRequest sendRequest = getSendRequestForMultipleAddresses(toAddress, receiverAmount.add(fee), fee, aesKey);
+        sendRequest.coinSelector = selector;
+        sendRequest.changeAddress = getFreshAddressEntry().getAddress();
+        wallet.completeTx(sendRequest);
+        printTx("FeeEstimationTransactionForMultipleAddresses", sendRequest.tx);
+        return sendRequest.tx;
+    }
+
+    private List<TransactionOutput> getSortedSpendableCoins(BtcCoinSelector selector, List<TransactionOutput> candidates) {
+        ArrayList<TransactionOutput> coins = new ArrayList<>(selector.select(params.getMaxMoney(), candidates).gathered);
+        // A new block can change which inputs pay for a withdrawal even when the same outputs are still spendable.
+        selector.sortOutputs(coins);
+        return coins;
+    }
+
+    // A round that does not end the estimation is larger than the round before: it has more coins or a signature
+    // that is a byte longer. The bound only stops an estimation that does not converge.
+    private static int getMaxFeeEstimationRounds(int numCoins) {
+        return 10 + numCoins;
+    }
+
+    private static WithdrawalEstimate toWithdrawalEstimate(Transaction tx, Coin dust) {
+        return new WithdrawalEstimate(tx.getOutput(0).getValue(), tx.getFee(), tx.getVsize(), dust);
     }
 
     private boolean feeEstimationNotSatisfied(int counter, Transaction tx) {
@@ -1161,16 +1287,17 @@ public class BtcWalletService extends WalletService {
     // Withdrawal Send
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // The receiver gets sendersAmount minus the fee
     public String sendFunds(String fromAddress,
                             String toAddress,
-                            Coin receiverAmount,
+                            Coin sendersAmount,
                             Coin fee,
                             @Nullable KeyParameter aesKey,
                             @SuppressWarnings("SameParameterValue") AddressEntry.Context context,
                             @Nullable String memo,
                             FutureCallback<Transaction> callback) throws AddressFormatException,
             AddressEntryException, InsufficientMoneyException {
-        SendRequest sendRequest = getSendRequest(fromAddress, toAddress, receiverAmount, fee, aesKey, context);
+        SendRequest sendRequest = getSendRequest(fromAddress, toAddress, sendersAmount, fee, aesKey, context);
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         // The wallet has committed the tx at this point; the remaining steps are best-effort.
         // The callback is attached before the memo is set: an already completed broadcast
@@ -1188,9 +1315,10 @@ public class BtcWalletService extends WalletService {
         return sendResult.tx.getTxId().toString();
     }
 
+    // The receiver gets sendersAmount minus the fee
     public Transaction sendFundsForMultipleAddresses(Set<String> fromAddresses,
                                                      String toAddress,
-                                                     Coin receiverAmount,
+                                                     Coin sendersAmount,
                                                      Coin fee,
                                                      @Nullable String changeAddress,
                                                      @Nullable KeyParameter aesKey,
@@ -1198,7 +1326,11 @@ public class BtcWalletService extends WalletService {
                                                      FutureCallback<Transaction> callback) throws AddressFormatException,
             AddressEntryException, InsufficientMoneyException {
 
-        SendRequest request = getSendRequestForMultipleAddresses(fromAddresses, toAddress, receiverAmount, fee, changeAddress, aesKey);
+        SendRequest request = getSendRequestForMultipleAddresses(toAddress, sendersAmount, fee, aesKey);
+        request.coinSelector = getCoinSelectorForMultipleAddresses(fromAddresses);
+        Optional<AddressEntry> changeEntry = changeAddress == null
+                ? Optional.empty() : findAddressEntry(changeAddress, AddressEntry.Context.AVAILABLE);
+        request.changeAddress = changeEntry.orElseGet(this::getFreshAddressEntry).getAddress();
         Wallet.SendResult sendResult = wallet.sendCoins(request);
         // The wallet has committed the tx at this point; the remaining steps are best-effort.
         // The callback is attached before the memo is set: an already completed broadcast
@@ -1239,8 +1371,8 @@ public class BtcWalletService extends WalletService {
             AddressEntryException {
         Transaction tx = new Transaction(params);
         final Coin receiverAmount = amount.subtract(fee);
-        Preconditions.checkArgument(Restrictions.isAboveDust(receiverAmount),
-                "The amount is too low (dust limit).");
+        if (!Restrictions.isAboveDust(receiverAmount))
+            throw new ReceiverAmountBelowDustException();
         tx.addOutput(receiverAmount, Address.fromString(params, toAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
@@ -1260,17 +1392,14 @@ public class BtcWalletService extends WalletService {
         return sendRequest;
     }
 
-    private SendRequest getSendRequestForMultipleAddresses(Set<String> fromAddresses,
-                                                           String toAddress,
+    private SendRequest getSendRequestForMultipleAddresses(String toAddress,
                                                            Coin amount,
                                                            Coin fee,
-                                                           @Nullable String changeAddress,
-                                                           @Nullable KeyParameter aesKey) throws
-            AddressFormatException, AddressEntryException {
+                                                           @Nullable KeyParameter aesKey) {
         Transaction tx = new Transaction(params);
         final Coin netValue = amount.subtract(fee);
-        checkArgument(Restrictions.isAboveDust(netValue),
-                "The amount is too low (dust limit).");
+        if (!Restrictions.isAboveDust(netValue))
+            throw new ReceiverAmountBelowDustException();
 
         tx.addOutput(netValue, Address.fromString(params, toAddress));
 
@@ -1280,6 +1409,11 @@ public class BtcWalletService extends WalletService {
         sendRequest.ensureMinRequiredFee = false;
         sendRequest.aesKey = aesKey;
         sendRequest.shuffleOutputs = false;
+        return sendRequest;
+    }
+
+    private BtcCoinSelector getCoinSelectorForMultipleAddresses(Set<String> fromAddresses)
+            throws AddressEntryException {
         Set<AddressEntry> addressEntries = fromAddresses.stream()
                 .map(address -> {
                     Optional<AddressEntry> addressEntryOptional = findAddressEntry(address, AddressEntry.Context.AVAILABLE);
@@ -1296,17 +1430,8 @@ public class BtcWalletService extends WalletService {
         if (addressEntries.isEmpty())
             throw new AddressEntryException("No Addresses for withdraw found in our wallet");
 
-        sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesFromAddressEntries(addressEntries),
+        return new BtcCoinSelector(walletsSetup.getAddressesFromAddressEntries(addressEntries),
                 preferences.getIgnoreDustThreshold());
-        Optional<AddressEntry> addressEntryOptional = Optional.empty();
-
-        if (changeAddress != null)
-            addressEntryOptional = findAddressEntry(changeAddress, AddressEntry.Context.AVAILABLE);
-
-        AddressEntry changeAddressAddressEntry = addressEntryOptional.orElseGet(this::getFreshAddressEntry);
-        checkNotNull(changeAddressAddressEntry, "change address must not be null");
-        sendRequest.changeAddress = changeAddressAddressEntry.getAddress();
-        return sendRequest;
     }
 
     // We ignore utxos which are considered dust attacks for spying on users' wallets.

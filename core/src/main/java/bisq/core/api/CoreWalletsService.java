@@ -35,6 +35,7 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.BsqTransferModel;
+import bisq.core.btc.model.WithdrawalEstimate;
 import bisq.core.btc.wallet.BsqTransferService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -301,36 +302,30 @@ class CoreWalletsService {
             Set<String> fromAddresses = btcWalletService.getAddressEntriesForAvailableBalanceStream()
                     .map(AddressEntry::getAddressString)
                     .collect(Collectors.toSet());
-            Coin receiverAmount = getValidTransferAmount(amount, btcFormatter);
-            Coin txFeePerVbyte = getTxFeeRateFromParamOrPreferenceOrFeeService(txFeeRate);
+            Coin amountAsCoin = getValidTransferAmount(amount, btcFormatter);
+            Coin txFeePerVbyte = getValidBtcTxFeeRate(txFeeRate);
 
             // TODO Support feeExcluded (or included), default is fee included.
-            //  See WithdrawalView # onWithdraw (and refactor).
-            Transaction feeEstimationTransaction =
-                    btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses,
-                            address,
-                            receiverAmount,
-                            txFeePerVbyte);
-            if (feeEstimationTransaction == null)
-                throw new IllegalStateException("could not estimate the transaction fee");
-
-            Coin dust = btcWalletService.getDust(feeEstimationTransaction);
-            Coin fee = feeEstimationTransaction.getFee().add(dust);
-            if (dust.isPositive()) {
-                fee = feeEstimationTransaction.getFee().add(dust);
-                log.info("Dust txo ({} sats) was detected, the dust amount has been added to the fee (was {}, now {})",
-                        dust.value,
-                        feeEstimationTransaction.getFee(),
-                        fee.value);
+            //  See WithdrawalView # onWithdraw.
+            WithdrawalEstimate withdrawalEstimate = btcWalletService.getWithdrawalEstimate(fromAddresses,
+                    address,
+                    amountAsCoin,
+                    false,
+                    txFeePerVbyte);
+            Coin sendersAmount = withdrawalEstimate.sendersAmount();
+            Coin fee = withdrawalEstimate.fee();
+            if (withdrawalEstimate.dust().isPositive()) {
+                log.info("Dust of {} sats of the selected coins is part of the fee",
+                        withdrawalEstimate.dust().value);
             }
-            log.info("Sending {} BTC to {} with tx fee of {} sats (fee rate {} sats/byte).",
-                    amount,
+            log.info("Sending {} BTC to {} with tx fee of {} sat (requested rate {} sat/vbyte).",
+                    sendersAmount.toPlainString(),
                     address,
                     fee.value,
                     txFeePerVbyte.value);
             btcWalletService.sendFundsForMultipleAddresses(fromAddresses,
                     address,
-                    receiverAmount,
+                    sendersAmount,
                     fee,
                     null,
                     tempAesKey,
@@ -632,6 +627,15 @@ class CoreWalletsService {
             throw new IllegalArgumentException(format("%s is an invalid transfer amount", amount));
 
         return amountAsCoin;
+    }
+
+    private Coin getValidBtcTxFeeRate(String txFeeRate) {
+        Coin txFeePerVbyte = getTxFeeRateFromParamOrPreferenceOrFeeService(txFeeRate);
+        long minFeePerVbyte = feeService.getMinFeePerVByte();
+        if (txFeePerVbyte.value < minFeePerVbyte)
+            throw new IllegalArgumentException(format("tx fee rate must be >= %d sat/vbyte", minFeePerVbyte));
+
+        return txFeePerVbyte;
     }
 
     private Coin getTxFeeRateFromParamOrPreferenceOrFeeService(String txFeeRate) {

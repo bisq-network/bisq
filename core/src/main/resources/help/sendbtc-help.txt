@@ -9,7 +9,7 @@ SYNOPSIS
 sendbtc
 		--address=<btc-address>
 		--amount=<btc-amount>
-		[--tx-fee-rate=<sats/byte>]
+		[--tx-fee-rate=<sat/vbyte>]
 		[--memo=<"memo">]
 
 DESCRIPTION
@@ -22,12 +22,16 @@ OPTIONS
         The destination BTC address for the send transaction.
 
 --amount
-		The amount of BTC to send.
+		The amount of BTC to spend, including the mining fee. If the selected coins
+		leave 1 to 545 satoshis as change, the wallet spends that remainder as well
+		and applies it to the fee first. The receiver gets the total spent minus the
+		fee, up to the entered amount.
 
 --tx-fee-rate
-        An optional transaction fee rate (sats/byte) for the transaction.  The user is
+        An optional transaction fee rate in satoshis per virtual byte. The user is
         responsible for choosing a fee rate that will be accepted by the network in a
-        reasonable amount of time, and the fee rate must be greater than 1 (sats/byte).
+        reasonable amount of time. A fee rate below the minimum fee rate of the fee service
+        is refused.
 
 --memo
 		An optional memo to be saved with the send btc transaction.
@@ -40,12 +44,12 @@ transaction fee rate:
 $ ./bisq-cli --password=xyz --port=9998 sendbtc --address=bcrt1qygvsqmyt8jyhtp7l3zwqm7s7v3nar6vkc2luz3 --amount=0.10
 
 Send 0.05 BTC to address bcrt1qygvsqmyt8jyhtp7l3zwqm7s7v3nar6vkc2luz3 with a transaction
-fee rate of 10 sats/byte:
+fee rate of 10 sat/vbyte:
 $ ./bisq-cli --password=xyz --port=9998 sendbtc --address=bcrt1qygvsqmyt8jyhtp7l3zwqm7s7v3nar6vkc2luz3 --amount=0.05 \
     --tx-fee-rate=10
 
 Send 0.005 BTC to address bcrt1qygvsqmyt8jyhtp7l3zwqm7s7v3nar6vkc2luz3 with a transaction
-fee rate of 40 sats/byte, and save a memo with the send transaction:
+fee rate of 40 sat/vbyte, and save a memo with the send transaction:
 $ ./bisq-cli --password=xyz --port=9998 sendbtc --address=bcrt1qygvsqmyt8jyhtp7l3zwqm7s7v3nar6vkc2luz3 --amount=0.005 \
     --tx-fee-rate=40 \
     --memo="note to self"

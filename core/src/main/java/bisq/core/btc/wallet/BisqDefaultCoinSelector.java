@@ -72,7 +72,6 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
 
     @Override
     public CoinSelection select(Coin target, List<TransactionOutput> candidates) {
-        ArrayList<TransactionOutput> selected = new ArrayList<>();
         // Sort the inputs by age*value so we get the highest "coin days" spent.
 
         ArrayList<TransactionOutput> sortedOutputs;
@@ -86,6 +85,11 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
         if (!target.equals(NetworkParameters.MAX_MONEY))
             sortOutputs(sortedOutputs);
 
+        return selectInOrder(target, sortedOutputs);
+    }
+
+    CoinSelection selectInOrder(Coin target, List<TransactionOutput> sortedOutputs) {
+        ArrayList<TransactionOutput> selected = new ArrayList<>();
         // Now iterate over the sorted outputs until we have got as close to the target as possible or a little
         // bit over (excessive value will be change).
         long total = 0;
