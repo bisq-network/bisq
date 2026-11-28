@@ -132,6 +132,11 @@ public abstract class SellerSetupTxListener extends BsqSwapTask {
                         confidence.getConfidenceType().equals(PENDING));
     }
 
+    @Override
+    protected void onCanceled() {
+        cleanup();
+    }
+
     private void cleanup() {
         UserThread.execute(() -> {
             if (confidenceListener != null) {

@@ -41,6 +41,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 // Main class. Contains the condition and setup, if condition is valid it will execute the
 // taskRunner and the optional runnable.
+@Slf4j
 public class FluentProtocol {
 
     public interface Event {
@@ -74,6 +75,10 @@ public class FluentProtocol {
 
     // Can be used before or after executeTasks
     public FluentProtocol run(Runnable runnable) {
+        if (tradeProtocol.isShutDown()) {
+            return this;
+        }
+
         Condition.Result result = condition.getResult();
         if (result.isValid) {
             runnable.run();
@@ -84,6 +89,12 @@ public class FluentProtocol {
     }
 
     public FluentProtocol executeTasks() {
+        if (tradeProtocol.isShutDown()) {
+            log.info("We do not run tasks for trade {} as it has left the pending trades",
+                    tradeProtocol.tradeModel.getId());
+            return this;
+        }
+
         Condition.Result result = condition.getResult();
         if (!result.isValid) {
             if (resultHandler != null) {
@@ -110,6 +121,7 @@ public class FluentProtocol {
 
         TradeTaskRunner taskRunner = setup.getTaskRunner(message, condition.getEvent());
         taskRunner.addTasks(setup.getTasks());
+        tradeProtocol.addTaskRunner(taskRunner);
         taskRunner.run();
         return this;
     }
